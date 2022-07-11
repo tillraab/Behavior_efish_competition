@@ -72,10 +72,10 @@ def main(file_path, check, x, y):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Detect frames of blinking LED in video recordings.')
     parser.add_argument('file', type=str, help='video file to be analyzed')
-    parser.add_argument("-c", action="store_true", help="check if LED pos is correct")
-    parser.add_argument('-x', type=int, nargs=2, default=[1272, 1282], help='x-borders of LED detect area (in pixels)')
-    parser.add_argument('-y', type=int, nargs=2, default=[1500, 1516], help='y-borders of LED area (in pixels)')
+    parser.add_argument("-c", '--check', action="store_true", help="check if LED pos is correct")
+    parser.add_argument('-x', type=int, nargs=2, default=[1240, 1250], help='x-borders of LED detect area (in pixels)')
+    parser.add_argument('-y', type=int, nargs=2, default=[1504, 1526], help='y-borders of LED area (in pixels)')
     args = parser.parse_args()
     import glob
 
-    main(args.file, args.c, args.x, args.y)
+    main(args.file, args.check, args.x, args.y)

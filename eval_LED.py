@@ -15,7 +15,7 @@ def main(folder):
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     times = np.load(os.path.join(folder, 'times.npy'))
-    LED_idx = pd.read_csv(os.path.join(folder, 'led_idxs.csv'), sep=',')
+    LED_idx = pd.read_csv(os.path.join(folder, 'led_idxs.csv'), sep=',', encoding = "utf-7")
 
     led_idx = np.array(LED_idx).T[0]
     led_frame = np.load(os.path.join(folder, 'LED_frames.npy'))

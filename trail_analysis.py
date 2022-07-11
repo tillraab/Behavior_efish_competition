@@ -81,6 +81,7 @@ class Trial(object):
         bins = np.arange(-bw / 2, self.times[-1] + bw / 2, bw)
         self.baseline_freq_times = np.array(bins[:-1] + (bins[1] - bins[0])/2)
         self.baseline_freqs = np.full((2, len(self.baseline_freq_times)), np.nan)
+        self.pct95_freqs = np.full((2, len(self.baseline_freq_times)), np.nan)
 
         for enu, id in enumerate(self.ids):
             for i in range(len(bins) - 1):
@@ -89,6 +90,7 @@ class Trial(object):
                     continue
                 else:
                     self.baseline_freqs[enu][i] = np.nanpercentile(Cf, 5)
+                    self.pct95_freqs[enu][i] = np.nanpercentile(Cf, 75)
 
         self.fish_freq_val = [np.nanmean(x[self.baseline_freq_times > self.light_sec]) for x in self.baseline_freqs]
 
@@ -116,6 +118,30 @@ class Trial(object):
 
             return rise_size
 
+        def correct_rise_idx(rise_peak_idx):
+
+            rise_dt = np.diff(self.times[rise_peak_idx])
+            rise_dt[rise_dt >= 10] = 10
+            rise_dt[rise_dt < 10] = rise_dt[rise_dt < 10] - 1
+            rise_dt = np.append(np.array([10]), rise_dt)
+
+
+            freq_slope = np.full(np.shape(self.fish_freq)[1], np.nan)
+            non_nan_idx = np.arange(len(freq_slope))[~np.isnan(self.fish_freq[i])]
+            freq_slope[non_nan_idx[1:]] = np.diff(self.fish_freq[i][~np.isnan(self.fish_freq[i])])
+
+            corrected_rise_idxs = []
+            for enu, r_idx in enumerate(rise_peak_idx):
+                mask = np.arange(len(freq_slope))[(self.times <= self.times[r_idx]) & (self.times > self.times[r_idx] - rise_dt[enu]) & (~np.isnan(freq_slope))]
+                if len(mask) == 0:
+                    corrected_rise_idxs.append(np.nan)
+                else:
+                    corrected_rise_idxs.append(mask[np.argmax(freq_slope[mask])])
+
+            corrected_rise_idxs = np.array(corrected_rise_idxs)
+
+            return corrected_rise_idxs
+
         for i in range(len(self.fish_freq)):
             rise_peak_idx, trough = detect_peaks(self.fish_freq[i][~np.isnan(self.fish_freq[i])], rise_th)
             non_nan_idx = np.arange(len(self.fish_freq[i]))[~np.isnan(self.fish_freq[i])]
@@ -123,8 +149,11 @@ class Trial(object):
 
             rise_size = check_rises_size(rise_peak_idx)
 
-            self.rise_idxs.append(rise_peak_idx[rise_size >= rise_th])
-            self.rise_size.append(rise_size[rise_size >= rise_th])
+            rise_idx = correct_rise_idx(rise_peak_idx)
+            # print(np.min(np.diff(self.times[rise_peak_idx])))
+
+            self.rise_idxs.append(np.array(rise_idx[(rise_size >= rise_th) & (~np.isnan(rise_idx))], dtype=int))
+            self.rise_size.append(rise_size[(rise_size >= rise_th) & (~np.isnan(rise_idx))])
 
     def update_meta(self):
         entries = self.meta.index.tolist()
@@ -150,25 +179,30 @@ class Trial(object):
 
         for enu, id in enumerate(self.ids):
             c = 'firebrick' if self.winner == enu else 'forestgreen'
-            ax.plot(self.times, self.fish_freq[enu], marker='.', color=c, zorder=1)
-            ax.plot(self.times[np.isnan(self.fish_freq[enu])], self.fish_freq_interp[enu][np.isnan(self.fish_freq[enu])], '.', zorder=1, color=c, alpha=0.25)
-            ax.plot(self.baseline_freq_times, self.baseline_freqs[enu], '--', color='k', zorder=2)
+            ax.plot(self.times/3600, self.fish_freq[enu], marker='.', color=c, zorder=1)
+            ax.plot(self.times[np.isnan(self.fish_freq[enu])]/3600, self.fish_freq_interp[enu][np.isnan(self.fish_freq[enu])], '.', zorder=1, color=c, alpha=0.25)
+            ax.plot(self.baseline_freq_times/3600, self.baseline_freqs[enu], '--', color='k', zorder=2)
+            ax.plot(self.baseline_freq_times/3600, self.pct95_freqs[enu], '--', color='k', zorder=2)
 
-            ax.plot(self.times[self.rise_idxs[enu]], self.fish_freq_interp[enu][self.rise_idxs[enu]], 'o', color='k')
+            ax.plot(self.times[self.rise_idxs[enu]]/3600, self.fish_freq_interp[enu][self.rise_idxs[enu]], 'o', color='k')
 
 
             win_str = '(W)' if self.winner == enu else ''
 
-            ax.text(self.times[-1], self.fish_freq_val[enu]-10, '%.0f' % id + win_str, va ='center', ha='right')
+            ax.text(self.times[-1]/3600, self.fish_freq_val[enu]-10, '%.0f' % id + win_str, va ='center', ha='right')
 
-            ax.set_xlim(0, self.times[-1])
+            ax.set_xlim(0, self.times[-1]/3600)
 
             freq_range = (np.nanmin(self.fish_freq), np.nanmax(self.fish_freq))
             ax.set_ylim(freq_range[0] - 20, freq_range[1] + 10)
+        ax.set_title(self.folder)
         plt.show()
 
     def save(self):
         saveorder = -1 if self.winner == 1 else 1
+
+        if not os.path.exists(os.path.join(self.base_path, self.folder, 'analysis')):
+            os.mkdir(os.path.join(self.base_path, self.folder, 'analysis'))
 
         np.save(os.path.join(self.base_path, self.folder, 'analysis', 'fish_freq.npy'), self.fish_freq[::saveorder])
         np.save(os.path.join(self.base_path, self.folder, 'analysis', 'fish_freq_interp.npy'), self.fish_freq_interp[::saveorder])
@@ -196,7 +230,7 @@ class Trial(object):
 
     def frame_to_idx(self, event_frames):
         self.sr = 20000
-        LED_idx = pd.read_csv(os.path.join(self.folder, 'led_idxs.csv'), sep=',')
+        LED_idx = pd.read_csv(os.path.join(self.folder, 'led_idxs.csv'), sep=',', encoding = "utf-7")
 
         led_idx = np.array(LED_idx).T[0]
         led_frame = np.load(os.path.join(self.folder, 'LED_frames.npy'))
@@ -214,15 +248,15 @@ class Trial(object):
 def main():
     parser = argparse.ArgumentParser(description='Evaluated electrode array recordings with multiple fish.')
     parser.add_argument('-f', type=str, help='single recording analysis', default='')
-    # parser.add_argument("-c", action="store_true", help="check if LED pos is correct")
+    parser.add_argument('-d', "--dev", action="store_true", help="developer mode; no data saved")
     # parser.add_argument('-x', type=int, nargs=2, default=[1272, 1282], help='x-borders of LED detect area (in pixels)')
     # parser.add_argument('-y', type=int, nargs=2, default=[1500, 1516], help='y-borders of LED area (in pixels)')
     args = parser.parse_args()
 
     base_path = '/home/raab/data/2022_competition'
 
-    if os.path.exists(os.path.join(base_path, 'meta.csv')):
-        meta = pd.read_csv(os.path.join(base_path, 'meta.csv'), sep=',', index_col=0)
+    if os.path.exists(os.path.join(base_path, 'meta.csv')) and not args.dev:
+        meta = pd.read_csv(os.path.join(base_path, 'meta.csv'), sep=',', index_col=0, encoding = "utf-7")
     else:
         meta = None
 
@@ -231,7 +265,7 @@ def main():
         folders = [x for x in folders if not '.' in x]
     else:
         folders= [os.path.split(os.path.normpath(args.f))[-1]]
-
+    folders = sorted(folders)
     trials = []
     for folder in folders:
         trial = Trial(folder, base_path, meta, fish_count=2)
@@ -247,9 +281,10 @@ def main():
         trial.rise_detection(rise_th=5)
 
         if meta is not None:
-            trial.update_meta()
-
-        trial.save()
+            if not args.dev:
+                trial.update_meta()
+        if not args.dev:
+            trial.save()
         trial.ilustrate()
         trials.append(trial)
 
