@@ -98,6 +98,7 @@ def main(folder, dt):
 
             # plt.ion()
             for i in tqdm(np.arange(len(frames_oi))):
+                break
                 video.set(cv2.CAP_PROP_POS_FRAMES, int(frames_oi[i]))
                 ret, frame = video.read()
 
