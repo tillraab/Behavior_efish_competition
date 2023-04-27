@@ -63,6 +63,7 @@ def main(file_path, check, x, y):
     LED_frames = np.arange(len(LED_val)-1)[(LED_val[:-1] < light_th) & (LED_val[1:] > light_th)]
 
     np.save(os.path.join(folder, 'LED_frames.npy'), LED_frames)
+
     fig, ax = plt.subplots()
     ax.plot(np.arange(len(LED_val)), LED_val, color='k')
     ax.plot(LED_frames, np.ones(len(LED_frames))*light_th, 'o', color='firebrick')
@@ -73,8 +74,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Detect frames of blinking LED in video recordings.')
     parser.add_argument('file', type=str, help='video file to be analyzed')
     parser.add_argument("-c", '--check', action="store_true", help="check if LED pos is correct")
-    parser.add_argument('-x', type=int, nargs=2, default=[1240, 1250], help='x-borders of LED detect area (in pixels)')
-    parser.add_argument('-y', type=int, nargs=2, default=[1504, 1526], help='y-borders of LED area (in pixels)')
+    parser.add_argument('-x', type=int, nargs=2, default=[675, 695], help='x-borders of LED detect area (in pixels)')
+    parser.add_argument('-y', type=int, nargs=2, default=[350, 360], help='y-borders of LED area (in pixels)')
     args = parser.parse_args()
     import glob
 
