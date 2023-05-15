@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import numpy as np
 import pandas as pd
 import os
 import sys
 import glob
 from IPython import embed
+
 
 def load_frame_times(trial_path):
     t_filepath = glob.glob(os.path.join(trial_path, '*.dat'))
@@ -19,6 +21,7 @@ def load_frame_times(trial_path):
         frame_t.append(t)
     return np.array(frame_t)
 
+
 def load_and_converete_boris_events(trial_path, recording, sr, video_stated_FPS=25):
     def converte_video_frames_to_grid_idx(event_frames, led_frames, led_idx):
         event_idx_grid = (event_frames - led_frames[0]) / (led_frames[-1] - led_frames[0]) * (led_idx[-1] - led_idx[0]) + led_idx[0]
@@ -29,16 +32,17 @@ def load_and_converete_boris_events(trial_path, recording, sr, video_stated_FPS=
     # frames where LED gets switched on
     led_frames = np.load(os.path.join(trial_path, 'LED_frames.npy'))
 
-    times, behavior, t_ag_on_off, t_contact = load_boris(trial_path, recording)
+    times, behavior, t_ag_on_off, t_contact, video_FPS = load_boris(trial_path, recording)
 
-    contact_frame = np.array(np.round(t_contact * video_stated_FPS), dtype=int)
-    ag_on_off_frame = np.array(np.round(t_ag_on_off * video_stated_FPS), dtype=int)
+    contact_frame = np.array(np.round(t_contact * video_FPS), dtype=int)
+    ag_on_off_frame = np.array(np.round(t_ag_on_off * video_FPS), dtype=int)
 
     # led_t_GRID = led_idx / sr
     contact_t_GRID = converte_video_frames_to_grid_idx(contact_frame, led_frames, led_idx) / sr
     ag_on_off_t_GRID = converte_video_frames_to_grid_idx(ag_on_off_frame, led_frames, led_idx) / sr
 
     return contact_t_GRID, ag_on_off_t_GRID, led_idx, led_frames
+
 
 def load_boris(trial_path, recording):
     boris_file = '-'.join(recording.split('-')[:3]) + '.csv'
@@ -58,21 +62,33 @@ def load_boris(trial_path, recording):
 
     t_contact = times[behavior == 2]
 
-    return times, behavior, np.array(t_ag_on_off), t_contact.to_numpy()
+    return times, behavior, np.array(t_ag_on_off), t_contact.to_numpy(), data['FPS'][0]
+
 
 def main(data_folder=None):
 
-
     trials_meta = pd.read_csv('order_meta.csv')
-    video_stated_FPS = 25.  # cap.get(cv2.CAP_PROP_FPS)
+    fish_meta = pd.read_csv('id_meta.csv')
+    fish_meta['mean_w'] = np.nanmean(fish_meta.loc[:, ['w1', 'w2', 'w3']], axis=1)
+    fish_meta['mean_l'] = np.nanmean(fish_meta.loc[:, ['l1', 'l2', 'l3']], axis=1)
+
+
+    video_stated_FPS = 25  # cap.get(cv2.CAP_PROP_FPS)
 
     sr = 20_000
 
     for trial_idx in range(len(trials_meta)):
+        print('')
+
         group = trials_meta['group'][trial_idx]
         recording = trials_meta['recording'][trial_idx][1:-1]
         rec_id1 = trials_meta['rec_id1'][trial_idx]
         rec_id2 = trials_meta['rec_id2'][trial_idx]
+
+        f1_length = float(fish_meta['mean_l'][(fish_meta['group'] == trials_meta['group'][trial_idx]) &
+                                              (fish_meta['fish'] == trials_meta['fish1'][trial_idx])])
+        f2_length = float(fish_meta['mean_l'][(fish_meta['group'] == trials_meta['group'][trial_idx]) &
+                                              (fish_meta['fish'] == trials_meta['fish2'][trial_idx])])
 
         if group < 3:
             continue
@@ -87,9 +103,6 @@ def main(data_folder=None):
         if not os.path.exists(os.path.join(trial_path, 'LED_frames.npy')):
             continue
 
-        contact_t_GRID, ag_on_off_t_GRID, led_idx, led_frames = \
-            load_and_converete_boris_events(trial_path, recording, sr)
-
         fund_v = np.load(os.path.join(trial_path, 'fund_v.npy'))
         ident_v = np.load(os.path.join(trial_path, 'ident_v.npy'))
         idx_v = np.load(os.path.join(trial_path, 'idx_v.npy'))
@@ -100,13 +113,39 @@ def main(data_folder=None):
         print(f'ids in recording: {uid[0]:.0f} {uid[1]:.0f}')
         print(f'ids in meta: {rec_id1:.0f} {rec_id2:.0f}')
 
-        fig, ax = plt.subplots(figsize=(30/2.54, 18/2.54))
-        for id in uid:
-            ax.plot(times[idx_v[ident_v == id]] / 3600, fund_v[ident_v == id], marker='.')
+        meta_id_in_uid = list(map(lambda x: x in uid, [rec_id1, rec_id2]))
+        if ~np.all(meta_id_in_uid):
+            continue
 
-        ax.plot(contact_t_GRID / 3600, np.ones_like(contact_t_GRID) * 1050, '|', markersize=20, color='k')
-        ax.plot(ag_on_off_t_GRID[:, 0] / 3600, np.ones_like(ag_on_off_t_GRID[:, 0]) * 1150, '|', markersize=20, color='red')
-        ax.set_ylim(400, 1200)
+        contact_t_GRID, ag_on_off_t_GRID, led_idx, led_frames = \
+            load_and_converete_boris_events(trial_path, recording, sr, video_stated_FPS=video_stated_FPS)
+
+        embed()
+        quit()
+        ###############################################################################
+        fig = plt.figure(figsize=(30/2.54, 18/2.54))
+        gs = gridspec.GridSpec(2, 1, left = 0.1, bottom = 0.1, right=0.95, top=0.95, height_ratios=[1, 3])
+        ax = []
+        ax.append(fig.add_subplot(gs[0, 0]))
+        ax.append(fig.add_subplot(gs[1, 0], sharex=ax[0]))
+        for id in uid:
+            ax[1].plot(times[idx_v[ident_v == id]] / 3600, fund_v[ident_v == id], marker='.')
+
+        ax[0].plot(contact_t_GRID / 3600, np.ones_like(contact_t_GRID) , '|', markersize=20, color='k')
+        ax[0].plot(ag_on_off_t_GRID[:, 0] / 3600, np.ones_like(ag_on_off_t_GRID[:, 0]) * 2, '|', markersize=20, color='red')
+        min_f, max_f = np.min(fund_v[~np.isnan(ident_v)]), np.nanmax(fund_v[~np.isnan(ident_v)])
+
+        ax[0].set_ylim(0, 3)
+        ax[0].set_yticks([1, 2])
+        ax[0].set_yticklabels(['contact', 'chase'])
+        ax[1].set_ylim(min_f-50, max_f+50)
+
+        ax[1].set_xlim(times[0]/3600, times[-1]/3600)
+        plt.setp(ax[0].get_xticklabels(), visible=False)
+
+        fig.suptitle(f'{recording}')
+
+
         plt.show()
 
 
