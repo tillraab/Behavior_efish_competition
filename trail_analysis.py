@@ -70,11 +70,17 @@ class Trial(object):
 
         for enu, id in enumerate(self.ids):
             i0, i1 = self.idx_v[self.ident_v == id][0], self.idx_v[self.ident_v == id][-1]
+            # self.fish_freq_interp[enu, i0:i1+1] = np.interp(self.times[i0:i1+1],
+            #                                                 self.times[self.idx_v[self.ident_v == id]],
+            #                                                 self.fish_freq[enu][~np.isnan(self.fish_freq[enu])])
             self.fish_freq_interp[enu, i0:i1+1] = np.interp(self.times[i0:i1+1],
                                                             self.times[self.idx_v[self.ident_v == id]],
-                                                            self.fish_freq[enu][~np.isnan(self.fish_freq[enu])])
+                                                            self.fund_v[self.ident_v == id])
 
-            help_sign_v = list(map(lambda x: np.interp(self.times[i0:i1+1], self.times[self.idx_v[self.ident_v == id]], x), self.fish_sign[enu][~np.isnan(self.fish_freq[enu])].T))
+            # help_sign_v = list(map(lambda x: np.interp(self.times[i0:i1+1], self.times[self.idx_v[self.ident_v == id]], x),
+            #                        self.fish_sign[enu][~np.isnan(self.fish_freq[enu])].T))
+            help_sign_v = list(map(lambda x: np.interp(self.times[i0:i1+1], self.times[self.idx_v[self.ident_v == id]], x),
+                                   self.sign_v[self.ident_v == id].T))
             self.fish_sign_interp[enu, i0:i1+1] = np.array(help_sign_v).T
 
     def baseline_freq(self, bw = 300):
@@ -132,7 +138,9 @@ class Trial(object):
 
             corrected_rise_idxs = []
             for enu, r_idx in enumerate(rise_peak_idx):
-                mask = np.arange(len(freq_slope))[(self.times <= self.times[r_idx]) & (self.times > self.times[r_idx] - rise_dt[enu]) & (~np.isnan(freq_slope))]
+                mask = np.arange(len(freq_slope))[(self.times <= self.times[r_idx]) &
+                                                  (self.times > self.times[r_idx] - rise_dt[enu]) &
+                                                  (~np.isnan(freq_slope))]
                 if len(mask) == 0:
                     corrected_rise_idxs.append(np.nan)
                 else:
@@ -247,25 +255,38 @@ class Trial(object):
 
 def main():
     parser = argparse.ArgumentParser(description='Evaluated electrode array recordings with multiple fish.')
-    parser.add_argument('-f', type=str, help='single recording analysis', default='')
+    parser.add_argument('file', type=str, help='single recording analysis', default='')
     parser.add_argument('-d', "--dev", action="store_true", help="developer mode; no data saved")
     # parser.add_argument('-x', type=int, nargs=2, default=[1272, 1282], help='x-borders of LED detect area (in pixels)')
     # parser.add_argument('-y', type=int, nargs=2, default=[1500, 1516], help='y-borders of LED area (in pixels)')
     args = parser.parse_args()
 
-    base_path = '/home/raab/data/2022_competition'
+    base_path = None
+    folders = []
+    for root, dirs, files in os.walk(args.file):
+        for file in files:
+            if file.endswith('.raw'):
+                root = os.path.normpath(root)
+                print(root, file)
+                print(os.path.join(root, file))
+                folders.append(os.path.split(root)[-1])
+                if not base_path:
+                    base_path = os.path.split(root)[0]
+    folders = sorted(folders)
 
     if os.path.exists(os.path.join(base_path, 'meta.csv')) and not args.dev:
         meta = pd.read_csv(os.path.join(base_path, 'meta.csv'), sep=',', index_col=0, encoding = "utf-7")
     else:
         meta = None
 
-    if args.f == '':
-        folders = os.listdir(base_path)
-        folders = [x for x in folders if not '.' in x]
-    else:
-        folders= [os.path.split(os.path.normpath(args.f))[-1]]
-    folders = sorted(folders)
+    # embed()
+    # if args.f == '':
+    #     folders = os.listdir(args.f)
+    #     folders = [x for x in folders if not '.' in x]
+    # else:
+    #     folders= [os.path.split(os.path.normpath(args.f))[-1]]
+    # folders = sorted(folders)
+
     trials = []
     for folder in folders:
         trial = Trial(folder, base_path, meta, fish_count=2)
