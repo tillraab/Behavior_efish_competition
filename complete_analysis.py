@@ -364,6 +364,21 @@ def main(data_folder=None):
 
     embed()
     quit()
+
+
+    for g in pd.unique(trial_summary['group']):
+        fish_no = np.unique(np.concatenate((trial_summary['win_fish'][trial_summary['group'] == g],
+                                            trial_summary['lose_fish'][trial_summary['group'] == g])))
+        for f in fish_no:
+            fish_EODf25 = np.concatenate((trial_summary['EODf_lose'][(trial_summary['group'] == g) & (trial_summary['lose_fish'] == f)],
+                                          trial_summary['EODf_win'][(trial_summary['group'] == g) & (trial_summary['win_fish'] == f)]))
+            if np.median(fish_EODf25) < 740:
+                sex = 'f'
+            else:
+                sex = 'm'
+            trial_summary['sex_win'][(trial_summary['group'] == g) & (trial_summary['win_fish'] == f)] = sex
+            trial_summary['sex_lose'][(trial_summary['group'] == g) & (trial_summary['lose_fish'] == f)] = sex
+
     pass
 
 if __name__ == '__main__':
