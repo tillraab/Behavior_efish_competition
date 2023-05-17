@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import itertools
+from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import os
@@ -84,34 +86,63 @@ def get_baseline_freq(fund_v, idx_v, times, ident_v, idents = None, binwidth = 3
 
     return np.array(base_freqs), np.array(bins[:-1] + (bins[1] - bins[0])/2)
 
-def frequency_q10_compensation(baseline_freq, temp, temp_t, light_start_sec):
+def q10(f1, f2, t1, t2):
+    return(f2/f1)**(10/(t2 - t1))
+
+def frequency_q10_compensation(baseline_freqs : np.ndarray,
+                               baseline_freq_times : np.ndarray,
+                               temp : np.ndarray,
+                               temp_t : np.ndarray,
+                               light_start_sec : float):
+    """
+    Compute baseline frequency at 25 degree Celsius using Q10 formula. Q10 values are computed between each frequency-
+    temperature pair after light_start_sec (since frequency modulations can be assumed minimal during light). Q10-
+    compensated baseline freqs are computed for all values in baseline_freqs using the median q10 value computed previously.
+
+    Parameters
+    ----------
+    baseline_freqs: 2D-array: For each fish and each time in baseline_freq_times a correpsonding frequency in Hz.
+    baseline_freq_times: 1D-array: Time stamps corresponding to baseline_freq.
+    temp: 1D-array: temperature values detected at timespamps temp_t.
+    temp_t: 1D-array: corresponding time stamps
+    light_start_sec: time when light is switched on and frequency modulations can be assumed to be minimal. Q10 values
+    only calculated for timestamps after light_start_sec
+
+    Returns
+    -------
+
+    """
+    q10_lit = 1.56
+
     q10_comp_freq = []
     q10_vals = []
-    for bf in baseline_freq:
+    for bf in baseline_freqs:
         Cbf = np.copy(bf)
-        Ctemp = np.copy(temp)
-        if len(Cbf) > len(Ctemp):
-            Cbf = Cbf[:len(Ctemp)]
-        elif len(Ctemp) > len(Cbf):
-            Ctemp = Ctemp[:len(Cbf)]
-        else:
-            pass
+        Ctemp = []
+        for base_line_time in baseline_freq_times:
+            Ctemp.append(temp[np.argmin(np.abs(temp_t - base_line_time))])
+        Ctemp = np.array(Ctemp)
+
         q10s = []
-        for i in range(len(Cbf) - 1):
-            for j in np.arange(len(Cbf) - 1) + 1:
-                if Cbf[i] == Cbf[j] or Ctemp[i] == Ctemp[j]:
-                    # q10 with same values is useless
-                    continue
-                if temp_t[i] < light_start_sec or temp_t[j] < light_start_sec:
-                    # to much frequency changes due to rises in first part of rec !!!
-                    continue
+        for i, j in itertools.combinations(range(len(Cbf)), r=2):
+            if Cbf[i] == Cbf[j] or Ctemp[i] == Ctemp[j]:
+                # q10 with same values is useless
+                continue
+            if baseline_freq_times[i] < light_start_sec or baseline_freq_times[j] < light_start_sec:
+                # too much frequency changes due to rises in first part of rec !!!
+                continue
+            # if np.abs(Ctemp[i] - Ctemp[j]) < 0.5:
+            #     continue
 
-                Cq10 = q10(Cbf[i], Cbf[j], Ctemp[i], Ctemp[j])
-                q10s.append(Cq10)
+            Cq10 = q10(Cbf[i], Cbf[j], Ctemp[i], Ctemp[j])
+            q10s.append(Cq10)
 
-        q10_comp_freq.append(Cbf * np.median(q10s) ** ((25 - Ctemp) / 10))
+
+        # q10_comp_freq.append(Cbf * np.median(q10s) ** ((25 - Ctemp) / 10))
+        q10_comp_freq.append(Cbf * q10_lit ** ((25 - Ctemp) / 10))
         q10_vals.append(np.median(q10s))
 
+    print(f'Q10-values: {q10_vals[0]:.2f} {q10_vals[1]:.2f}')
     return q10_comp_freq, q10_vals
 
 def get_temperature(folder_path):
@@ -134,6 +165,9 @@ def main(data_folder=None):
     female_color, male_color = '#e74c3c', '#3498db'
     Wc, Lc = 'darkgreen', '#3673A4'
 
+    if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures')):
+        os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures'))
+
     trials_meta = pd.read_csv('order_meta.csv')
     fish_meta = pd.read_csv('id_meta.csv')
     fish_meta['mean_w'] = np.nanmean(fish_meta.loc[:, ['w1', 'w2', 'w3']], axis=1)
@@ -141,14 +175,19 @@ def main(data_folder=None):
 
     video_stated_FPS = 25  # cap.get(cv2.CAP_PROP_FPS)
     sr = 20_000
+    light_start_sec = 3*60*60
 
-    trial_summary = pd.DataFrame(columns=['sex_win', 'sex_lose', 'size_win', 'size_lose', 'EODf_win', 'EODf_lose',
+    trial_summary = pd.DataFrame(columns=['group', 'win_fish', 'lose_fish', 'sex_win', 'sex_lose', 'size_win', 'size_lose', 'EODf_win', 'EODf_lose',
                                           'exp_win', 'exp_lose', 'chirps_win', 'chirps_lose', 'rises_win', 'rise_lose'])
     trial_summary_row = {f'{s}':None for s in trial_summary.keys()}
 
-    for trial_idx in range(len(trials_meta)):
+    for trial_idx in tqdm(np.arange(len(trials_meta)), desc='Trials'):
+        video_eval = True
+
         group = trials_meta['group'][trial_idx]
         recording = trials_meta['recording'][trial_idx][1:-1]
+        print('')
+        print(recording)
         rec_id1 = trials_meta['rec_id1'][trial_idx]
         rec_id2 = trials_meta['rec_id2'][trial_idx]
 
@@ -159,11 +198,14 @@ def main(data_folder=None):
         if not os.path.exists(trial_path):
             continue
 
+        if group < 5:
+            video_eval = False
+
         if not os.path.exists(os.path.join(trial_path, 'led_idxs.csv')):
-            continue
+            video_eval = False
 
         if not os.path.exists(os.path.join(trial_path, 'LED_frames.npy')):
-            continue
+            video_eval = False
 
         #############################################################################################################
         ### meta collect
@@ -187,7 +229,6 @@ def main(data_folder=None):
         idx_v = np.load(os.path.join(trial_path, 'idx_v.npy'))
         times = np.load(os.path.join(trial_path, 'times.npy'))
 
-        print('')
         if len(uid:=np.unique(ident_v[~np.isnan(ident_v)])) >2:
             print(f'to many ids: {len(uid)}')
         print(f'ids in recording: {uid[0]:.0f} {uid[1]:.0f}')
@@ -198,6 +239,9 @@ def main(data_folder=None):
             continue
 
         temp_t, temp = get_temperature(trial_path)
+        baseline_freqs = np.load(os.path.join(trial_path, 'analysis', 'baseline_freqs.npy'))
+        baseline_freq_times = np.load(os.path.join(trial_path, 'analysis', 'baseline_freq_times.npy'))
+        q10_comp_freq, q10_vals = frequency_q10_compensation(baseline_freqs, baseline_freq_times, temp, temp_t, light_start_sec=light_start_sec)
 
         #############################################################################################################
         ### communication
@@ -213,16 +257,23 @@ def main(data_folder=None):
 
         #############################################################################################################
         ### physical behavior
-        contact_t_GRID, ag_on_off_t_GRID, led_idx, led_frames = \
-            load_and_converete_boris_events(trial_path, recording, sr, video_stated_FPS=video_stated_FPS)
+        if video_eval:
+            contact_t_GRID, ag_on_off_t_GRID, led_idx, led_frames = \
+                load_and_converete_boris_events(trial_path, recording, sr, video_stated_FPS=video_stated_FPS)
+
+        win_fish_no = trials_meta['fish1'][trial_idx] if trials_meta['fish1'][trial_idx] == trials_meta['winner'][trial_idx] else trials_meta['fish2'][trial_idx]
+        lose_fish_no = trials_meta['fish2'][trial_idx] if trials_meta['fish1'][trial_idx] == trials_meta['winner'][trial_idx] else trials_meta['fish1'][trial_idx]
 
         trial_summary.loc[len(trial_summary)] = trial_summary_row
-        trial_summary.iloc[-1] = {'sex_win': 'n',
+        trial_summary.iloc[-1] = {'group': trials_meta['group'][trial_idx],
+                                  'win_fish': win_fish_no,
+                                  'lose_fish': lose_fish_no,
+                                  'sex_win': 'n',
                                   'sex_lose': 'n',
                                   'size_win': win_l,
                                   'size_lose': lose_l,
-                                  'EODf_win': -1,
-                                  'EODf_lose': -1,
+                                  'EODf_win': np.nanmedian(q10_comp_freq[0]),
+                                  'EODf_lose': np.nanmedian(q10_comp_freq[1]),
                                   'exp_win': win_exp,
                                   'exp_lose': lose_exp,
                                   'chirps_win': len(chirp_times[0]),
@@ -239,11 +290,34 @@ def main(data_folder=None):
         ax.append(fig.add_subplot(gs[0, 0]))
         ax.append(fig.add_subplot(gs[1, 0], sharex=ax[0]))
 
-        ax[1].plot(times[idx_v[ident_v == win_id]] / 3600, fund_v[ident_v == win_id], color=Wc)
-        ax[1].plot(times[idx_v[ident_v == lose_id]] / 3600, fund_v[ident_v == lose_id], color=Lc)
+        ####################################################
+        ### traces
 
-        ax[0].plot(contact_t_GRID / 3600, np.ones_like(contact_t_GRID) , '|', markersize=10, color='k')
-        ax[0].plot(ag_on_off_t_GRID[:, 0] / 3600, np.ones_like(ag_on_off_t_GRID[:, 0]) * 2, '|', markersize=10, color='firebrick')
+        ax[1].plot(times[idx_v[ident_v == win_id]] / 3600, fund_v[ident_v == win_id], color=Wc, label=f'ID {win_id} {np.nanmedian(q10_comp_freq[0]):.2f}Hz')
+        ax[1].plot(times[idx_v[ident_v == lose_id]] / 3600, fund_v[ident_v == lose_id], color=Lc, label=f'ID {lose_id} {np.nanmedian(q10_comp_freq[1]):.2f}Hz')
+
+        # ax[1].plot(baseline_freq_times / 3600, q10_comp_freq[0], '--', color=Wc, lw=1)
+        # ax[1].plot(baseline_freq_times / 3600, q10_comp_freq[1], '--', color=Lc, lw=1)
+        # ax[1].plot(times[idx_v[ident_v == lose_id]] / 3600, fund_v[ident_v == lose_id], color=Lc)
+
+        min_f, max_f = np.min(fund_v[~np.isnan(ident_v)]), np.nanmax(fund_v[~np.isnan(ident_v)])
+        ax[1].set_ylim(min_f-50, max_f+50)
+
+        ax[1].set_xlim(times[0]/3600, times[-1]/3600)
+        plt.setp(ax[0].get_xticklabels(), visible=False)
+
+        ax_m = ax[1].twinx()
+        ax_m.plot(temp_t/3600, temp, '--', lw=2, color='tab:red')
+        ylim0, ylim1 = ax[1].get_ylim()
+
+        ax_m.set_ylim(np.nanmedian(temp) - (ylim1-ylim0) / 40 / 2, np.nanmedian(temp) + (ylim1-ylim0) / 40 / 2)
+
+        ax[1].legend(loc='upper right', bbox_to_anchor=(1, 1), title=r'EODf$_{25}$')
+        ####################################################
+        ### behavior
+        if video_eval:
+            ax[0].plot(contact_t_GRID / 3600, np.ones_like(contact_t_GRID) , '|', markersize=10, color='k')
+            ax[0].plot(ag_on_off_t_GRID[:, 0] / 3600, np.ones_like(ag_on_off_t_GRID[:, 0]) * 2, '|', markersize=10, color='firebrick')
 
         ax[0].plot(times[rise_idx_int[0]] / 3600, np.ones_like(rise_idx_int[0]) * 4, '|', markersize=10, color=Wc)
         ax[0].plot(times[rise_idx_int[1]] / 3600, np.ones_like(rise_idx_int[1]) * 5, '|', markersize=10, color=Lc)
@@ -252,21 +326,17 @@ def main(data_folder=None):
             ax[0].plot(chirp_times[0] / 3600, np.ones_like(chirp_times[0]) * 7, '|', markersize=10, color=Wc)
             ax[0].plot(chirp_times[1] / 3600, np.ones_like(chirp_times[1]) * 8, '|', markersize=10, color=Lc)
 
-        min_f, max_f = np.min(fund_v[~np.isnan(ident_v)]), np.nanmax(fund_v[~np.isnan(ident_v)])
-
         ax[0].set_ylim(0, 9)
         ax[0].set_yticks([1, 2, 4, 5, 7, 8])
         ax[0].set_yticklabels(['contact', 'chase', r'rise$_{win}$', r'rise$_{lose}$', r'chirp$_{win}$', r'chirp$_{lose}$'])
-        ax[1].set_ylim(min_f-50, max_f+50)
-
-        ax[1].set_xlim(times[0]/3600, times[-1]/3600)
-        plt.setp(ax[0].get_xticklabels(), visible=False)
 
         fig.suptitle(f'{recording}')
 
+        plt.savefig(os.path.join(os.path.join(os.path.split(__file__)[0], 'figures', f'{recording}.png')), dpi=300)
+        plt.close()
 
-        plt.show()
-
+    embed()
+    quit()
 
     fig = plt.figure(figsize=(20/2.54, 20/2.54))
     gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.95, height_ratios=[1, 3], width_ratios=[3, 1])
@@ -291,7 +361,6 @@ def main(data_folder=None):
     plt.setp(ax_rises.get_xticklabels(), visible=False)
 
     plt.show()
-
 
     embed()
     quit()
