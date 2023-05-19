@@ -177,8 +177,9 @@ def main(data_folder=None):
     sr = 20_000
     light_start_sec = 3*60*60
 
-    trial_summary = pd.DataFrame(columns=['group', 'win_fish', 'lose_fish', 'sex_win', 'sex_lose', 'size_win', 'size_lose', 'EODf_win', 'EODf_lose',
-                                          'exp_win', 'exp_lose', 'chirps_win', 'chirps_lose', 'rises_win', 'rise_lose'])
+    trial_summary = pd.DataFrame(columns=['recording', 'group', 'win_fish', 'lose_fish', 'sex_win', 'sex_lose',
+                                          'size_win', 'size_lose', 'EODf_win', 'EODf_lose', 'exp_win', 'exp_lose',
+                                          'chirps_win', 'chirps_lose', 'rises_win', 'rise_lose', 'draw'])
     trial_summary_row = {f'{s}':None for s in trial_summary.keys()}
 
     for trial_idx in tqdm(np.arange(len(trials_meta)), desc='Trials'):
@@ -186,6 +187,7 @@ def main(data_folder=None):
 
         group = trials_meta['group'][trial_idx]
         recording = trials_meta['recording'][trial_idx][1:-1]
+
         print('')
         print(recording)
         rec_id1 = trials_meta['rec_id1'][trial_idx]
@@ -209,6 +211,16 @@ def main(data_folder=None):
 
         #############################################################################################################
         ### meta collect
+        if (winner_fish := trials_meta['winner'][trial_idx]) == -1:
+            pass
+        elif np.isnan(winner_fish):
+            continue
+        elif winner_fish != trials_meta['fish1'][trial_idx] and winner_fish != trials_meta['fish2'][trial_idx]:
+            embed()
+            quit()
+            print(f'not participating winner in {recording}!!!')
+            continue
+
         win_id = rec_id1 if trials_meta['fish1'][trial_idx] == trials_meta['winner'][trial_idx] else rec_id2
         lose_id = rec_id2 if trials_meta['fish1'][trial_idx] == trials_meta['winner'][trial_idx] else rec_id1
 
@@ -270,7 +282,8 @@ def main(data_folder=None):
         lose_fish_no = trials_meta['fish2'][trial_idx] if trials_meta['fish1'][trial_idx] == trials_meta['winner'][trial_idx] else trials_meta['fish1'][trial_idx]
 
         trial_summary.loc[len(trial_summary)] = trial_summary_row
-        trial_summary.iloc[-1] = {'group': trials_meta['group'][trial_idx],
+        trial_summary.iloc[-1] = {'recording' : recording,
+                                  'group': trials_meta['group'][trial_idx],
                                   'win_fish': win_fish_no,
                                   'lose_fish': lose_fish_no,
                                   'sex_win': 'n',
@@ -284,7 +297,8 @@ def main(data_folder=None):
                                   'chirps_win': len(chirp_times[0]),
                                   'chirps_lose': len(chirp_times[1]),
                                   'rises_win': len(rise_idx_int[0]),
-                                  'rise_lose': len(rise_idx_int[1])
+                                  'rise_lose': len(rise_idx_int[1]),
+                                  'draw': 1 if trials_meta['winner'][trial_idx] == -1 else 0
                                   }
         # embed()
 
@@ -340,9 +354,6 @@ def main(data_folder=None):
         plt.savefig(os.path.join(os.path.join(os.path.split(__file__)[0], 'figures', f'{recording}.png')), dpi=300)
         plt.close()
 
-    embed()
-    quit()
-
     fig = plt.figure(figsize=(20/2.54, 20/2.54))
     gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.95, height_ratios=[1, 3], width_ratios=[3, 1])
     ax = fig.add_subplot(gs[1, 0])
@@ -380,7 +391,8 @@ def main(data_folder=None):
                 sex = 'm'
             trial_summary['sex_win'][(trial_summary['group'] == g) & (trial_summary['win_fish'] == f)] = sex
             trial_summary['sex_lose'][(trial_summary['group'] == g) & (trial_summary['lose_fish'] == f)] = sex
-
+    embed()
+    quit()
     pass
 
 if __name__ == '__main__':
