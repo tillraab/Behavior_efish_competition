@@ -212,6 +212,8 @@ class Trial(object):
         if not os.path.exists(os.path.join(self.base_path, self.folder, 'analysis')):
             os.mkdir(os.path.join(self.base_path, self.folder, 'analysis'))
 
+        np.save(os.path.join(self.base_path, self.folder, 'analysis', 'ids.npy'), self.ids[::saveorder])
+
         np.save(os.path.join(self.base_path, self.folder, 'analysis', 'fish_freq.npy'), self.fish_freq[::saveorder])
         np.save(os.path.join(self.base_path, self.folder, 'analysis', 'fish_freq_interp.npy'), self.fish_freq_interp[::saveorder])
 
