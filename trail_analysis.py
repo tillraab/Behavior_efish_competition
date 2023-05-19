@@ -38,6 +38,8 @@ class Trial(object):
         self.winner = None
         self.loser = None
 
+        self.mean_shelter_power = None
+
         if os.path.exists(os.path.join(self.base_path, self.folder, 'fund_v.npy')):
             self.load()
 
@@ -108,8 +110,8 @@ class Trial(object):
         for enu, id in enumerate(self.ids):
             shelter_power[enu] = self.fish_sign_interp[enu][day_idxs, -1]
 
-        mean_shelter_power = np.nanmean(shelter_power, axis=1)
-        self.winner = 1 if mean_shelter_power[1] > mean_shelter_power[0] else 0
+        self.mean_shelter_power = np.nanmean(shelter_power, axis=1)
+        self.winner = 1 if self.mean_shelter_power[1] > self.mean_shelter_power[0] else 0
         self.loser = 0 if self.winner == 1 else 1
 
     def rise_detection(self, rise_th):
@@ -187,7 +189,7 @@ class Trial(object):
 
         for enu, id in enumerate(self.ids):
             c = 'firebrick' if self.winner == enu else 'forestgreen'
-            ax.plot(self.times/3600, self.fish_freq[enu], marker='.', color=c, zorder=1)
+            ax.plot(self.times/3600, self.fish_freq[enu], marker='.', color=c, zorder=1, label=f'{self.mean_shelter_power[enu]:.2f}dB')
             ax.plot(self.times[np.isnan(self.fish_freq[enu])]/3600, self.fish_freq_interp[enu][np.isnan(self.fish_freq[enu])], '.', zorder=1, color=c, alpha=0.25)
             ax.plot(self.baseline_freq_times/3600, self.baseline_freqs[enu], '--', color='k', zorder=2)
             ax.plot(self.baseline_freq_times/3600, self.pct95_freqs[enu], '--', color='k', zorder=2)

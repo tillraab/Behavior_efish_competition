@@ -238,8 +238,11 @@ def main(data_folder=None):
         if ~np.all(meta_id_in_uid):
             continue
 
+        ids = np.load(os.path.join(trial_path, 'analysis', 'ids.npy'))
+        sorter = -1 if win_id != ids[0] else 1
+
         temp_t, temp = get_temperature(trial_path)
-        baseline_freqs = np.load(os.path.join(trial_path, 'analysis', 'baseline_freqs.npy'))
+        baseline_freqs = np.load(os.path.join(trial_path, 'analysis', 'baseline_freqs.npy'))[::sorter]
         baseline_freq_times = np.load(os.path.join(trial_path, 'analysis', 'baseline_freq_times.npy'))
         q10_comp_freq, q10_vals = frequency_q10_compensation(baseline_freqs, baseline_freq_times, temp, temp_t, light_start_sec=light_start_sec)
 
@@ -252,8 +255,10 @@ def main(data_folder=None):
             got_chirps = True
 
         chirp_times = [chirp_t[chirp_ids == win_id], chirp_t[chirp_ids == lose_id]]
-        rise_idx = np.load(os.path.join(trial_path, 'analysis', 'rise_idx.npy'))
+        rise_idx = np.load(os.path.join(trial_path, 'analysis', 'rise_idx.npy'))[::sorter]
         rise_idx_int = [np.array(rise_idx[i][~np.isnan(rise_idx[i])], dtype=int) for i in range(len(rise_idx))]
+
+
 
         #############################################################################################################
         ### physical behavior
@@ -361,9 +366,6 @@ def main(data_folder=None):
     plt.setp(ax_rises.get_xticklabels(), visible=False)
 
     plt.show()
-
-    embed()
-    quit()
 
 
     for g in pd.unique(trial_summary['group']):
