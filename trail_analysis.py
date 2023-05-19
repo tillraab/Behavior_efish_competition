@@ -205,6 +205,7 @@ class Trial(object):
 
             freq_range = (np.nanmin(self.fish_freq), np.nanmax(self.fish_freq))
             ax.set_ylim(freq_range[0] - 20, freq_range[1] + 10)
+        ax.legend(loc = 'upper right', bbox_to_anchor=(1, 1))
         ax.set_title(self.folder)
         plt.show()
 
