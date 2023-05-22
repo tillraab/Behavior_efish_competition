@@ -168,8 +168,10 @@ def main(data_folder=None):
     if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures')):
         os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures'))
 
-    trials_meta = pd.read_csv('order_meta.csv')
-    fish_meta = pd.read_csv('id_meta.csv')
+    # trials_meta = pd.read_csv('order_meta.csv')
+    trials_meta = pd.read_csv(os.path.join(data_folder, 'order_meta.csv'))
+    # fish_meta = pd.read_csv('id_meta.csv')
+    fish_meta = pd.read_csv(os.path.join(data_folder, 'id_meta.csv'))
     fish_meta['mean_w'] = np.nanmean(fish_meta.loc[:, ['w1', 'w2', 'w3']], axis=1)
     fish_meta['mean_l'] = np.nanmean(fish_meta.loc[:, ['l1', 'l2', 'l3']], axis=1)
 
@@ -354,29 +356,29 @@ def main(data_folder=None):
         plt.savefig(os.path.join(os.path.join(os.path.split(__file__)[0], 'figures', f'{recording}.png')), dpi=300)
         plt.close()
 
-    fig = plt.figure(figsize=(20/2.54, 20/2.54))
-    gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.95, height_ratios=[1, 3], width_ratios=[3, 1])
-    ax = fig.add_subplot(gs[1, 0])
-
-    ax.plot(trial_summary['rises_win'], trial_summary['chirps_win'], 'o', color=Wc, label='winner')
-    ax.plot(trial_summary['rise_lose'], trial_summary['chirps_lose'], 'o', color=Lc, label='loster')
-    ax.set_xlabel('rises [n]', fontsize=12)
-    ax.set_ylabel('chirps [n]', fontsize=12)
-    ax.tick_params(labelsize=10)
-
-    ax_chirps = fig.add_subplot(gs[1, 1], sharey=ax)
-    ax_chirps.boxplot([trial_summary['chirps_win'], trial_summary['chirps_lose']], widths = .5, positions = [1, 2])
-    ax_chirps.set_xticks([1, 2])
-    ax_chirps.set_xticklabels(['Win', 'Lose'])
-    plt.setp(ax_chirps.get_yticklabels(), visible=False)
-
-    ax_rises = fig.add_subplot(gs[0, 0], sharex=ax)
-    ax_rises.boxplot([trial_summary['rises_win'], trial_summary['rise_lose']], widths = .5, positions = [1, 2], vert=False)
-    ax_rises.set_yticks([1, 2])
-    ax_rises.set_yticklabels(['Win', 'Lose'])
-    plt.setp(ax_rises.get_xticklabels(), visible=False)
-
-    plt.show()
+    # fig = plt.figure(figsize=(20/2.54, 20/2.54))
+    # gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.95, height_ratios=[1, 3], width_ratios=[3, 1])
+    # ax = fig.add_subplot(gs[1, 0])
+    #
+    # ax.plot(trial_summary['rises_win'], trial_summary['chirps_win'], 'o', color=Wc, label='winner')
+    # ax.plot(trial_summary['rise_lose'], trial_summary['chirps_lose'], 'o', color=Lc, label='loster')
+    # ax.set_xlabel('rises [n]', fontsize=12)
+    # ax.set_ylabel('chirps [n]', fontsize=12)
+    # ax.tick_params(labelsize=10)
+    #
+    # ax_chirps = fig.add_subplot(gs[1, 1], sharey=ax)
+    # ax_chirps.boxplot([trial_summary['chirps_win'], trial_summary['chirps_lose']], widths = .5, positions = [1, 2])
+    # ax_chirps.set_xticks([1, 2])
+    # ax_chirps.set_xticklabels(['Win', 'Lose'])
+    # plt.setp(ax_chirps.get_yticklabels(), visible=False)
+    #
+    # ax_rises = fig.add_subplot(gs[0, 0], sharex=ax)
+    # ax_rises.boxplot([trial_summary['rises_win'], trial_summary['rise_lose']], widths = .5, positions = [1, 2], vert=False)
+    # ax_rises.set_yticks([1, 2])
+    # ax_rises.set_yticklabels(['Win', 'Lose'])
+    # plt.setp(ax_rises.get_xticklabels(), visible=False)
+    #
+    # plt.show()
 
 
     for g in pd.unique(trial_summary['group']):
@@ -385,7 +387,7 @@ def main(data_folder=None):
         for f in fish_no:
             fish_EODf25 = np.concatenate((trial_summary['EODf_lose'][(trial_summary['group'] == g) & (trial_summary['lose_fish'] == f)],
                                           trial_summary['EODf_win'][(trial_summary['group'] == g) & (trial_summary['win_fish'] == f)]))
-            if np.median(fish_EODf25) < 740:
+            if np.nanmedian(fish_EODf25) < 740:
                 sex = 'f'
             else:
                 sex = 'm'
