@@ -181,7 +181,7 @@ def main(data_folder=None):
 
     trial_summary = pd.DataFrame(columns=['recording', 'group', 'win_fish', 'lose_fish', 'sex_win', 'sex_lose',
                                           'size_win', 'size_lose', 'EODf_win', 'EODf_lose', 'exp_win', 'exp_lose',
-                                          'chirps_win', 'chirps_lose', 'rises_win', 'rise_lose', 'draw'])
+                                          'chirps_win', 'chirps_lose', 'rises_win', 'rises_lose', 'draw'])
     trial_summary_row = {f'{s}':None for s in trial_summary.keys()}
 
     for trial_idx in tqdm(np.arange(len(trials_meta)), desc='Trials'):
@@ -299,7 +299,7 @@ def main(data_folder=None):
                                   'chirps_win': len(chirp_times[0]),
                                   'chirps_lose': len(chirp_times[1]),
                                   'rises_win': len(rise_idx_int[0]),
-                                  'rise_lose': len(rise_idx_int[1]),
+                                  'rises_lose': len(rise_idx_int[1]),
                                   'draw': 1 if trials_meta['winner'][trial_idx] == -1 else 0
                                   }
         # embed()
@@ -393,8 +393,7 @@ def main(data_folder=None):
                 sex = 'm'
             trial_summary['sex_win'][(trial_summary['group'] == g) & (trial_summary['win_fish'] == f)] = sex
             trial_summary['sex_lose'][(trial_summary['group'] == g) & (trial_summary['lose_fish'] == f)] = sex
-    embed()
-    quit()
+    trial_summary.to_csv('trial_summary.csv')
     pass
 
 if __name__ == '__main__':
