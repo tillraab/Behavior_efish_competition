@@ -129,7 +129,7 @@ def frequency_q10_compensation(baseline_freqs : np.ndarray,
                 # q10 with same values is useless
                 continue
             if baseline_freq_times[i] < light_start_sec or baseline_freq_times[j] < light_start_sec:
-                # too much frequency changes due to rises in first part of rec !!!
+            #     too much frequency changes due to rises in first part of rec !!!
                 continue
             # if np.abs(Ctemp[i] - Ctemp[j]) < 0.5:
             #     continue
@@ -387,7 +387,7 @@ def main(data_folder=None):
         for f in fish_no:
             fish_EODf25 = np.concatenate((trial_summary['EODf_lose'][(trial_summary['group'] == g) & (trial_summary['lose_fish'] == f)],
                                           trial_summary['EODf_win'][(trial_summary['group'] == g) & (trial_summary['win_fish'] == f)]))
-            if np.nanmedian(fish_EODf25) < 740:
+            if np.nanmedian(fish_EODf25) < 730:
                 sex = 'f'
             else:
                 sex = 'm'
