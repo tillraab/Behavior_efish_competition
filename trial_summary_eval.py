@@ -181,8 +181,10 @@ def plot_beh_conut_vs_experience(trial_summary, beh_key_win='chirps_win', beh_ke
     ax.set_xlabel('experience [trials]', fontsize=12)
     ax.set_ylabel(ylabel, fontsize=12)
     ax.tick_params(labelsize=10)
+
+
 def main():
-    beh_per_exp = []
+
     trial_summary = pd.read_csv('trial_summary.csv', index_col=0)
     chirp_notes = pd.read_csv('chirp_notes.csv', index_col=0)
     trial_summary = trial_summary[chirp_notes['good'] == 1]
