@@ -90,10 +90,10 @@ def kde(event_dt, max_dt = 60):
     for e in event_dt:
         conv_array += gauss(conv_t, e, kernal_w, kernal_h, norm=True)
 
-    plt.plot(conv_t, conv_array)
+    # plt.plot(conv_t, conv_array)
 
 
-def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 4):
+def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 4, norm_count = 1):
     def chunk_permutation(select_event_dt, conv_tt, n_chuck, max_jitter, kernal_w, kernal_h):
         # array.shape = (120, 100, 15486) = (len(conv_t), repetitions, len(event_dt))
         # event_dt_perm = cp.tile(event_dt, (len(conv_t), repetitions, 1))
@@ -105,6 +105,8 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
         # conv_t_perm = cp.tile(conv_tt, (1, repetitions, len(event_dt)))
 
         gauss_3d = cp.exp(-((conv_tt - event_dt_perm) / kernal_w) ** 2 / 2) * kernal_h
+        gauss_3d /= np.sum(gauss_3d, axis=0)
+
         kde_3d = cp.sum(gauss_3d, axis = 2).transpose()
 
         try:
@@ -122,7 +124,7 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
     kernal_w = 1
     kernal_h = 0.2
 
-    max_jitter = 5
+    max_jitter = 120
     select_event_dt = event_dt[np.abs(event_dt) <= max_dt + max_jitter*2]
 
     conv_t = cp.arange(-max_dt, max_dt, 1)
@@ -165,6 +167,7 @@ def main(base_path):
     trial_summary = pd.read_csv('trial_summary.csv', index_col=0)
 
     lose_chrips_centered_on_ag_off_t = []
+    norm_count = []
     for index, trial in tqdm(trial_summary.iterrows()):
         trial_path = os.path.join(base_path, trial['recording'])
 
@@ -196,14 +199,12 @@ def main(base_path):
         rise_times = [times[rise_idx_int[0]], times[rise_idx_int[1]]]
 
         lose_chrips_centered_on_ag_off_t.append(event_centered_times(ag_on_off_t_GRID[:, 1], chirp_times[1]))
+        norm_count.append(len(chirp_times[1]))
 
     kde(np.hstack(lose_chrips_centered_on_ag_off_t))
 
-    permulation_kde(np.hstack(lose_chrips_centered_on_ag_off_t))
+    permulation_kde(np.hstack(lose_chrips_centered_on_ag_off_t), norm_count=norm_count)
 
-
-    embed()
-    quit()
     pass
 
 if __name__ == '__main__':
