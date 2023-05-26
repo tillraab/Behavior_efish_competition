@@ -1,6 +1,8 @@
 import os
 import sys
 import argparse
+import time
+
 import numpy as np
 try:
     import cupy as cp
@@ -116,6 +118,7 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
 
     embed()
     quit()
+    t0 = time.time()
     kernal_w = 1
     kernal_h = 0.2
 
@@ -152,6 +155,7 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
     chunk_boot_KDE = chunk_permutation(select_event_dt, conv_tt, repetitions % chunk_size, max_jitter, kernal_w, kernal_h)
     chunk_collector.extend(chunk_boot_KDE)
 
+    print(f'bootstrap with {repetitions:.0f} repetitions took {time.time() - t0:.2f}s.')
 
 
 
