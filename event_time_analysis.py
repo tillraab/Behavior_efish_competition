@@ -64,8 +64,7 @@ def gauss(t, shift, sigma, size, norm = False):
         return res
 
 
-def event_centered_times(centered_event_times, surrounding_event_times, max_dt = 60):
-
+def event_centered_times(centered_event_times, surrounding_event_times, max_dt = np.inf):
 
     event_dt = []
     for Cevent_t in centered_event_times:
@@ -88,9 +87,9 @@ def kde(event_dt, max_dt = 60):
 
 
 def permulation_kde(event_dt, repetitions = 100, max_dt = 60):
-
     embed()
     quit()
+
     kernal_w = 1
     kernal_h = 0.2
 
