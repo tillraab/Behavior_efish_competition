@@ -215,6 +215,7 @@ def main(base_path):
         ax.plot(conv_t, boot_kde[i])
 
     ax.plot(conv_t, kde_array, color='k', lw=3)
+    plt.show()
     pass
 
 if __name__ == '__main__':
