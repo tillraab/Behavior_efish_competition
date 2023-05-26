@@ -105,9 +105,10 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
         # conv_t_perm = cp.tile(conv_tt, (1, repetitions, len(event_dt)))
 
         gauss_3d = cp.exp(-((conv_tt - event_dt_perm) / kernal_w) ** 2 / 2) * kernal_h
-        gauss_3d /= np.sum(gauss_3d, axis=0)
+        # gauss_3d /= np.sum(gauss_3d, axis=0)
 
         kde_3d = cp.sum(gauss_3d, axis = 2).transpose()
+
 
         try:
             kde_3d_numpy = cp.asnumpy(kde_3d)
