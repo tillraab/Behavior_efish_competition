@@ -91,7 +91,7 @@ def kde(event_dt, max_dt = 60):
     plt.plot(conv_t, conv_array)
 
 
-def permulation_kde(select_event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 1):
+def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 1):
     def chunk_permutation(select_event_dt, conv_tt, n_chuck, max_jitter, kernal_w, kernal_h):
         # array.shape = (120, 100, 15486) = (len(conv_t), repetitions, len(event_dt))
         # event_dt_perm = cp.tile(event_dt, (len(conv_t), repetitions, 1))
