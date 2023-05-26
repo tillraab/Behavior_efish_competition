@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 try:
-    import cupyy as cp
+    import cupy as cp
 except ImportError:
     import numpy as cp
 
@@ -122,7 +122,7 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
     kernal_w = 1
     kernal_h = 0.2
 
-    max_jitter = 30
+    max_jitter = 5
     select_event_dt = event_dt[np.abs(event_dt) <= max_dt + max_jitter*2]
 
     conv_t = cp.arange(-max_dt, max_dt, 1)
