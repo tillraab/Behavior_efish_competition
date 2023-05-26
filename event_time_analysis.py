@@ -91,6 +91,7 @@ def kde(event_dt, max_dt = 60):
         conv_array += gauss(conv_t, e, kernal_w, kernal_h, norm=True)
 
     # plt.plot(conv_t, conv_array)
+    return conv_array
 
 
 def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 4, norm_count = 1):
@@ -119,8 +120,6 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
             del event_dt_perm, gauss_3d
             return kde_3d
 
-    embed()
-    quit()
     t0 = time.time()
     kernal_w = 1
     kernal_h = 0.2
@@ -157,11 +156,16 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
         # del event_dt_perm, gauss_3d, kde_3d
     chunk_boot_KDE = chunk_permutation(select_event_dt, conv_tt, repetitions % chunk_size, max_jitter, kernal_w, kernal_h)
     chunk_collector.extend(chunk_boot_KDE)
-
+    chunk_collector = np.array(chunk_collector)
+    # ToDo: this works but is incorrect i think
+    chunk_collector /= np.sum(chunk_collector, axis=1).reshape(chunk_collector.shape[0], 1)
     print(f'bootstrap with {repetitions:.0f} repetitions took {time.time() - t0:.2f}s.')
 
-    embed()
-    quit()
+    # fig, ax = plt.subplots()
+    # for i in range(len(chunk_collector)):
+    #     ax.plot(cp.asnumpy(conv_t), chunk_collector[i])
+
+    return cp.asnumpy(conv_t), chunk_collector
 
 
 def main(base_path):
@@ -202,10 +206,15 @@ def main(base_path):
         lose_chrips_centered_on_ag_off_t.append(event_centered_times(ag_on_off_t_GRID[:, 1], chirp_times[1]))
         norm_count.append(len(chirp_times[1]))
 
-    kde(np.hstack(lose_chrips_centered_on_ag_off_t))
+    kde_array = kde(np.hstack(lose_chrips_centered_on_ag_off_t))
 
-    permulation_kde(np.hstack(lose_chrips_centered_on_ag_off_t), norm_count=norm_count)
+    conv_t, boot_kde = permulation_kde(np.hstack(lose_chrips_centered_on_ag_off_t), norm_count=norm_count)
 
+    fig, ax = plt.subplots()
+    for i in range(len(boot_kde)):
+        ax.plot(conv_t, boot_kde[i])
+
+    ax.plot(conv_t, kde_array, color='k', lw=3)
     pass
 
 if __name__ == '__main__':
