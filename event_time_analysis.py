@@ -96,8 +96,8 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
         # array.shape = (120, 100, 15486) = (len(conv_t), repetitions, len(event_dt))
         # event_dt_perm = cp.tile(event_dt, (len(conv_t), repetitions, 1))
         event_dt_perm = cp.tile(select_event_dt, (len(conv_tt), n_chuck, 1))
-        jitter = np.random.uniform(-max_jitter, max_jitter, size=(event_dt_perm.shape[1], event_dt_perm.shape[2]))
-        jitter = np.expand_dims(jitter, axis=0)
+        jitter = cp.random.uniform(-max_jitter, max_jitter, size=(event_dt_perm.shape[1], event_dt_perm.shape[2]))
+        jitter = cp.expand_dims(jitter, axis=0)
 
         event_dt_perm += jitter
         # conv_t_perm = cp.tile(conv_tt, (1, repetitions, len(event_dt)))
