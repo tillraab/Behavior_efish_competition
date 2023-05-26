@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 try:
-    import cupy as cp
+    import cupyy as cp
 except ImportError:
     import numpy as cp
 
