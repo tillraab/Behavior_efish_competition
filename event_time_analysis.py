@@ -128,8 +128,8 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
     chunk_size = int(np.floor(max_mem_use_GB / (select_event_dt.nbytes * conv_t.size / 1e9)))
     chunk_collector =[]
 
-    # for _ in range(repetitions // chunk_size):
-    for _ in range(3):
+    for _ in range(repetitions // chunk_size):
+    # for _ in range(3):
         chunk_boot_KDE = chunk_permutation(select_event_dt, conv_tt, chunk_size, max_jitter, kernal_w, kernal_h)
         chunk_collector.extend(chunk_boot_KDE)
         # # array.shape = (120, 100, 15486) = (len(conv_t), repetitions, len(event_dt))
