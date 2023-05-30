@@ -281,7 +281,9 @@ def main(base_path):
 
     embed()
     quit()
-    fig, ax = plt.subplots()
+    fig = plt.figure(figsize=(20/2.54, 12/2.54))
+    gs = gridspec.GridSpec(1, 1, left=0.1, bottom=0.1, right=0.95, top=0.95)
+    ax = fig.add_subplot(gs[0, 0])
     ax.fill_between(conv_t, perm_p1/np.sum(lose_chirp_count), perm_p99/np.sum(lose_chirp_count), color='cornflowerblue', alpha=.8)
     ax.plot(conv_t, perm_p50/np.sum(lose_chirp_count), color='dodgerblue', alpha=1, lw=3)
 
@@ -289,13 +291,23 @@ def main(base_path):
     ax.plot(conv_t, jk_p50/np.sum(lose_chirp_count)/jack_pct, color='firebrick', alpha=1, lw=3)
 
     ax_m = ax.twinx()
+    for enu, centered_events in enumerate(lose_chrips_centered_on_ag_off_t):
+        Cevents = centered_events[np.abs(centered_events) <= max_dt]
+        ax_m.plot(Cevents, np.ones(len(Cevents)) * enu, '|', markersize=8, color='k', alpha=.1)
+
+    ax_m.set_yticks([])
+    ax.set_xlabel('time [s]', fontsize=12)
+    ax.set_ylabel('event rate [Hz]', fontsize=12)
+    ax.set_xlim(-max_dt, max_dt)
+    ax.tick_params(labelsize=10)
+
     # for i in range(len(boot_kde)):
     #     ax.plot(conv_t, boot_kde[i] / np.sum(lose_chirp_count), color='tab:blue')
     #
     # for i in range(len(boot_kde)):
     #     ax.plot(conv_t, jk_kde[i] / np.sum(lose_chirp_count) / jack_pct, color='tab:red')
 
-    ax.plot(conv_t, kde_array/np.sum(lose_chirp_count), color='k', lw=3)
+    # ax.plot(conv_t, kde_array/np.sum(lose_chirp_count), color='k', lw=3)
     plt.show()
     pass
 
