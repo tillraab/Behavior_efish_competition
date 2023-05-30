@@ -80,21 +80,14 @@ def event_centered_times(centered_event_times, surrounding_event_times, max_dt =
 
     return np.array(event_dt)
 
-def kde(event_dt, max_dt = 60):
-    kernal_w = 1
-    kernal_h = 0.2
-
-    conv_t = np.arange(-max_dt, max_dt, 1)
+def kde(event_dt, conv_t, kernal_w = 1, kernal_h = 0.2):
     conv_array = np.zeros(len(conv_t))
-
     for e in event_dt:
-        conv_array += gauss(conv_t, e, kernal_w, kernal_h, norm=True)
-
-    # plt.plot(conv_t, conv_array)
+        conv_array += gauss(conv_t, e, kernal_w, kernal_h)
     return conv_array
 
 
-def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 4, norm_count = 1):
+def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 4, kernal_w = 1, kernal_h = 0.2):
     def chunk_permutation(select_event_dt, conv_tt, n_chuck, max_jitter, kernal_w, kernal_h):
         # array.shape = (120, 100, 15486) = (len(conv_t), repetitions, len(event_dt))
         # event_dt_perm = cp.tile(event_dt, (len(conv_t), repetitions, 1))
@@ -106,10 +99,8 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
         # conv_t_perm = cp.tile(conv_tt, (1, repetitions, len(event_dt)))
 
         gauss_3d = cp.exp(-((conv_tt - event_dt_perm) / kernal_w) ** 2 / 2) * kernal_h
-        # gauss_3d /= np.sum(gauss_3d, axis=0)
 
         kde_3d = cp.sum(gauss_3d, axis = 2).transpose()
-
 
         try:
             kde_3d_numpy = cp.asnumpy(kde_3d)
@@ -121,10 +112,8 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
             return kde_3d
 
     t0 = time.time()
-    kernal_w = 1
-    kernal_h = 0.2
 
-    max_jitter = 120
+    max_jitter = 2*max_dt
     select_event_dt = event_dt[np.abs(event_dt) <= max_dt + max_jitter*2]
 
     conv_t = cp.arange(-max_dt, max_dt, 1)
@@ -134,7 +123,6 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
     chunk_collector =[]
 
     for _ in range(repetitions // chunk_size):
-    # for _ in range(3):
         chunk_boot_KDE = chunk_permutation(select_event_dt, conv_tt, chunk_size, max_jitter, kernal_w, kernal_h)
         chunk_collector.extend(chunk_boot_KDE)
         # # array.shape = (120, 100, 15486) = (len(conv_t), repetitions, len(event_dt))
@@ -157,22 +145,93 @@ def permulation_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 
     chunk_boot_KDE = chunk_permutation(select_event_dt, conv_tt, repetitions % chunk_size, max_jitter, kernal_w, kernal_h)
     chunk_collector.extend(chunk_boot_KDE)
     chunk_collector = np.array(chunk_collector)
+
     # ToDo: this works but is incorrect i think
-    chunk_collector /= np.sum(chunk_collector, axis=1).reshape(chunk_collector.shape[0], 1)
+    # chunk_collector /= np.sum(chunk_collector, axis=1).reshape(chunk_collector.shape[0], 1)
     print(f'bootstrap with {repetitions:.0f} repetitions took {time.time() - t0:.2f}s.')
 
     # fig, ax = plt.subplots()
     # for i in range(len(chunk_collector)):
     #     ax.plot(cp.asnumpy(conv_t), chunk_collector[i])
 
-    return cp.asnumpy(conv_t), chunk_collector
+    return chunk_collector
 
+
+def jackknife_kde(event_dt, repetitions = 2000, max_dt = 60, max_mem_use_GB = 2, jack_pct = 0.9, kernal_w = 1, kernal_h = 0.2):
+    def chunk_jackknife(select_event_dt, conv_tt, n_chuck, jack_pct, kernal_w, kernal_h):
+        event_dt_rep = cp.tile(select_event_dt, (n_chuck, 1))
+        idx = cp.random.rand(*event_dt_rep.shape).argsort(1)[:, :int(event_dt_rep.shape[-1]*jack_pct)]
+        event_dt_jk = event_dt_rep[cp.arange(event_dt_rep.shape[0])[:, None], idx]
+        event_dt_jk_full = cp.tile(event_dt_jk, (len(conv_tt), 1, 1))
+
+        # event_dt_perm = cp.tile(select_event_dt, (len(conv_tt), n_chuck, 1))
+
+
+        # jitter = cp.random.uniform(-max_jitter, max_jitter, size=(event_dt_perm.shape[1], event_dt_perm.shape[2]))
+        # jitter = cp.expand_dims(jitter, axis=0)
+
+        # event_dt_perm += jitter
+        # conv_t_perm = cp.tile(conv_tt, (1, repetitions, len(event_dt)))
+
+        gauss_3d = cp.exp(-((conv_tt - event_dt_jk_full) / kernal_w) ** 2 / 2) * kernal_h
+
+        kde_3d = cp.sum(gauss_3d, axis = 2).transpose()
+
+        try:
+            kde_3d_numpy = cp.asnumpy(kde_3d)
+            del event_dt_rep, idx, event_dt_jk, event_dt_jk_full, gauss_3d, kde_3d
+            return kde_3d_numpy
+
+        except AttributeError:
+            del event_dt_rep, idx, event_dt_jk, event_dt_jk_full, gauss_3d
+            return kde_3d
+
+    t0 = time.time()
+
+    # max_jitter = 2*max_dt
+    select_event_dt = event_dt[np.abs(event_dt) <= max_dt * 2]
+
+    conv_t = cp.arange(-max_dt, max_dt, 1)
+    conv_tt = cp.reshape(conv_t, (len(conv_t), 1, 1))
+
+    chunk_size = int(np.floor(max_mem_use_GB / (select_event_dt.nbytes * jack_pct * conv_t.size / 1e9)))
+    chunk_collector =[]
+
+    for _ in range(repetitions // chunk_size):
+        chunk_jackknife_KDE = chunk_jackknife(select_event_dt, conv_tt, chunk_size, jack_pct, kernal_w, kernal_h)
+        chunk_collector.extend(chunk_jackknife_KDE)
+        del chunk_jackknife_KDE
+        # # array.shape = (120, 100, 15486) = (len(conv_t), repetitions, len(event_dt))
+        # # event_dt_perm = cp.tile(event_dt, (len(conv_t), repetitions, 1))
+        # event_dt_perm = cp.tile(event_dt, (len(conv_t), chunk_size, 1))
+        # jitter = np.random.uniform(-max_jitter, max_jitter, size=(event_dt_perm.shape[1], event_dt_perm.shape[2]))
+        # jitter = np.expand_dims(jitter, axis=0)
+        #
+        # event_dt_perm += jitter
+        # # conv_t_perm = cp.tile(conv_tt, (1, repetitions, len(event_dt)))
+        #
+        # gauss_3d = cp.exp(-((conv_tt - event_dt_perm) / kernal_w) ** 2 / 2) * kernal_h
+        # kde_3d = cp.sum(gauss_3d, axis = 2).transpose()
+        # try:
+        #     kde_3d_numpy = cp.asnumpy(kde_3d)
+        #     chunk_collector.extend(kde_3d_numpy)
+        # except AttributeError:
+        #     chunk_collector.extend(kde_3d)
+        # del event_dt_perm, gauss_3d, kde_3d
+    chunk_jackknife_KDE = chunk_jackknife(select_event_dt, conv_tt, repetitions % chunk_size, jack_pct, kernal_w, kernal_h)
+    chunk_collector.extend(chunk_jackknife_KDE)
+    del chunk_jackknife_KDE
+    chunk_collector = np.array(chunk_collector)
+
+    print(f'jackknife with {repetitions:.0f} repetitions took {time.time() - t0:.2f}s.')
+
+    return chunk_collector
 
 def main(base_path):
     trial_summary = pd.read_csv('trial_summary.csv', index_col=0)
 
     lose_chrips_centered_on_ag_off_t = []
-    norm_count = []
+    lose_chirp_count = []
     for index, trial in tqdm(trial_summary.iterrows()):
         trial_path = os.path.join(base_path, trial['recording'])
 
@@ -204,17 +263,39 @@ def main(base_path):
         rise_times = [times[rise_idx_int[0]], times[rise_idx_int[1]]]
 
         lose_chrips_centered_on_ag_off_t.append(event_centered_times(ag_on_off_t_GRID[:, 1], chirp_times[1]))
-        norm_count.append(len(chirp_times[1]))
+        lose_chirp_count.append(len(chirp_times[1]))
 
-    kde_array = kde(np.hstack(lose_chrips_centered_on_ag_off_t))
 
-    conv_t, boot_kde = permulation_kde(np.hstack(lose_chrips_centered_on_ag_off_t), norm_count=norm_count)
+    max_dt = 30
+    conv_t = np.arange(-max_dt, max_dt, 1)
 
+    kde_array = kde(np.hstack(lose_chrips_centered_on_ag_off_t), conv_t, kernal_w = 1, kernal_h = 1)
+
+    boot_kde = permulation_kde(np.hstack(lose_chrips_centered_on_ag_off_t), max_dt=max_dt, kernal_w=1, kernal_h=1)
+
+    jack_pct = 0.9
+    jk_kde = jackknife_kde(np.hstack(lose_chrips_centered_on_ag_off_t), max_dt=max_dt, jack_pct = jack_pct, kernal_w=1, kernal_h=1)
+
+    perm_p1, perm_p50, perm_p99 = np.percentile(boot_kde, (1, 50, 99), axis=0)
+    jk_p1, jk_p50, jk_p99 = np.percentile(jk_kde, (1, 50, 99), axis=0)
+
+    embed()
+    quit()
     fig, ax = plt.subplots()
-    for i in range(len(boot_kde)):
-        ax.plot(conv_t, boot_kde[i])
+    ax.fill_between(conv_t, perm_p1/np.sum(lose_chirp_count), perm_p99/np.sum(lose_chirp_count), color='cornflowerblue', alpha=.8)
+    ax.plot(conv_t, perm_p50/np.sum(lose_chirp_count), color='dodgerblue', alpha=1, lw=3)
 
-    ax.plot(conv_t, kde_array, color='k', lw=3)
+    ax.fill_between(conv_t, jk_p1/np.sum(lose_chirp_count)/jack_pct, jk_p99/np.sum(lose_chirp_count)/jack_pct, color='tab:red', alpha=.8)
+    ax.plot(conv_t, jk_p50/np.sum(lose_chirp_count)/jack_pct, color='firebrick', alpha=1, lw=3)
+
+    ax_m = ax.twinx()
+    # for i in range(len(boot_kde)):
+    #     ax.plot(conv_t, boot_kde[i] / np.sum(lose_chirp_count), color='tab:blue')
+    #
+    # for i in range(len(boot_kde)):
+    #     ax.plot(conv_t, jk_kde[i] / np.sum(lose_chirp_count) / jack_pct, color='tab:red')
+
+    ax.plot(conv_t, kde_array/np.sum(lose_chirp_count), color='k', lw=3)
     plt.show()
     pass
 
