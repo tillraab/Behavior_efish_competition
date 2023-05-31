@@ -236,18 +236,23 @@ def main(base_path):
     lose_chrips_centered_on_win_rises = []
     lose_chirp_count = []
 
+    win_chrips_centered_on_ag_off_t = []
+    win_chrips_centered_on_ag_on_t = []
+    win_chrips_centered_on_contact_t = []
+    win_chrips_centered_on_lose_rises = []
+    win_chirp_count = []
+
     lose_rises_centered_on_ag_off_t = []
     lose_rises_centered_on_ag_on_t = []
     lose_rises_centered_on_contact_t = []
     lose_rises_centered_on_win_chirps = []
     lose_rises_count = []
 
-
-
-    win_chrips_centered_on_ag_off_t = []
-    win_chrips_centered_on_ag_on_t = []
-    win_chrips_centered_on_contact_t = []
-    win_chirp_count = []
+    win_rises_centered_on_ag_off_t = []
+    win_rises_centered_on_ag_on_t = []
+    win_rises_centered_on_contact_t = []
+    win_rises_centered_on_lose_chirps = []
+    win_rises_count = []
 
     for index, trial in tqdm(trial_summary.iterrows()):
         trial_path = os.path.join(base_path, trial['recording'])
@@ -280,22 +285,31 @@ def main(base_path):
         rise_times = [times[rise_idx_int[0]], times[rise_idx_int[1]]]
 
         ### collect for correlations ####
+        # chirps
         lose_chrips_centered_on_ag_off_t.append(event_centered_times(ag_on_off_t_GRID[:, 1], chirp_times[1]))
         lose_chrips_centered_on_ag_on_t.append(event_centered_times(ag_on_off_t_GRID[:, 0], chirp_times[1]))
         lose_chrips_centered_on_contact_t.append(event_centered_times(contact_t_GRID, chirp_times[1]))
         lose_chrips_centered_on_win_rises.append(event_centered_times(rise_times[0], chirp_times[1]))
         lose_chirp_count.append(len(chirp_times[1]))
 
+        win_chrips_centered_on_ag_off_t.append(event_centered_times(ag_on_off_t_GRID[:, 1], chirp_times[0]))
+        win_chrips_centered_on_ag_on_t.append(event_centered_times(ag_on_off_t_GRID[:, 0], chirp_times[0]))
+        win_chrips_centered_on_contact_t.append(event_centered_times(contact_t_GRID, chirp_times[0]))
+        win_chrips_centered_on_lose_rises.append(event_centered_times(rise_times[1], chirp_times[0]))
+        win_chirp_count.append(len(chirp_times[0]))
+
+        # rises
         lose_rises_centered_on_ag_off_t.append(event_centered_times(ag_on_off_t_GRID[:, 1], rise_times[1]))
         lose_rises_centered_on_ag_on_t.append(event_centered_times(ag_on_off_t_GRID[:, 0], rise_times[1]))
         lose_rises_centered_on_contact_t.append(event_centered_times(contact_t_GRID, rise_times[1]))
         lose_rises_centered_on_win_chirps.append(event_centered_times(chirp_times[0], rise_times[1]))
         lose_rises_count.append(len(rise_times[1]))
 
-        win_chrips_centered_on_ag_off_t.append(event_centered_times(ag_on_off_t_GRID[:, 1], chirp_times[0]))
-        win_chrips_centered_on_ag_on_t.append(event_centered_times(ag_on_off_t_GRID[:, 0], chirp_times[0]))
-        win_chrips_centered_on_contact_t.append(event_centered_times(contact_t_GRID, chirp_times[0]))
-        win_chirp_count.append(len(chirp_times[0]))
+        win_rises_centered_on_ag_off_t.append(event_centered_times(ag_on_off_t_GRID[:, 1], rise_times[0]))
+        win_rises_centered_on_ag_on_t.append(event_centered_times(ag_on_off_t_GRID[:, 0], rise_times[0]))
+        win_rises_centered_on_contact_t.append(event_centered_times(contact_t_GRID, rise_times[0]))
+        win_rises_centered_on_lose_chirps.append(event_centered_times(chirp_times[1], rise_times[0]))
+        win_rises_count.append(len(rise_times[0]))
 
     # embed()
     # quit()
@@ -305,37 +319,26 @@ def main(base_path):
 
     conv_t = cp.arange(-max_dt, max_dt, conv_t_dt)
     # kde_array = kde(np.hstack(lose_chrips_centered_on_ag_off_t), conv_t, kernal_w = 1, kernal_h = 1)
-
-    # for centered_times, event_counts, title in \
-    #         zip([lose_chrips_centered_on_ag_off_t,
-    #              lose_chrips_centered_on_ag_on_t,
-    #              lose_chrips_centered_on_contact_t,
-    #              win_chrips_centered_on_ag_off_t,
-    #              win_chrips_centered_on_ag_on_t,
-    #              win_chrips_centered_on_contact_t,
-    #              lose_rises_centered_on_ag_on_t,
-    #              lose_chrips_centered_on_win_rises],
-    #
-    #             [lose_chirp_count,
-    #              lose_chirp_count,
-    #              lose_chirp_count,
-    #              win_chirp_count,
-    #              win_chirp_count,
-    #              win_chirp_count,
-    #              lose_rises_count,
-    #              lose_chirp_count],
-    #
-    #             [r'chirp$_{lose}$ on chase$_{off}$',
-    #              r'chirp$_{lose}$ on chase$_{on}$',
-    #              r'chirp$_{lose}$ on contact',
-    #              r'chirp$_{win}$ on chase$_{off}$',
-    #              r'chirp$_{win}$ on chase$_{on}$',
-    #              r'chirp$_{win}$ on contact',
-    #              r'rise$_{lose}$ on chase$_{on}$',
-    #              r'chirp$_{lose}$ on rise$_{win}$']):
     for centered_times, event_counts, title in \
             [[lose_chrips_centered_on_ag_off_t, lose_chirp_count, r'chirp$_{lose}$ on chase$_{off}$'],
-             [lose_chrips_centered_on_ag_on_t, lose_chirp_count, r'chirp$_{lose}$ on chase$_{on}$']]:
+             [lose_chrips_centered_on_ag_on_t, lose_chirp_count, r'chirp$_{lose}$ on chase$_{on}$'],
+             [lose_chrips_centered_on_contact_t, lose_chirp_count, r'chirp$_{lose}$ on contact'],
+             [lose_chrips_centered_on_win_rises, lose_chirp_count, r'chirp$_{lose}$ on rise$_{win}$'],
+
+             [win_chrips_centered_on_ag_off_t, win_chirp_count, r'chirp$_{win}$ on chase$_{off}$'],
+             [win_chrips_centered_on_ag_on_t, win_chirp_count, r'chirp$_{win}$ on chase$_{on}$'],
+             [win_chrips_centered_on_contact_t, win_chirp_count, r'chirp$_{win}$ on contact'],
+             [win_chrips_centered_on_lose_rises, win_chirp_count, r'chirp$_{win}$ on rise$_{lose}$'],
+
+             [lose_rises_centered_on_ag_off_t, lose_rises_count, r'rise$_{lose}$ on chase$_{off}$'],
+             [lose_rises_centered_on_ag_on_t, lose_rises_count, r'rise$_{lose}$ on chase$_{on}$'],
+             [lose_rises_centered_on_contact_t, lose_rises_count, r'rise$_{lose}$ on contact'],
+             [lose_rises_centered_on_win_chirps, lose_rises_count, r'rise$_{lose}$ on chirp$_{win}$'],
+
+             [win_rises_centered_on_ag_off_t, win_rises_count, r'rise$_{win}$ on chase$_{off}$'],
+             [win_rises_centered_on_ag_on_t, win_rises_count, r'rise$_{win}$ on chase$_{on}$'],
+             [win_rises_centered_on_contact_t, win_rises_count, r'rise$_{win}$ on contact'],
+             [win_rises_centered_on_lose_chirps, win_rises_count, r'rise$_{win}$ on chirp$_{lose}$']]:
 
         boot_kde = permulation_kde(np.hstack(centered_times), conv_t, kernal_w=1, kernal_h=1)
         jk_kde = jackknife_kde(np.hstack(centered_times), conv_t, jack_pct=jack_pct, kernal_w=1, kernal_h=1)
@@ -367,41 +370,12 @@ def main(base_path):
         ax.set_xlim(-max_dt, max_dt)
         ax.tick_params(labelsize=10)
 
-        plt.show()
+        if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures')):
+            os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures'))
+        save_str = title.replace('$', '').replace('{', '').replace('}', '').replace(' ', '_')
+        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{save_str}.png'), dpi=300)
+        plt.close()
 
-    ##################################
-    # boot_kde = permulation_kde(np.hstack(lose_chrips_centered_on_ag_off_t), conv_t, kernal_w=1, kernal_h=1)
-    # jk_kde = jackknife_kde(np.hstack(lose_chrips_centered_on_ag_off_t), conv_t, jack_pct = jack_pct, kernal_w=1, kernal_h=1)
-    #
-    # perm_p1, perm_p50, perm_p99 = np.percentile(boot_kde, (1, 50, 99), axis=0)
-    # jk_p1, jk_p50, jk_p99 = np.percentile(jk_kde, (1, 50, 99), axis=0)
-    #
-    # #################################################################################################################
-    #
-    # conv_t_numpy = cp.asnumpy(conv_t)
-    #
-    # fig = plt.figure(figsize=(20/2.54, 12/2.54))
-    # gs = gridspec.GridSpec(1, 1, left=0.1, bottom=0.1, right=0.95, top=0.95)
-    # ax = fig.add_subplot(gs[0, 0])
-    # ax.fill_between(conv_t_numpy, perm_p1/np.sum(lose_chirp_count), perm_p99/np.sum(lose_chirp_count), color='cornflowerblue', alpha=.8)
-    # ax.plot(conv_t_numpy, perm_p50/np.sum(lose_chirp_count), color='dodgerblue', alpha=1, lw=3)
-    #
-    # ax.fill_between(conv_t_numpy, jk_p1/np.sum(lose_chirp_count)/jack_pct, jk_p99/np.sum(lose_chirp_count)/jack_pct, color='tab:red', alpha=.8)
-    # ax.plot(conv_t_numpy, jk_p50/np.sum(lose_chirp_count)/jack_pct, color='firebrick', alpha=1, lw=3)
-    #
-    # ax_m = ax.twinx()
-    # for enu, centered_events in enumerate(lose_chrips_centered_on_ag_off_t):
-    #     Cevents = centered_events[np.abs(centered_events) <= max_dt]
-    #     ax_m.plot(Cevents, np.ones(len(Cevents)) * enu, '|', markersize=8, color='k', alpha=.1)
-    #
-    # ax_m.set_yticks([])
-    # ax.set_xlabel('time [s]', fontsize=12)
-    # ax.set_ylabel('event rate [Hz]', fontsize=12)
-    # ax.set_xlim(-max_dt, max_dt)
-    # ax.tick_params(labelsize=10)
-    #
-    # plt.show()
-    # pass
 
 if __name__ == '__main__':
     main(sys.argv[1])

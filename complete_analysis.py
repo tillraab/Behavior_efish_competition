@@ -356,7 +356,8 @@ def main(data_folder=None):
 
         fig.suptitle(f'{recording}')
 
-        plt.savefig(os.path.join(os.path.join(os.path.split(__file__)[0], 'figures', f'{recording}.png')), dpi=300)
+        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{recording}.png'), dpi=300)
+        # plt.savefig(os.path.join(os.path.join(os.path.split(__file__)[0], 'figures', f'{recording}.png')), dpi=300)
         plt.close()
 
     # fig = plt.figure(figsize=(20/2.54, 20/2.54))
