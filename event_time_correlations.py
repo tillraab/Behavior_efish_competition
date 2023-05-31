@@ -265,6 +265,8 @@ def main(base_path):
             continue
         if not os.path.exists(os.path.join(trial_path, 'LED_frames.npy')):
             continue
+        if trial['draw'] == 1:
+            continue
 
         ids = np.load(os.path.join(trial_path, 'analysis', 'ids.npy'))
         times = np.load(os.path.join(trial_path, 'times.npy'))
