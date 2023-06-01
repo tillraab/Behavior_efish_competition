@@ -73,6 +73,8 @@ def relative_rate_progression(all_event_t, title=''):
     snippet_starts = np.arange(0, stop_t, snippet_len)
     all_snippet_ratio = []
     for event_t in all_event_t:
+        if len(event_t) == 0:
+            continue
         expected_snippet_count = len(event_t[event_t <= stop_t]) / (stop_t / snippet_len)
 
         snippet_ratio = []
@@ -122,6 +124,7 @@ def main(base_path):
 
     all_contact_t = []
     all_ag_on_t = []
+    all_ag_off_t = []
 
     for index, trial in trial_summary.iterrows():
         print(index, len(trial_summary))
@@ -148,6 +151,11 @@ def main(base_path):
                 load_and_converete_boris_events(trial_path, trial['recording'], sr=20_000)
             all_contact_t.append(contact_t_GRID)
             all_ag_on_t.append(ag_on_off_t_GRID[:, 0])
+            all_ag_off_t.append(ag_on_off_t_GRID[:, 1])
+        else:
+            all_contact_t.append(np.array([]))
+            all_ag_on_t.append(np.array([]))
+            all_ag_off_t.append(np.array([]))
 
         ### communication
         if not os.path.exists(os.path.join(trial_path, 'chirp_times_cnn.npy')):
@@ -181,8 +189,72 @@ def main(base_path):
     relative_rate_progression(all_contact_t, title=r'contact')
     relative_rate_progression(all_ag_on_t, title=r'chasing')
 
+
+    all_chase_chirp_mask = []
+    all_chase_off_chirp_mask = []
+    all_contact_chirp_mask = []
+    all_chasing_t = []
+    all_chase_off_t = []
+    all_physical_t = []
+
+    for contact_t, ag_on_t, ag_off_t, chirp_times_lose in zip(all_contact_t, all_ag_on_t, all_ag_off_t, all_chirp_times_lose):
+        if len(contact_t) == 0:
+            continue
+
+        chase_chirp_mask = np.zeros_like(chirp_times_lose)
+        chase_off_chirp_mask = np.zeros_like(chirp_times_lose)
+        for chase_on_t, chase_off_t in zip(ag_on_t, ag_off_t):
+            chase_chirp_mask[(chirp_times_lose >= chase_on_t) & (chirp_times_lose < chase_off_t)] = 1
+            chase_off_chirp_mask[(chirp_times_lose >= chase_off_t-5) & (chirp_times_lose < chase_off_t+5)] = 1
+        all_chase_chirp_mask.append(chase_chirp_mask)
+        all_chase_off_chirp_mask.append(chase_off_chirp_mask)
+
+        chasing_t = np.sum(ag_off_t - ag_on_t)
+        all_chasing_t.append(chasing_t)
+        all_chase_off_t.append(len(ag_off_t) * 10)
+
+        contact_chirp_mask = np.zeros_like(chirp_times_lose)
+        for ct in contact_t:
+            contact_chirp_mask[(chirp_times_lose >= ct-5) & (chirp_times_lose < ct+5)] = 1
+        all_contact_chirp_mask.append(contact_chirp_mask)
+
+        all_physical_t.append(len(contact_t) * 10)
+
+    all_physical_t = np.array(all_physical_t)
+    all_chasing_t = np.array(all_chasing_t)
+    all_chase_off_t = np.array(all_chase_off_t)
+
+    physical_t_ratio = all_physical_t / (3*60*60)
+    chase_t_ratio = all_chasing_t / (3*60*60)
+    chase_off_t_ratio = all_chase_off_t / (3*60*60)
+
+    contact_chirp_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_contact_chirp_mask)))
+    chase_chirp_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_chase_chirp_mask)))
+    chase_off_chirp_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_chase_off_chirp_mask)))
+
+
+    fig = plt.figure(figsize=(20/2.54, 12/2.54))
+    gs = gridspec.GridSpec(1, 1, left=0.1, bottom=0.1, right=0.95, top=0.95)
+    ax = fig.add_subplot(gs[0, 0])
+
+    ax.boxplot([chase_chirp_ratio/chase_t_ratio,
+                contact_chirp_ratio/physical_t_ratio,
+                chase_off_chirp_ratio/chase_off_t_ratio], positions=np.arange(3), sym='')
+    ax.plot(np.arange(5)-1, np.ones(5), linestyle='dotted', lw=2, color='k')
+    ax.set_xlim(-0.5, 2.5)
+
+    ax.set_ylabel(r'rel. chrips$_{event}$ / rel. time$_{event}$', fontsize=12)
+    ax.set_xticks(np.arange(3))
+    ax.set_xticklabels(['chasing', 'contact', r'chase$_{off}$'])
+    ax.tick_params(labelsize=10)
+    plt.show()
+
+
+
     embed()
     quit()
+    # embed()
+    # quit()
     pass
 
 
