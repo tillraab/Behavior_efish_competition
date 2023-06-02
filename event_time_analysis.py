@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib.patches import Patch
 import pandas as pd
 from IPython import embed
 from event_time_correlations import load_and_converete_boris_events, kde, gauss
@@ -179,6 +180,9 @@ def main(base_path):
         win_sex.append(trial['sex_win'])
         lose_sex.append(trial['sex_lose'])
 
+    embed()
+    quit()
+
     iei_analysis(all_chirp_times_lose, all_chirp_times_win, all_rise_times_lose, all_rise_times_win, win_sex, lose_sex)
 
     relative_rate_progression(all_chirp_times_lose, title=r'chirp$_{lose}$')
@@ -191,34 +195,42 @@ def main(base_path):
 
 
     all_chase_chirp_mask = []
-    all_chase_off_chirp_mask = []
-    all_contact_chirp_mask = []
     all_chasing_t = []
+
+    all_chase_off_chirp_mask = []
     all_chase_off_t = []
+
+    all_contact_chirp_mask = []
     all_physical_t = []
+
+    time_tol = 2
 
     for contact_t, ag_on_t, ag_off_t, chirp_times_lose in zip(all_contact_t, all_ag_on_t, all_ag_off_t, all_chirp_times_lose):
         if len(contact_t) == 0:
             continue
 
+        # ToDo: the 5 seconds are a little dirty... sometimes 5s is longer than chasing dur
         chase_chirp_mask = np.zeros_like(chirp_times_lose)
         chase_off_chirp_mask = np.zeros_like(chirp_times_lose)
         for chase_on_t, chase_off_t in zip(ag_on_t, ag_off_t):
-            chase_chirp_mask[(chirp_times_lose >= chase_on_t) & (chirp_times_lose < chase_off_t)] = 1
-            chase_off_chirp_mask[(chirp_times_lose >= chase_off_t-5) & (chirp_times_lose < chase_off_t+5)] = 1
+            chase_chirp_mask[(chirp_times_lose >= chase_on_t) & (chirp_times_lose < chase_off_t-time_tol)] = 1
+            chase_off_chirp_mask[(chirp_times_lose >= chase_off_t-time_tol) & (chirp_times_lose < chase_off_t+time_tol)] = 1
         all_chase_chirp_mask.append(chase_chirp_mask)
         all_chase_off_chirp_mask.append(chase_off_chirp_mask)
 
-        chasing_t = np.sum(ag_off_t - ag_on_t)
+
+        chasing_dur = (ag_off_t - ag_on_t) - time_tol
+        chasing_dur[chasing_dur < 0] = 0
+        chasing_t = np.sum(chasing_dur)
         all_chasing_t.append(chasing_t)
-        all_chase_off_t.append(len(ag_off_t) * 10)
+        all_chase_off_t.append(len(ag_off_t) * time_tol*2)
 
         contact_chirp_mask = np.zeros_like(chirp_times_lose)
         for ct in contact_t:
-            contact_chirp_mask[(chirp_times_lose >= ct-5) & (chirp_times_lose < ct+5)] = 1
+            contact_chirp_mask[(chirp_times_lose >= ct-time_tol) & (chirp_times_lose < ct+time_tol)] = 1
         all_contact_chirp_mask.append(contact_chirp_mask)
 
-        all_physical_t.append(len(contact_t) * 10)
+        all_physical_t.append(len(contact_t) * time_tol*2)
 
     all_physical_t = np.array(all_physical_t)
     all_chasing_t = np.array(all_chasing_t)
@@ -247,6 +259,45 @@ def main(base_path):
     ax.set_xticks(np.arange(3))
     ax.set_xticklabels(['chasing', 'contact', r'chase$_{off}$'])
     ax.tick_params(labelsize=10)
+    plt.show()
+
+    flat_contact_chirp_mask = np.hstack(all_contact_chirp_mask)
+    flat_chase_chirp_mask = np.hstack(all_chase_chirp_mask)
+    flat_chase_off_chirp_mask = np.hstack(all_chase_off_chirp_mask)
+
+    flat_chase_chirp_mask[flat_contact_chirp_mask == 1] = 0
+    flat_chase_off_chirp_mask[flat_contact_chirp_mask == 1] = 0
+    flat_chase_chirp_mask[flat_chase_off_chirp_mask == 1] = 0
+
+    chirps_context_values = [np.sum(flat_contact_chirp_mask) / len(flat_contact_chirp_mask),
+                    np.sum(flat_chase_chirp_mask) / len(flat_chase_chirp_mask),
+                    np.sum(flat_chase_off_chirp_mask) / len(flat_chase_off_chirp_mask)]
+    chirps_context_values.append(1 - np.sum(chirps_context_values))
+
+    time_context_values = [np.sum(all_physical_t), np.sum(all_chasing_t), np.sum(all_chase_off_t)]
+    time_context_values.append(len(all_chasing_t) * 3*60*60 - np.sum(time_context_values))
+    time_context_values /= np.sum(time_context_values)
+
+
+    fig, ax = plt.subplots(figsize=(12/2.54,12/2.54))
+    size = 0.3
+    outer_colors = ['tab:red', 'tab:orange', 'tab:green', 'tab:grey']
+    ax.pie(chirps_context_values, radius=1, colors=outer_colors,
+           wedgeprops=dict(width=size, edgecolor='w'), startangle=90, center=(0, .5))
+    ax.pie(time_context_values, radius=1-size, colors=outer_colors,
+           wedgeprops=dict(width=size, edgecolor='w', alpha=.6), startangle=90, center=(0, .5))
+
+    ax.set_title(r'chirp$_{lose}$ context')
+    legend_elements = [Patch(facecolor='tab:red', edgecolor='w', label='%.1f' % (chirps_context_values[0] * 100) + '%'),
+                       Patch(facecolor='tab:orange', edgecolor='w', label='%.1f' % (chirps_context_values[1] * 100) + '%'),
+                       Patch(facecolor='tab:green', edgecolor='w', label='%.1f' % (chirps_context_values[2] * 100) + '%'),
+                       Patch(facecolor='tab:red', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[0] * 100) + '%'),
+                       Patch(facecolor='tab:orange', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[1] * 100) + '%'),
+                       Patch(facecolor='tab:green', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[2] * 100) + '%')]
+
+    # ax.text(-0.65, -1.4, 'chirps', fontsize=10, va='center', ha='center')
+    # ax.text(0.75, -1.4, 'time', fontsize=10, va='center', ha='center')
+    ax.legend(handles=legend_elements, loc='lower right', ncol=2, bbox_to_anchor=(1.1, -0.15), frameon=False, fontsize=9)
     plt.show()
 
 
