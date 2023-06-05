@@ -10,61 +10,101 @@ from event_time_correlations import load_and_converete_boris_events, kde, gauss
 
 female_color, male_color = '#e74c3c', '#3498db'
 
-def iei_analysis(all_chirp_times_lose, all_chirp_times_win, all_rise_times_lose, all_rise_times_win, win_sex, lose_sex):
-    ici_lose = []
-    ici_win = []
+def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
+    iei = []
+    for i in range(len(event_times)):
+        iei.append(np.diff(event_times[i]))
 
-    iri_lose = []
-    iri_win = []
+    fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
+    gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.9)
+    ax = []
+    ax.append(fig.add_subplot(gs[0, 0]))
+    ax.append(fig.add_subplot(gs[0, 1], sharey=ax[0], sharex=ax[0]))
+    ax.append(fig.add_subplot(gs[1, 0], sharey=ax[0], sharex=ax[0]))
+    ax.append(fig.add_subplot(gs[1, 1], sharey=ax[0], sharex=ax[0]))
 
-    for i in range(len(all_chirp_times_lose)):
-        ici_lose.append(np.diff(all_chirp_times_lose[i]))
-        ici_win.append(np.diff(all_chirp_times_win[i]))
-
-        iri_lose.append(np.diff(all_rise_times_lose[i]))
-        iri_win.append(np.diff(all_rise_times_win[i]))
-
-    for iei, kernal_w in zip([ici_lose, ici_win, iri_lose, iri_win],
-                             [1, 1, 5, 50]):
-
-        fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
-        gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.95)
-        ax = []
-        ax.append(fig.add_subplot(gs[0, 0]))
-        ax.append(fig.add_subplot(gs[0, 1], sharey=ax[0], sharex=ax[0]))
-        ax.append(fig.add_subplot(gs[1, 0], sharey=ax[0], sharex=ax[0]))
-        ax.append(fig.add_subplot(gs[1, 1], sharey=ax[0], sharex=ax[0]))
-
-        for i in range(len(iei)):
-            if win_sex[i] == 'm':
-                if lose_sex[i] == 'm':
-                    color, linestyle = male_color, '-'
-                    sp = 0
-                else:
-                    color, linestyle = male_color, '--'
-                    sp = 1
+    for i in range(len(iei)):
+        if win_sex[i] == 'm':
+            if lose_sex[i] == 'm':
+                color, linestyle = male_color, '-'
+                sp = 0
             else:
-                if lose_sex[i] == 'm':
-                    color, linestyle = female_color, '--'
-                    sp = 2
-                else:
-                    color, linestyle = female_color, '-'
-                    sp = 3
+                color, linestyle = male_color, '--'
+                sp = 1
+        else:
+            if lose_sex[i] == 'm':
+                color, linestyle = female_color, '--'
+                sp = 2
+            else:
+                color, linestyle = female_color, '-'
+                sp = 3
 
 
-            conv_y_chirp_lose = np.arange(0, np.percentile(np.hstack(iei), 90), .5)
-            kde_array = kde(iei[i], conv_y_chirp_lose, kernal_w=kernal_w, kernal_h=1)
+        conv_y = np.arange(0, np.percentile(np.hstack(iei), 80), .5)
+        kde_array = kde(iei[i], conv_y, kernal_w=kernal_w, kernal_h=1)
 
-            # kde_array /= np.sum(kde_array)
-            ax[sp].plot(conv_y_chirp_lose, kde_array, zorder=2, color=color, linestyle=linestyle, lw=2)
+        # kde_array /= np.sum(kde_array)
+        ax[sp].plot(conv_y, kde_array, zorder=2, color=color, linestyle=linestyle, lw=2)
 
-        plt.setp(ax[1].get_yticklabels(), visible=False)
-        plt.setp(ax[3].get_yticklabels(), visible=False)
+    ax[0].set_xlim(conv_y[0], conv_y[-1])
+    ax[0].set_ylabel('event rate [Hz]', fontsize=12)
+    ax[2].set_ylabel('event rate [Hz]', fontsize=12)
+    ax[2].set_xlabel('time [s]', fontsize=12)
+    ax[3].set_xlabel('time [s]', fontsize=12)
+    fig.suptitle(title, fontsize=12)
 
+    for a in ax:
+        a.tick_params(labelsize=10)
 
-        plt.setp(ax[0].get_xticklabels(), visible=False)
-        plt.setp(ax[1].get_xticklabels(), visible=False)
-        plt.show()
+    plt.setp(ax[1].get_yticklabels(), visible=False)
+    plt.setp(ax[3].get_yticklabels(), visible=False)
+
+    plt.setp(ax[0].get_xticklabels(), visible=False)
+    plt.setp(ax[1].get_xticklabels(), visible=False)
+
+    plt.show()
+
+    # for iei, kernal_w in zip([ici_lose, ici_win, iri_lose, iri_win],
+    #                          [1, 1, 5, 50]):
+    #
+    #     fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
+    #     gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.95)
+    #     ax = []
+    #     ax.append(fig.add_subplot(gs[0, 0]))
+    #     ax.append(fig.add_subplot(gs[0, 1], sharey=ax[0], sharex=ax[0]))
+    #     ax.append(fig.add_subplot(gs[1, 0], sharey=ax[0], sharex=ax[0]))
+    #     ax.append(fig.add_subplot(gs[1, 1], sharey=ax[0], sharex=ax[0]))
+    #
+    #     for i in range(len(iei)):
+    #         if win_sex[i] == 'm':
+    #             if lose_sex[i] == 'm':
+    #                 color, linestyle = male_color, '-'
+    #                 sp = 0
+    #             else:
+    #                 color, linestyle = male_color, '--'
+    #                 sp = 1
+    #         else:
+    #             if lose_sex[i] == 'm':
+    #                 color, linestyle = female_color, '--'
+    #                 sp = 2
+    #             else:
+    #                 color, linestyle = female_color, '-'
+    #                 sp = 3
+    #
+    #
+    #         conv_y = np.arange(0, np.percentile(np.hstack(iei), 90), .5)
+    #         kde_array = kde(iei[i], conv_y, kernal_w=kernal_w, kernal_h=1)
+    #
+    #         # kde_array /= np.sum(kde_array)
+    #         ax[sp].plot(conv_y, kde_array, zorder=2, color=color, linestyle=linestyle, lw=2)
+    #
+    #     plt.setp(ax[1].get_yticklabels(), visible=False)
+    #     plt.setp(ax[3].get_yticklabels(), visible=False)
+    #
+    #
+    #     plt.setp(ax[0].get_xticklabels(), visible=False)
+    #     plt.setp(ax[1].get_xticklabels(), visible=False)
+    #     plt.show()
 
 
 def relative_rate_progression(all_event_t, title=''):
@@ -180,120 +220,200 @@ def main(base_path):
         win_sex.append(trial['sex_win'])
         lose_sex.append(trial['sex_lose'])
 
-    embed()
-    quit()
-
-    iei_analysis(all_chirp_times_lose, all_chirp_times_win, all_rise_times_lose, all_rise_times_win, win_sex, lose_sex)
+    iei_analysis(all_chirp_times_lose, win_sex, lose_sex, kernal_w=1, title=r'chirps$_{lose}$')
+    iei_analysis(all_chirp_times_win,  win_sex, lose_sex, kernal_w=1, title=r'chirps$_{win}$')
+    iei_analysis(all_rise_times_lose, win_sex, lose_sex, kernal_w=5, title=r'rises$_{lose}$')
+    iei_analysis(all_rise_times_win, win_sex, lose_sex, kernal_w=50, title=r'rises$_{win}$')
 
     relative_rate_progression(all_chirp_times_lose, title=r'chirp$_{lose}$')
     relative_rate_progression(all_chirp_times_win, title=r'chirp$_{win}$')
-    relative_rate_progression(all_rise_times_lose, title=r'rise$_{lose}$')
-    relative_rate_progression(all_rise_times_win, title=r'rise$_{win}$')
+    relative_rate_progression(all_rise_times_lose, title=r'rises$_{lose}$')
+    relative_rate_progression(all_rise_times_win, title=r'rises$_{win}$')
 
     relative_rate_progression(all_contact_t, title=r'contact')
     relative_rate_progression(all_ag_on_t, title=r'chasing')
 
+    #####################################################################################################
+    # all_chase_chirp_mask = []
+    # all_chasing_t = []
+    #
+    # all_chase_off_chirp_mask = []
+    # all_chase_off_t = []
+    #
+    # all_contact_chirp_mask = []
+    # all_physical_t = []
 
-    all_chase_chirp_mask = []
-    all_chasing_t = []
+    all_pre_chase_event_mask = []
+    all_chase_event_mask = []
+    all_end_chase_event_mask = []
+    all_after_chase_event_mask = []
+    all_around_countact_event_mask = []
 
-    all_chase_off_chirp_mask = []
-    all_chase_off_t = []
-
-    all_contact_chirp_mask = []
-    all_physical_t = []
+    all_pre_chase_time = []
+    all_chase_time = []
+    all_end_chase_time = []
+    all_after_chase_time = []
+    all_around_countact_time = []
 
     time_tol = 2
 
     for contact_t, ag_on_t, ag_off_t, chirp_times_lose in zip(all_contact_t, all_ag_on_t, all_ag_off_t, all_chirp_times_lose):
-        if len(contact_t) == 0:
+        if len(ag_on_t) == 0:
             continue
 
-        # ToDo: the 5 seconds are a little dirty... sometimes 5s is longer than chasing dur
-        chase_chirp_mask = np.zeros_like(chirp_times_lose)
-        chase_off_chirp_mask = np.zeros_like(chirp_times_lose)
+        pre_chase_event_mask = np.zeros_like(chirp_times_lose)
+        chase_event_mask = np.zeros_like(chirp_times_lose)
+        end_chase_event_mask = np.zeros_like(chirp_times_lose)
+        after_chase_event_mask = np.zeros_like(chirp_times_lose)
+
+        # chase_chirp_mask = np.zeros_like(chirp_times_lose)
+        # chase_off_chirp_mask = np.zeros_like(chirp_times_lose)
         for chase_on_t, chase_off_t in zip(ag_on_t, ag_off_t):
-            chase_chirp_mask[(chirp_times_lose >= chase_on_t) & (chirp_times_lose < chase_off_t-time_tol)] = 1
-            chase_off_chirp_mask[(chirp_times_lose >= chase_off_t-time_tol) & (chirp_times_lose < chase_off_t+time_tol)] = 1
-        all_chase_chirp_mask.append(chase_chirp_mask)
-        all_chase_off_chirp_mask.append(chase_off_chirp_mask)
+            # chase_chirp_mask[(chirp_times_lose >= chase_on_t) & (chirp_times_lose < chase_off_t-time_tol)] = 1
+            # chase_off_chirp_mask[(chirp_times_lose >= chase_off_t-time_tol) & (chirp_times_lose < chase_off_t+time_tol)] = 1
 
+            pre_chase_event_mask[(chirp_times_lose >= chase_on_t - time_tol) & (chirp_times_lose < chase_on_t)] = 1
+            chase_event_mask[(chirp_times_lose >= chase_on_t) & (chirp_times_lose < chase_off_t - time_tol)] = 1
+            end_chase_event_mask[(chirp_times_lose >= chase_off_t - time_tol) & (chirp_times_lose < chase_off_t)] = 1
+            after_chase_event_mask[(chirp_times_lose >= chase_off_t) & (chirp_times_lose < chase_off_t + time_tol)] = 1
 
+        # all_chase_chirp_mask.append(chase_chirp_mask)
+        # all_chase_off_chirp_mask.append(chase_off_chirp_mask)
+
+        all_pre_chase_event_mask.append(pre_chase_event_mask)
+        all_chase_event_mask.append(chase_event_mask)
+        all_end_chase_event_mask.append(end_chase_event_mask)
+        all_after_chase_event_mask.append(after_chase_event_mask)
+
+        all_pre_chase_time.append(len(ag_on_t) * time_tol)
         chasing_dur = (ag_off_t - ag_on_t) - time_tol
-        chasing_dur[chasing_dur < 0] = 0
-        chasing_t = np.sum(chasing_dur)
-        all_chasing_t.append(chasing_t)
-        all_chase_off_t.append(len(ag_off_t) * time_tol*2)
+        chasing_dur[chasing_dur < 0 ] = 0
+        all_chase_time.append(np.sum(chasing_dur))
+        all_end_chase_time.append(len(ag_on_t) * time_tol)
+        all_after_chase_time.append(len(ag_on_t) * time_tol)
 
-        contact_chirp_mask = np.zeros_like(chirp_times_lose)
+        # chasing_dur = (ag_off_t - ag_on_t) - time_tol
+        # chasing_dur[chasing_dur < 0] = 0
+        # chasing_t = np.sum(chasing_dur)
+        # all_chasing_t.append(chasing_t)
+        # all_chase_off_t.append(len(ag_off_t) * time_tol*2)
+
+        # contact_chirp_mask = np.zeros_like(chirp_times_lose)
+        around_countact_event_mask = np.zeros_like(chirp_times_lose)
         for ct in contact_t:
-            contact_chirp_mask[(chirp_times_lose >= ct-time_tol) & (chirp_times_lose < ct+time_tol)] = 1
-        all_contact_chirp_mask.append(contact_chirp_mask)
+            around_countact_event_mask[(chirp_times_lose >= ct-time_tol) & (chirp_times_lose < ct+time_tol)] = 1
+        all_around_countact_event_mask.append(around_countact_event_mask)
+        all_around_countact_time.append(len(contact_t) * time_tol*2)
 
-        all_physical_t.append(len(contact_t) * time_tol*2)
+        # all_physical_t.append(len(contact_t) * time_tol*2)
 
-    all_physical_t = np.array(all_physical_t)
-    all_chasing_t = np.array(all_chasing_t)
-    all_chase_off_t = np.array(all_chase_off_t)
+    all_pre_chase_time = np.array(all_pre_chase_time)
+    all_chase_time = np.array(all_chase_time)
+    all_end_chase_time = np.array(all_end_chase_time)
+    all_after_chase_time = np.array(all_after_chase_time)
+    all_around_countact_time = np.array(all_around_countact_time)
 
-    physical_t_ratio = all_physical_t / (3*60*60)
-    chase_t_ratio = all_chasing_t / (3*60*60)
-    chase_off_t_ratio = all_chase_off_t / (3*60*60)
+    all_pre_chase_time_ratio = all_pre_chase_time / (3*60*60)
+    all_chase_time_ratio = all_chase_time / (3*60*60)
+    all_end_chase_time_ratio = all_end_chase_time / (3*60*60)
+    all_after_chase_time_ratio = all_after_chase_time / (3*60*60)
+    all_around_countact_time_ratio = all_around_countact_time / (3*60*60)
 
-    contact_chirp_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_contact_chirp_mask)))
-    chase_chirp_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_chase_chirp_mask)))
-    chase_off_chirp_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_chase_off_chirp_mask)))
+    all_pre_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_pre_chase_event_mask)))
+    all_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_chase_event_mask)))
+    all_end_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_end_chase_event_mask)))
+    all_after_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_after_chase_event_mask)))
+    all_around_countact_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_around_countact_event_mask)))
 
+    # all_physical_t = np.array(all_physical_t)
+    # all_chasing_t = np.array(all_chasing_t)
+    # all_chase_off_t = np.array(all_chase_off_t)
+
+    # physical_t_ratio = all_physical_t / (3*60*60)
+    # chase_t_ratio = all_chasing_t / (3*60*60)
+    # chase_off_t_ratio = all_chase_off_t / (3*60*60)
+
+    # contact_chirp_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_contact_chirp_mask)))
+    # chase_chirp_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_chase_chirp_mask)))
+    # chase_off_chirp_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_chase_off_chirp_mask)))
+
+    ###########################################################################################################
 
     fig = plt.figure(figsize=(20/2.54, 12/2.54))
     gs = gridspec.GridSpec(1, 1, left=0.1, bottom=0.1, right=0.95, top=0.95)
     ax = fig.add_subplot(gs[0, 0])
 
-    ax.boxplot([chase_chirp_ratio/chase_t_ratio,
-                contact_chirp_ratio/physical_t_ratio,
-                chase_off_chirp_ratio/chase_off_t_ratio], positions=np.arange(3), sym='')
-    ax.plot(np.arange(5)-1, np.ones(5), linestyle='dotted', lw=2, color='k')
-    ax.set_xlim(-0.5, 2.5)
+    # ax.boxplot([chase_chirp_ratio/chase_t_ratio,
+    #             contact_chirp_ratio/physical_t_ratio,
+    #             chase_off_chirp_ratio/chase_off_t_ratio], positions=np.arange(3), sym='')
+    ax.boxplot([all_pre_chase_event_ratio/all_pre_chase_time_ratio,
+                all_chase_event_ratio/all_chase_time_ratio,
+                all_end_chase_event_ratio/all_end_chase_time_ratio,
+                all_after_chase_event_ratio/all_after_chase_time_ratio,
+                all_around_countact_event_ratio/all_around_countact_time_ratio], positions=np.arange(5), sym='')
+    ax.plot(np.arange(7)-1, np.ones(7), linestyle='dotted', lw=2, color='k')
+    ax.set_xlim(-0.5, 4.5)
 
     ax.set_ylabel(r'rel. chrips$_{event}$ / rel. time$_{event}$', fontsize=12)
-    ax.set_xticks(np.arange(3))
-    ax.set_xticklabels(['chasing', 'contact', r'chase$_{off}$'])
+    ax.set_xticks(np.arange(5))
+    ax.set_xticklabels([r'chase$_{before}$', r'chasing', r'chase$_{end}$', r'chase$_{after}$', 'contact'])
     ax.tick_params(labelsize=10)
     plt.show()
 
-    flat_contact_chirp_mask = np.hstack(all_contact_chirp_mask)
-    flat_chase_chirp_mask = np.hstack(all_chase_chirp_mask)
-    flat_chase_off_chirp_mask = np.hstack(all_chase_off_chirp_mask)
+    ###############################################
+    flat_pre_chase_event_mask = np.hstack(all_pre_chase_event_mask)
+    flat_chase_event_mask = np.hstack(all_chase_event_mask)
+    flat_end_chase_event_mask = np.hstack(all_end_chase_event_mask)
+    flat_after_chase_event_mask = np.hstack(all_after_chase_event_mask)
+    flat_around_countact_event_mask = np.hstack(all_around_countact_event_mask)
 
-    flat_chase_chirp_mask[flat_contact_chirp_mask == 1] = 0
-    flat_chase_off_chirp_mask[flat_contact_chirp_mask == 1] = 0
-    flat_chase_chirp_mask[flat_chase_off_chirp_mask == 1] = 0
+    flat_pre_chase_event_mask[flat_around_countact_event_mask == 1] = 0
+    flat_chase_event_mask[flat_around_countact_event_mask == 1] = 0
+    flat_end_chase_event_mask[flat_around_countact_event_mask == 1] = 0
+    flat_after_chase_event_mask[flat_around_countact_event_mask == 1] = 0
 
-    chirps_context_values = [np.sum(flat_contact_chirp_mask) / len(flat_contact_chirp_mask),
-                    np.sum(flat_chase_chirp_mask) / len(flat_chase_chirp_mask),
-                    np.sum(flat_chase_off_chirp_mask) / len(flat_chase_off_chirp_mask)]
-    chirps_context_values.append(1 - np.sum(chirps_context_values))
+    # flat_contact_chirp_mask = np.hstack(all_contact_chirp_mask)
+    # flat_chase_chirp_mask = np.hstack(all_chase_chirp_mask)
+    # flat_chase_off_chirp_mask = np.hstack(all_chase_off_chirp_mask)
 
-    time_context_values = [np.sum(all_physical_t), np.sum(all_chasing_t), np.sum(all_chase_off_t)]
-    time_context_values.append(len(all_chasing_t) * 3*60*60 - np.sum(time_context_values))
+    # flat_chase_chirp_mask[flat_contact_chirp_mask == 1] = 0
+    # flat_chase_off_chirp_mask[flat_contact_chirp_mask == 1] = 0
+    # flat_chase_chirp_mask[flat_chase_off_chirp_mask == 1] = 0
+
+    event_context_values = [np.sum(flat_pre_chase_event_mask) / len(flat_pre_chase_event_mask),
+                            np.sum(flat_chase_event_mask) / len(flat_chase_event_mask),
+                            np.sum(flat_end_chase_event_mask) / len(flat_end_chase_event_mask),
+                            np.sum(flat_after_chase_event_mask) / len(flat_after_chase_event_mask),
+                            np.sum(flat_around_countact_event_mask) / len(flat_around_countact_event_mask)]
+
+    event_context_values.append(1 - np.sum(event_context_values))
+
+    time_context_values = [np.sum(all_pre_chase_time), np.sum(all_chase_time), np.sum(all_end_chase_time),
+                           np.sum(all_after_chase_time), np.sum(all_around_countact_time)]
+
+    time_context_values.append(len(all_pre_chase_time) * 3*60*60 - np.sum(time_context_values))
     time_context_values /= np.sum(time_context_values)
 
 
     fig, ax = plt.subplots(figsize=(12/2.54,12/2.54))
     size = 0.3
-    outer_colors = ['tab:red', 'tab:orange', 'tab:green', 'tab:grey']
-    ax.pie(chirps_context_values, radius=1, colors=outer_colors,
+    outer_colors = ['tab:red', 'tab:orange', 'yellow', 'tab:green', 'k', 'tab:grey']
+    ax.pie(event_context_values, radius=1, colors=outer_colors,
            wedgeprops=dict(width=size, edgecolor='w'), startangle=90, center=(0, .5))
     ax.pie(time_context_values, radius=1-size, colors=outer_colors,
            wedgeprops=dict(width=size, edgecolor='w', alpha=.6), startangle=90, center=(0, .5))
 
-    ax.set_title(r'chirp$_{lose}$ context')
-    legend_elements = [Patch(facecolor='tab:red', edgecolor='w', label='%.1f' % (chirps_context_values[0] * 100) + '%'),
-                       Patch(facecolor='tab:orange', edgecolor='w', label='%.1f' % (chirps_context_values[1] * 100) + '%'),
-                       Patch(facecolor='tab:green', edgecolor='w', label='%.1f' % (chirps_context_values[2] * 100) + '%'),
+    ax.set_title(r'event context')
+    legend_elements = [Patch(facecolor='tab:red', edgecolor='w', label='%.1f' % (event_context_values[0] * 100) + '%'),
+                       Patch(facecolor='tab:orange', edgecolor='w', label='%.1f' % (event_context_values[1] * 100) + '%'),
+                       Patch(facecolor='yellow', edgecolor='w', label='%.1f' % (event_context_values[2] * 100) + '%'),
+                       Patch(facecolor='tab:green', edgecolor='w', label='%.1f' % (event_context_values[3] * 100) + '%'),
+                       Patch(facecolor='k', edgecolor='w', label='%.1f' % (event_context_values[4] * 100) + '%'),
                        Patch(facecolor='tab:red', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[0] * 100) + '%'),
                        Patch(facecolor='tab:orange', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[1] * 100) + '%'),
-                       Patch(facecolor='tab:green', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[2] * 100) + '%')]
+                       Patch(facecolor='yellow', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[2] * 100) + '%'),
+                       Patch(facecolor='tab:green', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[3] * 100) + '%'),
+                       Patch(facecolor='k', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[4] * 100) + '%')]
 
     # ax.text(-0.65, -1.4, 'chirps', fontsize=10, va='center', ha='center')
     # ax.text(0.75, -1.4, 'time', fontsize=10, va='center', ha='center')

@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 import time
+import itertools
 
 import numpy as np
 try:
@@ -14,6 +15,8 @@ import matplotlib.gridspec as gridspec
 import pandas as pd
 from IPython import embed
 from tqdm import tqdm
+
+female_color, male_color = '#e74c3c', '#3498db'
 
 
 def load_and_converete_boris_events(trial_path, recording, sr):
@@ -165,15 +168,6 @@ def jackknife_kde(event_dt, conv_t, repetitions = 2000, max_mem_use_GB = 2, jack
         event_dt_jk = event_dt_rep[cp.arange(event_dt_rep.shape[0])[:, None], idx]
         event_dt_jk_full = cp.tile(event_dt_jk, (len(conv_tt), 1, 1))
 
-        # event_dt_perm = cp.tile(select_event_dt, (len(conv_tt), n_chuck, 1))
-
-
-        # jitter = cp.random.uniform(-max_jitter, max_jitter, size=(event_dt_perm.shape[1], event_dt_perm.shape[2]))
-        # jitter = cp.expand_dims(jitter, axis=0)
-
-        # event_dt_perm += jitter
-        # conv_t_perm = cp.tile(conv_tt, (1, repetitions, len(event_dt)))
-
         gauss_3d = cp.exp(-((conv_tt - event_dt_jk_full) / kernal_w) ** 2 / 2) * kernal_h
 
         kde_3d = cp.sum(gauss_3d, axis = 2).transpose()
@@ -229,6 +223,20 @@ def jackknife_kde(event_dt, conv_t, repetitions = 2000, max_mem_use_GB = 2, jack
     return chunk_collector
 
 
+def single_kde(event_dt, conv_t, kernal_w = 1, kernal_h = 0.2):
+
+    single_kdes = cp.zeros((len(event_dt), len(conv_t)))
+    for enu, e_dt in enumerate(event_dt):
+        Ce_dt = e_dt[np.abs(e_dt) <= float(cp.max(conv_t)) * 2]
+        conv_tt = cp.reshape(conv_t, (len(conv_t), 1))
+        Ce_dt_tile = cp.tile(Ce_dt, (len(conv_tt), 1))
+
+        gauss_3d = cp.exp(-((conv_tt - Ce_dt_tile) / kernal_w) ** 2 / 2) * kernal_h
+        single_kdes[enu] = cp.sum(gauss_3d, axis=1)
+
+
+    return cp.asnumpy(single_kdes)
+
 def main(base_path):
     trial_summary = pd.read_csv('trial_summary.csv', index_col=0)
 
@@ -256,6 +264,9 @@ def main(base_path):
     win_rises_centered_on_lose_chirps = []
     win_rises_count = []
 
+    sex_win = []
+    sex_lose = []
+
     for index, trial in tqdm(trial_summary.iterrows()):
         trial_path = os.path.join(base_path, trial['recording'])
 
@@ -279,6 +290,7 @@ def main(base_path):
         ### communication
         if not os.path.exists(os.path.join(trial_path, 'chirp_times_cnn.npy')):
             continue
+
         chirp_t = np.load(os.path.join(trial_path, 'chirp_times_cnn.npy'))
         chirp_ids = np.load(os.path.join(trial_path, 'chirp_ids_cnn.npy'))
         chirp_times = [chirp_t[chirp_ids == trial['win_ID']], chirp_t[chirp_ids == trial['lose_ID']]]
@@ -315,13 +327,18 @@ def main(base_path):
         win_rises_centered_on_lose_chirps.append(event_centered_times(chirp_times[1], rise_times[0]))
         win_rises_count.append(len(rise_times[0]))
 
+        sex_win.append(trial['sex_win'])
+        sex_lose.append(trial['sex_lose'])
+    sex_win = np.array(sex_win)
+    sex_lose = np.array(sex_lose)
     # embed()
     # quit()
     max_dt = 30
     conv_t_dt = 0.5
     jack_pct = 0.9
 
-    conv_t = cp.arange(-max_dt, max_dt, conv_t_dt)
+    conv_t = cp.arange(-max_dt, max_dt+conv_t_dt, conv_t_dt)
+    conv_t_numpy = cp.asnumpy(conv_t)
     # kde_array = kde(np.hstack(lose_chrips_centered_on_ag_off_t), conv_t, kernal_w = 1, kernal_h = 1)
     for centered_times, event_counts, title in \
             [[lose_chrips_centered_on_ag_off_t, lose_chirp_count, r'chirp$_{lose}$ on chase$_{off}$'],
@@ -344,23 +361,96 @@ def main(base_path):
              [win_rises_centered_on_contact_t, win_rises_count, r'rise$_{win}$ on contact'],
              [win_rises_centered_on_lose_chirps, win_rises_count, r'rise$_{win}$ on chirp$_{lose}$']]:
 
+        if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures')):
+            os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures'))
+        save_str = title.replace('$', '').replace('{', '').replace('}', '').replace(' ', '_')
+
+        ###########################################################################################################
+        ### by pairing ###
+        centered_times_pairing = []
+        for sex_w, sex_l in itertools.product(['m', 'f'], repeat=2):
+            centered_times_pairing.append([])
+            for i in range(len(centered_times)):
+                if sex_w == sex_win[i] and sex_l == sex_lose[i]:
+                    centered_times_pairing[-1].append(centered_times[i])
+
+        event_counts_pairings = [np.sum(np.array(event_counts)[(sex_win == 'm') & (sex_lose == 'm')]),
+                                 np.sum(np.array(event_counts)[(sex_win == 'm') & (sex_lose == 'f')]),
+                                 np.sum(np.array(event_counts)[(sex_win == 'f') & (sex_lose == 'm')]),
+                                 np.sum(np.array(event_counts)[(sex_win == 'f') & (sex_lose == 'f')])]
+        color = [male_color, female_color, male_color, female_color]
+        linestyle = ['-', '--', '--', '-']
+
+        perm_p_pairings = []
+        jk_p_pairings = []
+        fig = plt.figure(figsize=(20/2.54, 12/2.54))
+        gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.9)
+        ax = []
+        ax.append(fig.add_subplot(gs[0, 0]))
+        ax.append(fig.add_subplot(gs[0, 1], sharey=ax[0]))
+        ax.append(fig.add_subplot(gs[1, 0], sharex=ax[0]))
+        ax.append(fig.add_subplot(gs[1, 1], sharey=ax[2], sharex=ax[1]))
+
+        for enu, (centered_times_p, event_count_p) in enumerate(zip(centered_times_pairing, event_counts_pairings)):
+            boot_kde = permutation_kde(np.hstack(centered_times_p), conv_t, kernal_w=1, kernal_h=1)
+            jk_kde = jackknife_kde(np.hstack(centered_times_p), conv_t, jack_pct=jack_pct, kernal_w=1, kernal_h=1)
+
+            perm_p1, perm_p50, perm_p99 = np.percentile(boot_kde, (1, 50, 99), axis=0)
+            perm_p_pairings.append([perm_p1, perm_p50, perm_p99])
+
+            jk_p1, jk_p50, jk_p99 = np.percentile(jk_kde, (1, 50, 99), axis=0)
+            jk_p_pairings.append([jk_p1, jk_p50, jk_p99])
+
+            ax[enu].fill_between(conv_t_numpy, perm_p1 / event_count_p, perm_p99 / event_count_p, color='cornflowerblue', alpha=.8)
+            ax[enu].plot(conv_t_numpy, perm_p50 / event_count_p, color='dodgerblue', alpha=1, lw=3)
+
+            ax[enu].fill_between(conv_t_numpy, jk_p1 / event_count_p / jack_pct, jk_p99 / event_count_p / jack_pct, color=color[enu], alpha=.8)
+            ax[enu].plot(conv_t_numpy, jk_p50 / event_count_p / jack_pct, color=color[enu], alpha=1, lw=3, linestyle=linestyle[enu])
+
+            ax_m = ax[enu].twinx()
+            for enu2, centered_events in enumerate(centered_times_p):
+                Cevents = centered_events[np.abs(centered_events) <= max_dt]
+                ax_m.plot(Cevents, np.ones(len(Cevents)) * enu2, '|', markersize=8, color='k', alpha=.1)
+
+            ax_m.set_yticks([])
+            ax[enu].set_xlim(-max_dt, max_dt)
+            ax[enu].tick_params(labelsize=10)
+
+        plt.setp(ax[1].get_yticklabels(), visible=False)
+        plt.setp(ax[3].get_yticklabels(), visible=False)
+
+        plt.setp(ax[0].get_xticklabels(), visible=False)
+        plt.setp(ax[1].get_xticklabels(), visible=False)
+
+        ax[2].set_xlabel('time [s]', fontsize=12)
+        ax[3].set_xlabel('time [s]', fontsize=12)
+        ax[0].set_ylabel('event rate [Hz]', fontsize=12)
+        ax[2].set_ylabel('event rate [Hz]', fontsize=12)
+        fig.suptitle(title)
+
+        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{save_str}_by_sexes.png'), dpi=300)
+        plt.close()
+
+        ###########################################################################################################
+        ### all pairings ###
         boot_kde = permutation_kde(np.hstack(centered_times), conv_t, kernal_w=1, kernal_h=1)
         jk_kde = jackknife_kde(np.hstack(centered_times), conv_t, jack_pct=jack_pct, kernal_w=1, kernal_h=1)
 
         perm_p1, perm_p50, perm_p99 = np.percentile(boot_kde, (1, 50, 99), axis=0)
         jk_p1, jk_p50, jk_p99 = np.percentile(jk_kde, (1, 50, 99), axis=0)
 
-
-        conv_t_numpy = cp.asnumpy(conv_t)
-
         fig = plt.figure(figsize=(20/2.54, 12/2.54))
         gs = gridspec.GridSpec(1, 1, left=0.1, bottom=0.1, right=0.95, top=0.95)
         ax = fig.add_subplot(gs[0, 0])
-        ax.fill_between(conv_t_numpy, perm_p1/np.sum(event_counts), perm_p99/np.sum(event_counts), color='cornflowerblue', alpha=.8)
-        ax.plot(conv_t_numpy, perm_p50/np.sum(event_counts), color='dodgerblue', alpha=1, lw=3)
+        # ax.fill_between(conv_t_numpy, perm_p1/np.sum(event_counts), perm_p99/np.sum(event_counts), color='cornflowerblue', alpha=.8)
+        # ax.plot(conv_t_numpy, perm_p50/np.sum(event_counts), color='dodgerblue', alpha=1, lw=3)
+        ax.fill_between(conv_t_numpy, perm_p1/len(np.hstack(centered_times)), perm_p99/len(np.hstack(centered_times)), color='cornflowerblue', alpha=.8)
+        ax.plot(conv_t_numpy, perm_p50/len(np.hstack(centered_times)), color='dodgerblue', alpha=1, lw=3)
 
-        ax.fill_between(conv_t_numpy, jk_p1/np.sum(event_counts)/jack_pct, jk_p99/np.sum(event_counts)/jack_pct, color='tab:red', alpha=.8)
-        ax.plot(conv_t_numpy, jk_p50/np.sum(event_counts)/jack_pct, color='firebrick', alpha=1, lw=3)
+        # ax.fill_between(conv_t_numpy, jk_p1/np.sum(event_counts)/jack_pct, jk_p99/np.sum(event_counts)/jack_pct, color='tab:red', alpha=.8)
+        # ax.plot(conv_t_numpy, jk_p50/np.sum(event_counts)/jack_pct, color='firebrick', alpha=1, lw=3)
+        ax.fill_between(conv_t_numpy, jk_p1/len(np.hstack(centered_times))/jack_pct, jk_p99/len(np.hstack(centered_times))/jack_pct, color='tab:red', alpha=.8)
+        ax.plot(conv_t_numpy, jk_p50/len(np.hstack(centered_times))/jack_pct, color='firebrick', alpha=1, lw=3)
 
         ax_m = ax.twinx()
         for enu, centered_events in enumerate(centered_times):
@@ -374,9 +464,6 @@ def main(base_path):
         ax.set_xlim(-max_dt, max_dt)
         ax.tick_params(labelsize=10)
 
-        if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures')):
-            os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures'))
-        save_str = title.replace('$', '').replace('{', '').replace('}', '').replace(' ', '_')
         plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{save_str}.png'), dpi=300)
         plt.close()
 
