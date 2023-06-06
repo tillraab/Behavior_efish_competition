@@ -1,3 +1,6 @@
+import sys
+import os
+import scipy.stats as scp
 import numpy as np
 import itertools
 import pandas as pd
@@ -183,23 +186,62 @@ def plot_beh_conut_vs_experience(trial_summary, beh_key_win='chirps_win', beh_ke
     ax.tick_params(labelsize=10)
 
 
-def main():
+def main(base_path):
 
-    trial_summary = pd.read_csv('trial_summary.csv', index_col=0)
-    chirp_notes = pd.read_csv('chirp_notes.csv', index_col=0)
+    trial_summary = pd.read_csv(os.path.join(base_path, 'trial_summary.csv'), index_col=0)
+    chirp_notes = pd.read_csv(os.path.join(base_path, 'chirp_notes.csv'), index_col=0)
     trial_summary = trial_summary[chirp_notes['good'] == 1]
 
+    if True:
+        print('')
+        rc = np.concatenate((trial_summary['rises_win'][(trial_summary["draw"] == 0)].to_numpy(),
+                             trial_summary['rises_lose'][(trial_summary["draw"] == 0)]))
+        cc = np.concatenate((trial_summary['chirps_win'][(trial_summary["draw"] == 0)].to_numpy(),
+                             trial_summary['chirps_lose'][(trial_summary["draw"] == 0)]))
+        r, p = scp.spearmanr(rc, cc)
+        print(f'Risescount - Chirpscount - all: Pearson-r={r:.2f} p={p:.3f}')
+
+        r, p = scp.spearmanr(trial_summary['rises_win'][(trial_summary["draw"] == 0)],
+                             trial_summary['chirps_win'][(trial_summary["draw"] == 0)])
+        print(f'Risescount - Chirpscount - win: Pearson-r={r:.2f} p={p:.3f}')
+
+        r, p = scp.spearmanr(trial_summary['rises_lose'][(trial_summary["draw"] == 0)],
+                             trial_summary['chirps_lose'][(trial_summary["draw"] == 0)])
+        print(f'Risescount - Chirpscount - lose: Pearson-r={r:.2f} p={p:.3f}')
     plot_rise_vs_chirp_count(trial_summary)
 
+    if True:
+        print('')
+        chirps_lose_female_win = trial_summary['chirps_lose'][(trial_summary['sex_win'] == 'f') & (trial_summary["draw"] == 0)]
+        chirps_lose_male_win = trial_summary['chirps_lose'][(trial_summary['sex_win'] == 'm') & (trial_summary["draw"] == 0)]
+
+        U, p = scp.mannwhitneyu(chirps_lose_female_win, chirps_lose_male_win)
+        print(f'Chirpscount - female win - male win: MW-U={U:.2f} p={p:.3f}')
+
+        chirps_lose_female_lose = trial_summary['chirps_lose'][(trial_summary['sex_lose'] == 'f') & (trial_summary["draw"] == 0)]
+        chirps_lose_male_lose = trial_summary['chirps_lose'][(trial_summary['sex_lose'] == 'm') & (trial_summary["draw"] == 0)]
+
+        U, p = scp.mannwhitneyu(chirps_lose_female_lose, chirps_lose_male_lose)
+        print(f'Chirpscount - female lose - male lose: MW-U={U:.2f} p={p:.3f}')
+        ###################################################################################
+        rises_lose_female_win = trial_summary['rises_lose'][(trial_summary['sex_win'] == 'f') & (trial_summary["draw"] == 0)]
+        rises_lose_male_win = trial_summary['rises_lose'][(trial_summary['sex_win'] == 'm') & (trial_summary["draw"] == 0)]
+
+        U, p = scp.mannwhitneyu(rises_lose_female_win, rises_lose_male_win)
+        print(f'Risescount - female win - male win: MW-U={U:.2f} p={p:.3f}')
+
+        rises_lose_female_lose = trial_summary['rises_lose'][(trial_summary['sex_lose'] == 'f') & (trial_summary["draw"] == 0)]
+        rises_lose_male_lose = trial_summary['rises_lose'][(trial_summary['sex_lose'] == 'm') & (trial_summary["draw"] == 0)]
+
+        U, p = scp.mannwhitneyu(rises_lose_female_lose, rises_lose_male_lose)
+        print(f'Risescount - female lose - male lose: MW-U={U:.2f} p={p:.3f}')
     plot_beh_count_per_pairing(trial_summary,
                                beh_key_win='chirps_win', beh_key_lose='chirps_lose',
                                ylabel='chirps [n]')
-    plot_beh_count_per_pairing(trial_summary,
+    plot_beh_count_per_pairing(trial_summary, 
                                beh_key_win='rises_win', beh_key_lose='rises_lose',
                                ylabel='rises [n]')
 
-
-
     plot_beh_count_vs_meta(trial_summary,
                            beh_key_win='chirps_win', beh_key_lose='chirps_lose',
                            meta_key_win="size_win", meta_key_lose='size_lose',
@@ -216,13 +258,63 @@ def main():
                            beh_key_win='rises_win', beh_key_lose='rises_lose',
                            meta_key_win="EODf_win", meta_key_lose='EODf_lose',
                            xlabel=u'$\Delta$EODf [Hz]')
+    if True:
+        ### chirp count vs. dSize ###
+        for key in ['chirps_lose', 'chirps_win', 'rises_win', 'rises_lose']:
+            print('')
+            lose_chirps_male_win = trial_summary[key][(trial_summary['sex_win'] == 'm') & (trial_summary["draw"] == 0)]
+            lose_size_male_win = trial_summary['size_lose'][(trial_summary['sex_win'] == 'm') & (trial_summary["draw"] == 0)]
+            win_size_male_win = trial_summary['size_win'][(trial_summary['sex_win'] == 'm') & (trial_summary["draw"] == 0)]
+
+            r, p = scp.pearsonr(lose_chirps_male_win, lose_size_male_win - win_size_male_win)
+            print(f'(Male win) {key} - dSize: Pearson-r={r:.2f} p={p:.3f}')
+
+            lose_chirps_female_win = trial_summary[key][(trial_summary['sex_win'] == 'f') & (trial_summary["draw"] == 0)]
+            lose_size_female_win = trial_summary['size_lose'][(trial_summary['sex_win'] == 'f') & (trial_summary["draw"] == 0)]
+            win_size_female_win = trial_summary['size_win'][(trial_summary['sex_win'] == 'f') & (trial_summary["draw"] == 0)]
+
+            r, p = scp.pearsonr(lose_chirps_female_win, lose_size_female_win - win_size_female_win)
+            print(f'(Female win) {key} - dSize: Pearson-r={r:.2f} p={p:.3f}')
+
+            lose_chirps_male_lose = trial_summary[key][(trial_summary['sex_lose'] == 'm') & (trial_summary["draw"] == 0)]
+            lose_size_male_lose = trial_summary['size_lose'][(trial_summary['sex_lose'] == 'm') & (trial_summary["draw"] == 0)]
+            win_size_male_lose = trial_summary['size_win'][(trial_summary['sex_lose'] == 'm') & (trial_summary["draw"] == 0)]
+
+            r, p = scp.pearsonr(lose_chirps_male_lose, lose_size_male_lose - win_size_male_lose)
+            print(f'(Male lose) {key} - dSize: Pearson-r={r:.2f} p={p:.3f}')
+
+            lose_chirps_female_lose = trial_summary[key][(trial_summary['sex_lose'] == 'f') & (trial_summary["draw"] == 0)]
+            lose_size_female_lose = trial_summary['size_lose'][(trial_summary['sex_lose'] == 'f') & (trial_summary["draw"] == 0)]
+            win_size_female_lose = trial_summary['size_win'][(trial_summary['sex_lose'] == 'f') & (trial_summary["draw"] == 0)]
+
+            r, p = scp.pearsonr(lose_chirps_female_lose, lose_size_female_lose - win_size_female_lose)
+            print(f'(Female lose) {key} - dSize: Pearson-r={r:.2f} p={p:.3f}')
+
+            all_lose_chrips = trial_summary[key][(trial_summary["draw"] == 0)]
+            all_lose_size = trial_summary['size_lose'][(trial_summary["draw"] == 0)]
+            all_win_size = trial_summary['size_win'][(trial_summary["draw"] == 0)]
+            r, p = scp.pearsonr(all_lose_chrips, all_lose_size - all_win_size)
+
+            print(f'(all) {key} - dSize: Pearson-r={r:.2f} p={p:.3f}')
 
     plot_beh_conut_vs_experience(trial_summary, beh_key_win='chirps_win', beh_key_lose='chirps_lose', ylabel='chirps [n]')
     plot_beh_conut_vs_experience(trial_summary, beh_key_win='rises_win', beh_key_lose='rises_lose', ylabel='rises [n]')
+
+    if True:
+        for key in ['chirps_lose', 'chirps_win', 'rises_lose', 'rises_win']:
+            print('')
+            lose_chirps = trial_summary[key][(trial_summary["draw"] == 0)]
+            lose_exp = trial_summary['exp_lose'][(trial_summary["draw"] == 0)]
+            win_exp = trial_summary['exp_win'][(trial_summary["draw"] == 0)]
+
+            r, p = scp.pearsonr(lose_chirps, lose_exp)
+            print(f'(all) {key} - lose exp: Pearson-r={r:.2f} p={p:.3f}')
+            r, p = scp.pearsonr(lose_chirps, win_exp)
+            print(f'(all) {key} - win exp: Pearson-r={r:.2f} p={p:.3f}')
 
     plt.show()
 
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1])
