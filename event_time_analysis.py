@@ -1,5 +1,6 @@
 import os
 import sys
+import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -48,8 +49,8 @@ def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
         ax[sp].plot(conv_y, kde_array, zorder=2, color=color, linestyle=linestyle, lw=2)
 
     ax[0].set_xlim(conv_y[0], conv_y[-1])
-    ax[0].set_ylabel('event rate [Hz]', fontsize=12)
-    ax[2].set_ylabel('event rate [Hz]', fontsize=12)
+    ax[0].set_ylabel('KDE', fontsize=12)
+    ax[2].set_ylabel('KDE', fontsize=12)
     ax[2].set_xlabel('time [s]', fontsize=12)
     ax[3].set_xlabel('time [s]', fontsize=12)
     fig.suptitle(title, fontsize=12)
@@ -63,7 +64,9 @@ def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
     plt.setp(ax[0].get_xticklabels(), visible=False)
     plt.setp(ax[1].get_xticklabels(), visible=False)
 
-    plt.show()
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{title}_iei.png'), dpi=300)
+    plt.close()
+    # plt.show()
 
     # for iei, kernal_w in zip([ici_lose, ici_win, iri_lose, iri_win],
     #                          [1, 1, 5, 50]):
@@ -151,18 +154,26 @@ def relative_rate_progression(all_event_t, title=''):
     ax.set_xlim(0, 3)
     ax.set_ylim(0, 5)
 
-    x = np.hstack(all_snippeqt_ratio)
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{title}_progression.png'), dpi=300)
+    plt.close()
+    # plt.show()
+
+    x = np.hstack(all_snippet_ratio)
     y = np.hstack(np.tile(snippet_starts, (all_snippet_ratio.shape[0], 1)))
 
     r, p = scp.pearsonr(x, y)
 
     print(f'{title}: pearson-r={r:.2f} p={p:.3f}')
 
-    plt.show()
+
+
 
 
 def main(base_path):
+    # ToDo: for chirp and rise analysis different datasets!!!
     trial_summary = pd.read_csv('trial_summary.csv', index_col=0)
+    chirp_notes = pd.read_csv(os.path.join(base_path, 'chirp_notes.csv'), index_col=0)
+    trial_summary = trial_summary[chirp_notes['good'] == 1]
 
     all_rise_times_lose = []
     all_rise_times_win = []
@@ -227,6 +238,9 @@ def main(base_path):
         win_sex.append(trial['sex_win'])
         lose_sex.append(trial['sex_lose'])
 
+    win_sex = np.array(win_sex)
+    lose_sex = np.array(lose_sex)
+
     iei_analysis(all_chirp_times_lose, win_sex, lose_sex, kernal_w=1, title=r'chirps$_{lose}$')
     iei_analysis(all_chirp_times_win,  win_sex, lose_sex, kernal_w=1, title=r'chirps$_{win}$')
     iei_analysis(all_rise_times_lose, win_sex, lose_sex, kernal_w=5, title=r'rises$_{lose}$')
@@ -244,140 +258,208 @@ def main(base_path):
 
     #############################################################################
 
-    all_pre_chase_event_mask = []
-    all_chase_event_mask = []
-    all_end_chase_event_mask = []
-    all_after_chase_event_mask = []
-    all_around_countact_event_mask = []
+    for all_event_t, event_name in zip([all_chirp_times_lose, all_chirp_times_win, all_rise_times_lose, all_rise_times_win],
+                                       [r'chirps$_{lose}$', r'chirps$_{win}$', r'rises$_{lose}$', r'rises$_{win}$']):
+        print('')
+        all_pre_chase_event_mask = []
+        all_chase_event_mask = []
+        all_end_chase_event_mask = []
+        all_after_chase_event_mask = []
+        all_around_countact_event_mask = []
 
-    all_pre_chase_time = []
-    all_chase_time = []
-    all_end_chase_time = []
-    all_after_chase_time = []
-    all_around_countact_time = []
+        all_pre_chase_time = []
+        all_chase_time = []
+        all_end_chase_time = []
+        all_after_chase_time = []
+        all_around_countact_time = []
 
-    time_tol = 2
+        video_trial_win_sex = []
+        video_trial_lose_sex = []
 
-    for contact_t, ag_on_t, ag_off_t, chirp_times_lose in zip(all_contact_t, all_ag_on_t, all_ag_off_t, all_chirp_times_lose):
-        if len(ag_on_t) == 0:
-            continue
+        time_tol = 5
 
-        pre_chase_event_mask = np.zeros_like(chirp_times_lose)
-        chase_event_mask = np.zeros_like(chirp_times_lose)
-        end_chase_event_mask = np.zeros_like(chirp_times_lose)
-        after_chase_event_mask = np.zeros_like(chirp_times_lose)
+        for enu, contact_t, ag_on_t, ag_off_t, event_times in zip(
+                np.arange(len(all_contact_t)), all_contact_t, all_ag_on_t, all_ag_off_t, all_event_t):
 
-        for chase_on_t, chase_off_t in zip(ag_on_t, ag_off_t):
-            pre_chase_event_mask[(chirp_times_lose >= chase_on_t - time_tol) & (chirp_times_lose < chase_on_t)] = 1
-            chase_event_mask[(chirp_times_lose >= chase_on_t) & (chirp_times_lose < chase_off_t - time_tol)] = 1
-            end_chase_event_mask[(chirp_times_lose >= chase_off_t - time_tol) & (chirp_times_lose < chase_off_t)] = 1
-            after_chase_event_mask[(chirp_times_lose >= chase_off_t) & (chirp_times_lose < chase_off_t + time_tol)] = 1
+            if len(ag_on_t) == 0:
+                continue
 
-        all_pre_chase_event_mask.append(pre_chase_event_mask)
-        all_chase_event_mask.append(chase_event_mask)
-        all_end_chase_event_mask.append(end_chase_event_mask)
-        all_after_chase_event_mask.append(after_chase_event_mask)
+            pre_chase_event_mask = np.zeros_like(event_times)
+            chase_event_mask = np.zeros_like(event_times)
+            end_chase_event_mask = np.zeros_like(event_times)
+            after_chase_event_mask = np.zeros_like(event_times)
 
-        all_pre_chase_time.append(len(ag_on_t) * time_tol)
-        chasing_dur = (ag_off_t - ag_on_t) - time_tol
-        chasing_dur[chasing_dur < 0 ] = 0
-        all_chase_time.append(np.sum(chasing_dur))
-        all_end_chase_time.append(len(ag_on_t) * time_tol)
-        all_after_chase_time.append(len(ag_on_t) * time_tol)
+            video_trial_win_sex.append(win_sex[enu])
+            video_trial_lose_sex.append(lose_sex[enu])
 
-        around_countact_event_mask = np.zeros_like(chirp_times_lose)
-        for ct in contact_t:
-            around_countact_event_mask[(chirp_times_lose >= ct-time_tol) & (chirp_times_lose < ct+time_tol)] = 1
-        all_around_countact_event_mask.append(around_countact_event_mask)
-        all_around_countact_time.append(len(contact_t) * time_tol*2)
+            for chase_on_t, chase_off_t in zip(ag_on_t, ag_off_t):
+                pre_chase_event_mask[(event_times >= chase_on_t - time_tol) & (event_times < chase_on_t)] = 1
+                chase_event_mask[(event_times >= chase_on_t) & (event_times < chase_off_t - time_tol)] = 1
+                end_chase_event_mask[(event_times >= chase_off_t - time_tol) & (event_times < chase_off_t)] = 1
+                after_chase_event_mask[(event_times >= chase_off_t) & (event_times < chase_off_t + time_tol)] = 1
 
-    all_pre_chase_time = np.array(all_pre_chase_time)
-    all_chase_time = np.array(all_chase_time)
-    all_end_chase_time = np.array(all_end_chase_time)
-    all_after_chase_time = np.array(all_after_chase_time)
-    all_around_countact_time = np.array(all_around_countact_time)
+            all_pre_chase_event_mask.append(pre_chase_event_mask)
+            all_chase_event_mask.append(chase_event_mask)
+            all_end_chase_event_mask.append(end_chase_event_mask)
+            all_after_chase_event_mask.append(after_chase_event_mask)
 
-    all_pre_chase_time_ratio = all_pre_chase_time / (3*60*60)
-    all_chase_time_ratio = all_chase_time / (3*60*60)
-    all_end_chase_time_ratio = all_end_chase_time / (3*60*60)
-    all_after_chase_time_ratio = all_after_chase_time / (3*60*60)
-    all_around_countact_time_ratio = all_around_countact_time / (3*60*60)
+            all_pre_chase_time.append(len(ag_on_t) * time_tol)
+            chasing_dur = (ag_off_t - ag_on_t) - time_tol
+            chasing_dur[chasing_dur < 0 ] = 0
+            all_chase_time.append(np.sum(chasing_dur))
+            all_end_chase_time.append(len(ag_on_t) * time_tol)
+            all_after_chase_time.append(len(ag_on_t) * time_tol)
 
-    all_pre_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_pre_chase_event_mask)))
-    all_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_chase_event_mask)))
-    all_end_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_end_chase_event_mask)))
-    all_after_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_after_chase_event_mask)))
-    all_around_countact_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_around_countact_event_mask)))
+            around_countact_event_mask = np.zeros_like(event_times)
+            for ct in contact_t:
+                around_countact_event_mask[(event_times >= ct-time_tol) & (event_times < ct+time_tol)] = 1
+            all_around_countact_event_mask.append(around_countact_event_mask)
+            all_around_countact_time.append(len(contact_t) * time_tol*2)
 
-    fig = plt.figure(figsize=(20/2.54, 12/2.54))
-    gs = gridspec.GridSpec(1, 1, left=0.1, bottom=0.1, right=0.95, top=0.95)
-    ax = fig.add_subplot(gs[0, 0])
+        all_pre_chase_time = np.array(all_pre_chase_time)
+        all_chase_time = np.array(all_chase_time)
+        all_end_chase_time = np.array(all_end_chase_time)
+        all_after_chase_time = np.array(all_after_chase_time)
+        all_around_countact_time = np.array(all_around_countact_time)
 
-    ax.boxplot([all_pre_chase_event_ratio/all_pre_chase_time_ratio,
-                all_chase_event_ratio/all_chase_time_ratio,
-                all_end_chase_event_ratio/all_end_chase_time_ratio,
-                all_after_chase_event_ratio/all_after_chase_time_ratio,
-                all_around_countact_event_ratio/all_around_countact_time_ratio], positions=np.arange(5), sym='')
-    ax.plot(np.arange(7)-1, np.ones(7), linestyle='dotted', lw=2, color='k')
-    ax.set_xlim(-0.5, 4.5)
+        video_trial_win_sex = np.array(video_trial_win_sex)
+        video_trial_lose_sex = np.array(video_trial_lose_sex)
 
-    ax.set_ylabel(r'rel. chrips$_{event}$ / rel. time$_{event}$', fontsize=12)
-    ax.set_xticks(np.arange(5))
-    ax.set_xticklabels([r'chase$_{before}$', r'chasing', r'chase$_{end}$', r'chase$_{after}$', 'contact'])
-    ax.tick_params(labelsize=10)
-    plt.show()
+        all_pre_chase_time_ratio = all_pre_chase_time / (3*60*60)
+        all_chase_time_ratio = all_chase_time / (3*60*60)
+        all_end_chase_time_ratio = all_end_chase_time / (3*60*60)
+        all_after_chase_time_ratio = all_after_chase_time / (3*60*60)
+        all_around_countact_time_ratio = all_around_countact_time / (3*60*60)
 
-    ###############################################
-    flat_pre_chase_event_mask = np.hstack(all_pre_chase_event_mask)
-    flat_chase_event_mask = np.hstack(all_chase_event_mask)
-    flat_end_chase_event_mask = np.hstack(all_end_chase_event_mask)
-    flat_after_chase_event_mask = np.hstack(all_after_chase_event_mask)
-    flat_around_countact_event_mask = np.hstack(all_around_countact_event_mask)
+        all_pre_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_pre_chase_event_mask)))
+        all_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_chase_event_mask)))
+        all_end_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_end_chase_event_mask)))
+        all_after_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_after_chase_event_mask)))
+        all_around_countact_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_around_countact_event_mask)))
 
-    flat_pre_chase_event_mask[flat_around_countact_event_mask == 1] = 0
-    flat_chase_event_mask[flat_around_countact_event_mask == 1] = 0
-    flat_end_chase_event_mask[flat_around_countact_event_mask == 1] = 0
-    flat_after_chase_event_mask[flat_around_countact_event_mask == 1] = 0
+        for x, y, name in [[all_pre_chase_event_ratio, all_pre_chase_time_ratio, 'pre chase'],
+                           [all_chase_event_ratio, all_chase_time_ratio, 'while chase'],
+                           [all_end_chase_event_ratio, all_end_chase_time_ratio, 'end chase'],
+                           [all_after_chase_event_ratio, all_after_chase_time_ratio, 'after chase'],
+                           [all_around_countact_event_ratio, all_around_countact_time_ratio, 'aroung contact']]:
+            t, p = scp.ttest_rel(x, y)
+            print(f'{event_name} {name}: t={t:.2f} p={p:.3f}')
 
-    event_context_values = [np.sum(flat_pre_chase_event_mask) / len(flat_pre_chase_event_mask),
-                            np.sum(flat_chase_event_mask) / len(flat_chase_event_mask),
-                            np.sum(flat_end_chase_event_mask) / len(flat_end_chase_event_mask),
-                            np.sum(flat_after_chase_event_mask) / len(flat_after_chase_event_mask),
-                            np.sum(flat_around_countact_event_mask) / len(flat_around_countact_event_mask)]
 
-    event_context_values.append(1 - np.sum(event_context_values))
+        fig = plt.figure(figsize=(20/2.54, 12/2.54))
+        gs = gridspec.GridSpec(1, 2, left=0.1, bottom=0.15, right=0.95, top=0.9)
+        ax = fig.add_subplot(gs[0, 0])
+        ax_pie = fig.add_subplot(gs[0, 1])
 
-    time_context_values = [np.sum(all_pre_chase_time), np.sum(all_chase_time), np.sum(all_end_chase_time),
-                           np.sum(all_after_chase_time), np.sum(all_around_countact_time)]
+        ax.boxplot([all_pre_chase_event_ratio/all_pre_chase_time_ratio,
+                    all_chase_event_ratio/all_chase_time_ratio,
+                    all_end_chase_event_ratio/all_end_chase_time_ratio,
+                    all_after_chase_event_ratio/all_after_chase_time_ratio,
+                    all_around_countact_event_ratio/all_around_countact_time_ratio], positions=np.arange(5), sym='', zorder=2)
 
-    time_context_values.append(len(all_pre_chase_time) * 3*60*60 - np.sum(time_context_values))
-    time_context_values /= np.sum(time_context_values)
+        ylim = list(ax.get_ylim())
+        ylim[0] = -.1 if ylim[0] < -.1 else ylim[0]
+        ylim[1] = 1.1 if ylim[1] < 1.1 else ylim[1]
+        ##############################################################################
+        for sex_w, sex_l in itertools.product(['m', 'f'], repeat=2):
+            mec = 'k' if sex_w == sex_l else 'None'
+            if 'lose' in event_name:
+                marker='o'
+                c = male_color if sex_l == 'm' else female_color
+            elif "win" in event_name:
+                marker='p'
+                c = male_color if sex_w == 'm' else female_color
+            else:
+                print('error')
+                embed()
+                quit()
+            values = np.array(all_pre_chase_event_ratio/all_pre_chase_time_ratio)[(video_trial_win_sex == sex_w) & (video_trial_lose_sex == sex_l)]
+            ax.plot(np.ones_like(values) * 0, values, marker=marker, linestyle='None', color=c, mec=mec, markersize=8, zorder=1)
 
-    fig, ax = plt.subplots(figsize=(12/2.54,12/2.54))
-    size = 0.3
-    outer_colors = ['tab:red', 'tab:orange', 'yellow', 'tab:green', 'k', 'tab:grey']
-    ax.pie(event_context_values, radius=1, colors=outer_colors,
-           wedgeprops=dict(width=size, edgecolor='w'), startangle=90, center=(0, .5))
-    ax.pie(time_context_values, radius=1-size, colors=outer_colors,
-           wedgeprops=dict(width=size, edgecolor='w', alpha=.6), startangle=90, center=(0, .5))
+            values = np.array(all_chase_event_ratio/all_chase_time_ratio)[(video_trial_win_sex == sex_w) & (video_trial_lose_sex == sex_l)]
+            ax.plot(np.ones_like(values) * 1, values, marker=marker, linestyle='None', color=c, mec=mec, markersize=8, zorder=1)
 
-    ax.set_title(r'event context')
-    legend_elements = [Patch(facecolor='tab:red', edgecolor='w', label='%.1f' % (event_context_values[0] * 100) + '%'),
-                       Patch(facecolor='tab:orange', edgecolor='w', label='%.1f' % (event_context_values[1] * 100) + '%'),
-                       Patch(facecolor='yellow', edgecolor='w', label='%.1f' % (event_context_values[2] * 100) + '%'),
-                       Patch(facecolor='tab:green', edgecolor='w', label='%.1f' % (event_context_values[3] * 100) + '%'),
-                       Patch(facecolor='k', edgecolor='w', label='%.1f' % (event_context_values[4] * 100) + '%'),
-                       Patch(facecolor='tab:red', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[0] * 100) + '%'),
-                       Patch(facecolor='tab:orange', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[1] * 100) + '%'),
-                       Patch(facecolor='yellow', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[2] * 100) + '%'),
-                       Patch(facecolor='tab:green', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[3] * 100) + '%'),
-                       Patch(facecolor='k', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[4] * 100) + '%')]
+            values = np.array(all_end_chase_event_ratio/all_end_chase_time_ratio)[(video_trial_win_sex == sex_w) & (video_trial_lose_sex == sex_l)]
+            ax.plot(np.ones_like(values) * 2, values, marker=marker, linestyle='None', color=c, mec=mec, markersize=8, zorder=1)
 
-    ax.legend(handles=legend_elements, loc='lower right', ncol=2, bbox_to_anchor=(1.1, -0.15), frameon=False, fontsize=9)
-    plt.show()
+            values = np.array(all_after_chase_event_ratio/all_after_chase_time_ratio)[(video_trial_win_sex == sex_w) & (video_trial_lose_sex == sex_l)]
+            ax.plot(np.ones_like(values) * 3, values, marker=marker, linestyle='None', color=c, mec=mec, markersize=8, zorder=1)
 
-    embed()
-    quit()
+            values = np.array(all_around_countact_event_ratio/all_around_countact_time_ratio)[(video_trial_win_sex == sex_w) & (video_trial_lose_sex == sex_l)]
+            ax.plot(np.ones_like(values) * 4, values, marker=marker, linestyle='None', color=c, mec=mec, markersize=8, zorder=1)
+
+        # ax.plot(np.ones_like(all_pre_chase_event_ratio) * 0, all_pre_chase_event_ratio/all_pre_chase_time_ratio, 'ok')
+        # ax.plot(np.ones_like(all_chase_event_ratio) * 1, all_chase_event_ratio/all_chase_time_ratio, 'ok')
+        # ax.plot(np.ones_like(all_end_chase_event_ratio) * 2, all_end_chase_event_ratio/all_end_chase_time_ratio, 'ok')
+        # ax.plot(np.ones_like(all_after_chase_event_ratio) * 3, all_after_chase_event_ratio/all_after_chase_time_ratio, 'ok')
+
+        # ax.plot(np.ones_like(all_around_countact_event_ratio) * 4, all_around_countact_event_ratio/all_around_countact_time_ratio, 'ok')
+        ##############################################################################
+
+        ax.plot(np.arange(7)-1, np.ones(7), linestyle='dotted', lw=2, color='k')
+        ax.set_xlim(-0.5, 4.5)
+        ax.set_ylim(ylim[0], ylim[1])
+
+        ax.set_ylabel(r'rel. count$_{event}$ / rel. time$_{event}$', fontsize=12)
+        ax.set_xticks(np.arange(5))
+        ax.set_xticklabels([r'chase$_{before}$', r'chasing', r'chase$_{end}$', r'chase$_{after}$', 'contact'], rotation=45)
+        ax.tick_params(labelsize=10)
+        # ax.set_title(event_name)
+        fig.suptitle(f'{event_name}: n={len(np.hstack(all_event_t))}')
+        # plt.show()
+
+        ###############################################
+        flat_pre_chase_event_mask = np.hstack(all_pre_chase_event_mask)
+        flat_chase_event_mask = np.hstack(all_chase_event_mask)
+        flat_end_chase_event_mask = np.hstack(all_end_chase_event_mask)
+        flat_after_chase_event_mask = np.hstack(all_after_chase_event_mask)
+        flat_around_countact_event_mask = np.hstack(all_around_countact_event_mask)
+
+        flat_pre_chase_event_mask[flat_around_countact_event_mask == 1] = 0
+        flat_chase_event_mask[flat_around_countact_event_mask == 1] = 0
+        flat_end_chase_event_mask[flat_around_countact_event_mask == 1] = 0
+        flat_after_chase_event_mask[flat_around_countact_event_mask == 1] = 0
+
+        event_context_values = [np.sum(flat_pre_chase_event_mask) / len(flat_pre_chase_event_mask),
+                                np.sum(flat_chase_event_mask) / len(flat_chase_event_mask),
+                                np.sum(flat_end_chase_event_mask) / len(flat_end_chase_event_mask),
+                                np.sum(flat_after_chase_event_mask) / len(flat_after_chase_event_mask),
+                                np.sum(flat_around_countact_event_mask) / len(flat_around_countact_event_mask)]
+
+        event_context_values.append(1 - np.sum(event_context_values))
+
+        time_context_values = [np.sum(all_pre_chase_time), np.sum(all_chase_time), np.sum(all_end_chase_time),
+                               np.sum(all_after_chase_time), np.sum(all_around_countact_time)]
+
+        time_context_values.append(len(all_pre_chase_time) * 3*60*60 - np.sum(time_context_values))
+        time_context_values /= np.sum(time_context_values)
+
+        # fig, ax = plt.subplots(figsize=(12/2.54,12/2.54))
+        size = 0.3
+        outer_colors = ['tab:red', 'tab:orange', 'yellow', 'tab:green', 'k', 'tab:grey']
+        ax_pie.pie(event_context_values, radius=1, colors=outer_colors,
+               wedgeprops=dict(width=size, edgecolor='w'), startangle=90, center=(0, 1))
+        ax_pie.pie(time_context_values, radius=1-size, colors=outer_colors,
+               wedgeprops=dict(width=size, edgecolor='w', alpha=.6), startangle=90, center=(0, 1))
+
+        ax_pie.set_title(r'event context')
+        legend_elements = [Patch(facecolor='tab:red', edgecolor='w', label='%.1f' % (event_context_values[0] * 100) + '%'),
+                           Patch(facecolor='tab:orange', edgecolor='w', label='%.1f' % (event_context_values[1] * 100) + '%'),
+                           Patch(facecolor='yellow', edgecolor='w', label='%.1f' % (event_context_values[2] * 100) + '%'),
+                           Patch(facecolor='tab:green', edgecolor='w', label='%.1f' % (event_context_values[3] * 100) + '%'),
+                           Patch(facecolor='k', edgecolor='w', label='%.1f' % (event_context_values[4] * 100) + '%'),
+                           Patch(facecolor='tab:red', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[0] * 100) + '%'),
+                           Patch(facecolor='tab:orange', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[1] * 100) + '%'),
+                           Patch(facecolor='yellow', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[2] * 100) + '%'),
+                           Patch(facecolor='tab:green', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[3] * 100) + '%'),
+                           Patch(facecolor='k', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[4] * 100) + '%')]
+
+        ax_pie.legend(handles=legend_elements, loc='lower right', ncol=2, bbox_to_anchor=(1.15, -0.25), frameon=False, fontsize=9)
+
+        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{event_name}_categories.png'), dpi=300)
+        plt.close()
+        # plt.show()
+
 
 
 if __name__ == '__main__':

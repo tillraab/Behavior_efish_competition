@@ -186,10 +186,13 @@ def jackknife_kde(event_dt, conv_t, repetitions = 2000, max_mem_use_GB = 2, jack
     # max_jitter = 2*max_dt
     select_event_dt = event_dt[np.abs(event_dt) <= float(cp.max(conv_t)) * 2]
 
+    if len(select_event_dt) == 0:
+        return np.zeros((repetitions, len(conv_t)))
+
     # conv_t = cp.arange(-max_dt, max_dt, 1)
     conv_tt = cp.reshape(conv_t, (len(conv_t), 1, 1))
-
     chunk_size = int(np.floor(max_mem_use_GB / (select_event_dt.nbytes * jack_pct * conv_t.size / 1e9)))
+
     chunk_collector =[]
 
     for _ in range(repetitions // chunk_size):
@@ -238,7 +241,10 @@ def single_kde(event_dt, conv_t, kernal_w = 1, kernal_h = 0.2):
     return cp.asnumpy(single_kdes)
 
 def main(base_path):
+    # ToDo: for chirp and rise analysis different datasets!!!
     trial_summary = pd.read_csv('trial_summary.csv', index_col=0)
+    chirp_notes = pd.read_csv(os.path.join(base_path, 'chirp_notes.csv'), index_col=0)
+    trial_summary = trial_summary[chirp_notes['good'] == 1]
 
     lose_chrips_centered_on_ag_off_t = []
     lose_chrips_centered_on_ag_on_t = []

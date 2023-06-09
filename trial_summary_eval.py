@@ -36,10 +36,13 @@ def plot_rise_vs_chirp_count(trial_summary):
     ax_rises.set_yticklabels(['Win', 'Lose'])
     plt.setp(ax_rises.get_xticklabels(), visible=False)
 
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'rise_vs_chirp_count.png'), dpi=300)
+    plt.close()
+
 
 def plot_beh_count_per_pairing(trial_summary,
                                beh_key_win=None, beh_key_lose=None,
-                               ylabel='y'):
+                               ylabel='y', save_str='random_plot_title'):
 
     mek = ['k', 'None', 'None', 'k']
     markersize = 12
@@ -73,11 +76,14 @@ def plot_beh_count_per_pairing(trial_summary,
     ax.set_ylabel(ylabel, fontsize=12)
     plt.tick_params(labelsize=10)
 
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{save_str}.png'), dpi=300)
+    plt.close()
+
 
 def plot_beh_count_vs_meta(trial_summary,
                            beh_key_win=None, beh_key_lose=None,
                            meta_key_win=None, meta_key_lose=None,
-                           xlabel='x'):
+                           xlabel='x', save_str='random_plot_title'):
     mek = ['k', 'None', 'None', 'k']
     markersize = 12
     win_colors = [male_color, male_color, female_color, female_color]
@@ -132,8 +138,12 @@ def plot_beh_count_vs_meta(trial_summary,
     plt.setp(ax[3].get_yticklabels(), visible=False)
     plt.tick_params(labelsize=10)
 
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{save_str}.png'), dpi=300)
+    plt.close()
 
-def plot_beh_conut_vs_experience(trial_summary, beh_key_win='chirps_win', beh_key_lose='chirps_lose', ylabel='chirps [n]'):
+
+def plot_beh_conut_vs_experience(trial_summary, beh_key_win='chirps_win', beh_key_lose='chirps_lose',
+                                 ylabel='chirps [n]', save_str='random_plot_title'):
     mek = ['k', 'None', 'None', 'k']
     markersize = 10
     win_colors = [male_color, male_color, female_color, female_color]
@@ -185,9 +195,12 @@ def plot_beh_conut_vs_experience(trial_summary, beh_key_win='chirps_win', beh_ke
     ax.set_ylabel(ylabel, fontsize=12)
     ax.tick_params(labelsize=10)
 
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{save_str}.png'), dpi=300)
+    plt.close()
+
 
 def main(base_path):
-
+    # ToDo: for chirp and rise analysis different datasets!!!
     trial_summary = pd.read_csv(os.path.join(base_path, 'trial_summary.csv'), index_col=0)
     chirp_notes = pd.read_csv(os.path.join(base_path, 'chirp_notes.csv'), index_col=0)
     trial_summary = trial_summary[chirp_notes['good'] == 1]
@@ -237,27 +250,27 @@ def main(base_path):
         print(f'Risescount - female lose - male lose: MW-U={U:.2f} p={p:.3f}')
     plot_beh_count_per_pairing(trial_summary,
                                beh_key_win='chirps_win', beh_key_lose='chirps_lose',
-                               ylabel='chirps [n]')
+                               ylabel='chirps [n]', save_str='chirps_per_pairing')
     plot_beh_count_per_pairing(trial_summary, 
                                beh_key_win='rises_win', beh_key_lose='rises_lose',
-                               ylabel='rises [n]')
+                               ylabel='rises [n]', save_str='rises_per_pairing')
 
     plot_beh_count_vs_meta(trial_summary,
                            beh_key_win='chirps_win', beh_key_lose='chirps_lose',
                            meta_key_win="size_win", meta_key_lose='size_lose',
-                           xlabel=u'$\Delta$size [cm]')
+                           xlabel=u'$\Delta$size [cm]', save_str='chirps_vs_dSize')
     plot_beh_count_vs_meta(trial_summary,
                            beh_key_win='rises_win', beh_key_lose='rises_lose',
                            meta_key_win="size_win", meta_key_lose='size_lose',
-                           xlabel=u'$\Delta$size [cm]')
+                           xlabel=u'$\Delta$size [cm]', save_str='rises_vs_dSize')
     plot_beh_count_vs_meta(trial_summary,
                            beh_key_win='chirps_win', beh_key_lose='chirps_lose',
                            meta_key_win="EODf_win", meta_key_lose='EODf_lose',
-                           xlabel=u'$\Delta$EODf [Hz]')
+                           xlabel=u'$\Delta$EODf [Hz]', save_str='chirps_vs_dEODf')
     plot_beh_count_vs_meta(trial_summary,
                            beh_key_win='rises_win', beh_key_lose='rises_lose',
                            meta_key_win="EODf_win", meta_key_lose='EODf_lose',
-                           xlabel=u'$\Delta$EODf [Hz]')
+                           xlabel=u'$\Delta$EODf [Hz]', save_str='rises_vs_dEODf')
     if True:
         ### chirp count vs. dSize ###
         for key in ['chirps_lose', 'chirps_win', 'rises_win', 'rises_lose']:
@@ -297,8 +310,10 @@ def main(base_path):
 
             print(f'(all) {key} - dSize: Pearson-r={r:.2f} p={p:.3f}')
 
-    plot_beh_conut_vs_experience(trial_summary, beh_key_win='chirps_win', beh_key_lose='chirps_lose', ylabel='chirps [n]')
-    plot_beh_conut_vs_experience(trial_summary, beh_key_win='rises_win', beh_key_lose='rises_lose', ylabel='rises [n]')
+    plot_beh_conut_vs_experience(trial_summary, beh_key_win='chirps_win', beh_key_lose='chirps_lose',
+                                 ylabel='chirps [n]', save_str='chirps_by_experince')
+    plot_beh_conut_vs_experience(trial_summary, beh_key_win='rises_win', beh_key_lose='rises_lose', ylabel='rises [n]',
+                                 save_str='chirps_by_experince')
 
     if True:
         for key in ['chirps_lose', 'chirps_win', 'rises_lose', 'rises_win']:
