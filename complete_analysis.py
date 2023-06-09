@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import itertools
+from event_time_correlations import load_and_converete_boris_events
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
@@ -182,6 +183,7 @@ def main(data_folder=None):
     trial_summary = pd.DataFrame(columns=['recording', 'group', 'win_fish', 'lose_fish', 'win_ID', 'lose_ID',
                                           'sex_win', 'sex_lose', 'size_win', 'size_lose', 'EODf_win', 'EODf_lose',
                                           'exp_win', 'exp_lose', 'chirps_win', 'chirps_lose', 'rises_win', 'rises_lose',
+                                          'chase_count', 'contact_count', 'med_chase_dur', 'comp_dur0', 'comp_dur1',
                                           'draw'])
     trial_summary_row = {f'{s}':None for s in trial_summary.keys()}
 
@@ -277,15 +279,35 @@ def main(data_folder=None):
 
         #############################################################################################################
         ### physical behavior
+        med_chase_dur = contact_n = chase_n = comp_dur0 = comp_dur1 = -1
+
         if video_eval:
-            contact_t_GRID, ag_on_off_t_GRID, led_idx, led_frames = \
-                load_and_converete_boris_events(trial_path, recording, sr, video_stated_FPS=video_stated_FPS)
+            contact_t_GRID, ag_on_off_t_GRID, led_idx, led_frames = load_and_converete_boris_events(trial_path, recording, sr)
+
+            only_contact_mask = np.ones_like(contact_t_GRID, dtype=bool)
+            for enu, ct in enumerate(contact_t_GRID):
+                for Cag_on_off_t in ag_on_off_t_GRID:
+                    if Cag_on_off_t[0] <= ct <= Cag_on_off_t[1]:
+                        only_contact_mask[enu] = 0
+                        break
+                    elif ct < Cag_on_off_t[0]:
+                        break
+
+            contact_t_solely = contact_t_GRID[only_contact_mask]
+            ag_offs = np.concatenate((contact_t_GRID, ag_on_off_t_GRID[:, 1]))
+            ag_offs = ag_offs[np.argsort(ag_offs)]
+
+            med_chase_dur = np.median(ag_on_off_t_GRID[:,1] -  ag_on_off_t_GRID[:,0])
+            contact_n = len(contact_t_GRID)
+            chase_n = len(ag_on_off_t_GRID)
+            comp_dur0 = ag_offs[2]
+            comp_dur1 = ag_offs[2] - ag_offs[0]
 
         win_fish_no = trials_meta['fish1'][trial_idx] if trials_meta['fish1'][trial_idx] == trials_meta['winner'][trial_idx] else trials_meta['fish2'][trial_idx]
         lose_fish_no = trials_meta['fish2'][trial_idx] if trials_meta['fish1'][trial_idx] == trials_meta['winner'][trial_idx] else trials_meta['fish1'][trial_idx]
 
         trial_summary.loc[len(trial_summary)] = trial_summary_row
-        trial_summary.iloc[-1] = {'recording' : recording,
+        trial_summary.iloc[-1] = {'recording': recording,
                                   'group': trials_meta['group'][trial_idx],
                                   'win_fish': win_fish_no,
                                   'lose_fish': lose_fish_no,
@@ -303,7 +325,12 @@ def main(data_folder=None):
                                   'chirps_lose': len(chirp_times[1]),
                                   'rises_win': len(rise_idx_int[0]),
                                   'rises_lose': len(rise_idx_int[1]),
-                                  'draw': 1 if trials_meta['winner'][trial_idx] == -1 else 0
+                                  'draw': 1 if trials_meta['winner'][trial_idx] == -1 else 0,
+                                  'chase_count': chase_n,
+                                  'contact_count': contact_n,
+                                  'med_chase_dur': med_chase_dur,
+                                  'comp_dur0': comp_dur0,
+                                  'comp_dur1': comp_dur1
                                   }
         # embed()
 
