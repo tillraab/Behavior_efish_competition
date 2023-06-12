@@ -161,7 +161,7 @@ def get_temperature(folder_path):
 
     return np.array(temp_t), np.array(temp)
 
-def main(data_folder=None):
+def main(base_path=None):
     colors = ['#BA2D22', '#53379B', '#F47F17', '#3673A4', '#AAB71B', '#DC143C', '#1E90FF']
     female_color, male_color = '#e74c3c', '#3498db'
     Wc, Lc = 'darkgreen', '#3673A4'
@@ -170,9 +170,9 @@ def main(data_folder=None):
         os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures'))
 
     # trials_meta = pd.read_csv('order_meta.csv')
-    trials_meta = pd.read_csv(os.path.join(data_folder, 'order_meta.csv'))
+    trials_meta = pd.read_csv(os.path.join(base_path, 'order_meta.csv'))
     # fish_meta = pd.read_csv('id_meta.csv')
-    fish_meta = pd.read_csv(os.path.join(data_folder, 'id_meta.csv'))
+    fish_meta = pd.read_csv(os.path.join(base_path, 'id_meta.csv'))
     fish_meta['mean_w'] = np.nanmean(fish_meta.loc[:, ['w1', 'w2', 'w3']], axis=1)
     fish_meta['mean_l'] = np.nanmean(fish_meta.loc[:, ['l1', 'l2', 'l3']], axis=1)
 
@@ -181,7 +181,7 @@ def main(data_folder=None):
     light_start_sec = 3*60*60
 
     trial_summary = pd.DataFrame(columns=['recording', 'group', 'win_fish', 'lose_fish', 'win_ID', 'lose_ID',
-                                          'sex_win', 'sex_lose', 'size_win', 'size_lose', 'EODf_win', 'EODf_lose',
+                                          'sex_win', 'sex_lose', 'size_win', 'size_lose', 'dsize', 'EODf_win', 'EODf_lose', 'dEODf',
                                           'exp_win', 'exp_lose', 'chirps_win', 'chirps_lose', 'rises_win', 'rises_lose',
                                           'chase_count', 'contact_count', 'med_chase_dur', 'comp_dur0', 'comp_dur1',
                                           'draw'])
@@ -201,7 +201,7 @@ def main(data_folder=None):
         if group < 3:
             continue
 
-        trial_path = os.path.join(data_folder, recording)
+        trial_path = os.path.join(base_path, recording)
         if not os.path.exists(trial_path):
             continue
 
@@ -317,8 +317,10 @@ def main(data_folder=None):
                                   'sex_lose': 'n',
                                   'size_win': win_l,
                                   'size_lose': lose_l,
+                                  'dsize': win_l - lose_l,
                                   'EODf_win': np.nanmedian(q10_comp_freq[0]),
                                   'EODf_lose': np.nanmedian(q10_comp_freq[1]),
+                                  'dEODf': np.nanmedian(q10_comp_freq[0]) - np.nanmedian(q10_comp_freq[1]),
                                   'exp_win': win_exp,
                                   'exp_lose': lose_exp,
                                   'chirps_win': len(chirp_times[0]),
@@ -401,7 +403,7 @@ def main(data_folder=None):
                 sex = 'm'
             trial_summary['sex_win'][(trial_summary['group'] == g) & (trial_summary['win_fish'] == f)] = sex
             trial_summary['sex_lose'][(trial_summary['group'] == g) & (trial_summary['lose_fish'] == f)] = sex
-    trial_summary.to_csv('trial_summary.csv')
+    trial_summary.to_csv(os.path.join(base_path, 'trial_summary.csv'))
     pass
 
 if __name__ == '__main__':

@@ -171,8 +171,9 @@ def relative_rate_progression(all_event_t, title=''):
 
 def main(base_path):
     # ToDo: for chirp and rise analysis different datasets!!!
-    trial_summary = pd.read_csv('trial_summary.csv', index_col=0)
+    trial_summary = pd.read_csv(os.path.join(base_path, 'trial_summary.csv'), index_col=0)
     chirp_notes = pd.read_csv(os.path.join(base_path, 'chirp_notes.csv'), index_col=0)
+    good_chirp_trial_idx = np.arange(len(chirp_notes))[chirp_notes['good'] == 1]
     trial_summary = trial_summary[chirp_notes['good'] == 1]
 
     all_rise_times_lose = []
