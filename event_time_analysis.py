@@ -173,8 +173,8 @@ def main(base_path):
     # ToDo: for chirp and rise analysis different datasets!!!
     trial_summary = pd.read_csv(os.path.join(base_path, 'trial_summary.csv'), index_col=0)
     chirp_notes = pd.read_csv(os.path.join(base_path, 'chirp_notes.csv'), index_col=0)
-    good_chirp_trial_idx = np.arange(len(chirp_notes))[chirp_notes['good'] == 1]
-    trial_summary = trial_summary[chirp_notes['good'] == 1]
+    trial_mask = chirp_notes['good'] == 1
+    # trial_summary = trial_summary[chirp_notes['good'] == 1]
 
     all_rise_times_lose = []
     all_rise_times_win = []
@@ -233,8 +233,12 @@ def main(base_path):
         all_rise_times_lose.append(rise_times[1])
         all_rise_times_win.append(rise_times[0])
 
-        all_chirp_times_lose.append(chirp_times[1])
-        all_chirp_times_win.append(chirp_times[0])
+        if trial_mask[index]:
+            all_chirp_times_lose.append(chirp_times[1])
+            all_chirp_times_win.append(chirp_times[0])
+        else:
+            all_chirp_times_lose.append(np.array([]))
+            all_chirp_times_win.append(np.array([]))
 
         win_sex.append(trial['sex_win'])
         lose_sex.append(trial['sex_lose'])
@@ -258,7 +262,6 @@ def main(base_path):
 
 
     #############################################################################
-
     for all_event_t, event_name in zip([all_chirp_times_lose, all_chirp_times_win, all_rise_times_lose, all_rise_times_win],
                                        [r'chirps$_{lose}$', r'chirps$_{win}$', r'rises$_{lose}$', r'rises$_{win}$']):
         print('')
@@ -283,6 +286,9 @@ def main(base_path):
                 np.arange(len(all_contact_t)), all_contact_t, all_ag_on_t, all_ag_off_t, all_event_t):
 
             if len(ag_on_t) == 0:
+                continue
+
+            if len(event_times) == 0:
                 continue
 
             pre_chase_event_mask = np.zeros_like(event_times)
