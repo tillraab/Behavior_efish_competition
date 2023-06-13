@@ -241,7 +241,9 @@ def single_kde(event_dt, conv_t, kernal_w = 1, kernal_h = 0.2):
     return cp.asnumpy(single_kdes)
 
 def main(base_path):
-    # ToDo: for chirp and rise analysis different datasets!!!
+    if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr')):
+        os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr'))
+
     trial_summary = pd.read_csv('trial_summary.csv', index_col=0)
     chirp_notes = pd.read_csv(os.path.join(base_path, 'chirp_notes.csv'), index_col=0)
     # trial_summary = trial_summary[chirp_notes['good'] == 1]
@@ -381,8 +383,6 @@ def main(base_path):
              [win_rises_centered_on_contact_t, win_rises_count, r'rise$_{win}$ on contact'],
              [win_rises_centered_on_lose_chirps, win_rises_count, r'rise$_{win}$ on chirp$_{lose}$']]:
 
-        if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures')):
-            os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures'))
         save_str = title.replace('$', '').replace('{', '').replace('}', '').replace(' ', '_')
 
         ###########################################################################################################
@@ -451,7 +451,7 @@ def main(base_path):
         ax[2].set_ylabel('event rate [Hz]', fontsize=12)
         fig.suptitle(title)
 
-        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{save_str}_by_sexes.png'), dpi=300)
+        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr', f'{save_str}_by_sexes.png'), dpi=300)
         plt.close()
 
         ###########################################################################################################
@@ -490,7 +490,7 @@ def main(base_path):
         ax.set_xlim(-max_dt, max_dt)
         ax.tick_params(labelsize=10)
 
-        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{save_str}.png'), dpi=300)
+        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr', f'{save_str}.png'), dpi=300)
         plt.close()
 
 

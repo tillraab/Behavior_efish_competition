@@ -154,7 +154,6 @@ def get_temperature(folder_path):
     temp_t = np.array(temp_t)
     temp = np.array(temp)
 
-
     if type(temp[-1]).__name__== 'str':
         temp = np.array(temp[:-1], dtype=float)
         temp_t = np.array(temp_t[:-1], dtype=int)
@@ -166,8 +165,8 @@ def main(base_path=None):
     female_color, male_color = '#e74c3c', '#3498db'
     Wc, Lc = 'darkgreen', '#3673A4'
 
-    if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures')):
-        os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures'))
+    if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures', 'example_trials')):
+        os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures', 'example_trials'))
 
     # trials_meta = pd.read_csv('order_meta.csv')
     trials_meta = pd.read_csv(os.path.join(base_path, 'order_meta.csv'))
@@ -385,7 +384,7 @@ def main(base_path=None):
 
         fig.suptitle(f'{recording}')
 
-        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{recording}.png'), dpi=300)
+        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'example_trials', f'{recording}.png'), dpi=300)
         # plt.savefig(os.path.join(os.path.join(os.path.split(__file__)[0], 'figures', f'{recording}.png')), dpi=300)
         plt.close()
 

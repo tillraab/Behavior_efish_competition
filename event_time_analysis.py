@@ -64,7 +64,7 @@ def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
     plt.setp(ax[0].get_xticklabels(), visible=False)
     plt.setp(ax[1].get_xticklabels(), visible=False)
 
-    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{title}_iei.png'), dpi=300)
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_meta', f'{title}_iei.png'), dpi=300)
     plt.close()
     # plt.show()
 
@@ -154,7 +154,7 @@ def relative_rate_progression(all_event_t, title=''):
     ax.set_xlim(0, 3)
     ax.set_ylim(0, 5)
 
-    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{title}_progression.png'), dpi=300)
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_meta', f'{title}_progression.png'), dpi=300)
     plt.close()
     # plt.show()
 
@@ -163,7 +163,7 @@ def relative_rate_progression(all_event_t, title=''):
 
     r, p = scp.pearsonr(x, y)
 
-    print(f'{title}: pearson-r={r:.2f} p={p:.3f}')
+    print(f'Progression {title}: pearson-r={r:.2f} p={p:.3f}')
 
 
 
@@ -171,6 +171,14 @@ def relative_rate_progression(all_event_t, title=''):
 
 def main(base_path):
     # ToDo: for chirp and rise analysis different datasets!!!
+    if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures', 'event_meta')):
+        os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures', 'event_meta'))
+
+    if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr')):
+        os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr'))
+
+
+
     trial_summary = pd.read_csv(os.path.join(base_path, 'trial_summary.csv'), index_col=0)
     chirp_notes = pd.read_csv(os.path.join(base_path, 'chirp_notes.csv'), index_col=0)
     trial_mask = chirp_notes['good'] == 1
@@ -269,13 +277,15 @@ def main(base_path):
         all_chase_event_mask = []
         all_end_chase_event_mask = []
         all_after_chase_event_mask = []
-        all_around_countact_event_mask = []
+        all_before_contact_event_mask = []
+        all_after_contact_event_mask = []
 
         all_pre_chase_time = []
         all_chase_time = []
         all_end_chase_time = []
         all_after_chase_time = []
-        all_around_countact_time = []
+        all_before_contact_time = []
+        all_after_contact_time = []
 
         video_trial_win_sex = []
         video_trial_lose_sex = []
@@ -317,17 +327,23 @@ def main(base_path):
             all_end_chase_time.append(len(ag_on_t) * time_tol)
             all_after_chase_time.append(len(ag_on_t) * time_tol)
 
-            around_countact_event_mask = np.zeros_like(event_times)
+            before_countact_event_mask = np.zeros_like(event_times)
+            after_countact_event_mask = np.zeros_like(event_times)
             for ct in contact_t:
-                around_countact_event_mask[(event_times >= ct-time_tol) & (event_times < ct+time_tol)] = 1
-            all_around_countact_event_mask.append(around_countact_event_mask)
-            all_around_countact_time.append(len(contact_t) * time_tol*2)
+                before_countact_event_mask[(event_times >= ct-time_tol) & (event_times < ct)] = 1
+                after_countact_event_mask[(event_times >= ct) & (event_times < ct+time_tol)] = 1
+            all_before_contact_event_mask.append(before_countact_event_mask)
+            all_after_contact_event_mask.append(after_countact_event_mask)
+
+            all_before_contact_time.append(len(contact_t) * time_tol)
+            all_after_contact_time.append(len(contact_t) * time_tol)
 
         all_pre_chase_time = np.array(all_pre_chase_time)
         all_chase_time = np.array(all_chase_time)
         all_end_chase_time = np.array(all_end_chase_time)
         all_after_chase_time = np.array(all_after_chase_time)
-        all_around_countact_time = np.array(all_around_countact_time)
+        all_before_contact_time = np.array(all_before_contact_time)
+        all_after_contact_time = np.array(all_after_contact_time)
 
         video_trial_win_sex = np.array(video_trial_win_sex)
         video_trial_lose_sex = np.array(video_trial_lose_sex)
@@ -336,19 +352,22 @@ def main(base_path):
         all_chase_time_ratio = all_chase_time / (3*60*60)
         all_end_chase_time_ratio = all_end_chase_time / (3*60*60)
         all_after_chase_time_ratio = all_after_chase_time / (3*60*60)
-        all_around_countact_time_ratio = all_around_countact_time / (3*60*60)
+        all_before_countact_time_ratio = all_before_contact_time / (3*60*60)
+        all_after_countact_time_ratio = all_after_contact_time / (3*60*60)
 
         all_pre_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_pre_chase_event_mask)))
         all_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_chase_event_mask)))
         all_end_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_end_chase_event_mask)))
         all_after_chase_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_after_chase_event_mask)))
-        all_around_countact_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_around_countact_event_mask)))
+        all_before_countact_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_before_contact_event_mask)))
+        all_after_countact_event_ratio = np.array(list(map(lambda x: np.sum(x)/len(x), all_after_contact_event_mask)))
 
         for x, y, name in [[all_pre_chase_event_ratio, all_pre_chase_time_ratio, 'pre chase'],
                            [all_chase_event_ratio, all_chase_time_ratio, 'while chase'],
                            [all_end_chase_event_ratio, all_end_chase_time_ratio, 'end chase'],
                            [all_after_chase_event_ratio, all_after_chase_time_ratio, 'after chase'],
-                           [all_around_countact_event_ratio, all_around_countact_time_ratio, 'aroung contact']]:
+                           [all_before_countact_event_ratio, all_before_countact_time_ratio, 'pre contact'],
+                           [all_after_countact_event_ratio, all_after_countact_time_ratio, 'post contact']]:
             t, p = scp.ttest_rel(x, y)
             print(f'{event_name} {name}: t={t:.2f} p={p:.3f}')
 
@@ -362,7 +381,8 @@ def main(base_path):
                     all_chase_event_ratio/all_chase_time_ratio,
                     all_end_chase_event_ratio/all_end_chase_time_ratio,
                     all_after_chase_event_ratio/all_after_chase_time_ratio,
-                    all_around_countact_event_ratio/all_around_countact_time_ratio], positions=np.arange(5), sym='', zorder=2)
+                    all_before_countact_event_ratio/all_before_countact_time_ratio,
+                    all_after_countact_event_ratio/all_after_countact_time_ratio], positions=np.arange(6), sym='', zorder=2)
 
         ylim = list(ax.get_ylim())
         ylim[0] = -.1 if ylim[0] < -.1 else ylim[0]
@@ -392,24 +412,27 @@ def main(base_path):
             values = np.array(all_after_chase_event_ratio/all_after_chase_time_ratio)[(video_trial_win_sex == sex_w) & (video_trial_lose_sex == sex_l)]
             ax.plot(np.ones_like(values) * 3, values, marker=marker, linestyle='None', color=c, mec=mec, markersize=8, zorder=1)
 
-            values = np.array(all_around_countact_event_ratio/all_around_countact_time_ratio)[(video_trial_win_sex == sex_w) & (video_trial_lose_sex == sex_l)]
+            values = np.array(all_before_countact_event_ratio/all_before_countact_time_ratio)[(video_trial_win_sex == sex_w) & (video_trial_lose_sex == sex_l)]
             ax.plot(np.ones_like(values) * 4, values, marker=marker, linestyle='None', color=c, mec=mec, markersize=8, zorder=1)
+
+            values = np.array(all_after_countact_event_ratio/all_after_countact_time_ratio)[(video_trial_win_sex == sex_w) & (video_trial_lose_sex == sex_l)]
+            ax.plot(np.ones_like(values) * 5, values, marker=marker, linestyle='None', color=c, mec=mec, markersize=8, zorder=1)
 
         # ax.plot(np.ones_like(all_pre_chase_event_ratio) * 0, all_pre_chase_event_ratio/all_pre_chase_time_ratio, 'ok')
         # ax.plot(np.ones_like(all_chase_event_ratio) * 1, all_chase_event_ratio/all_chase_time_ratio, 'ok')
         # ax.plot(np.ones_like(all_end_chase_event_ratio) * 2, all_end_chase_event_ratio/all_end_chase_time_ratio, 'ok')
         # ax.plot(np.ones_like(all_after_chase_event_ratio) * 3, all_after_chase_event_ratio/all_after_chase_time_ratio, 'ok')
 
-        # ax.plot(np.ones_like(all_around_countact_event_ratio) * 4, all_around_countact_event_ratio/all_around_countact_time_ratio, 'ok')
+        # ax.plot(np.ones_like(all_before_countact_event_ratio) * 4, all_before_countact_event_ratio/all_before_countact_time_ratio, 'ok')
         ##############################################################################
 
         ax.plot(np.arange(7)-1, np.ones(7), linestyle='dotted', lw=2, color='k')
-        ax.set_xlim(-0.5, 4.5)
+        ax.set_xlim(-0.5, 5.5)
         ax.set_ylim(ylim[0], ylim[1])
 
         ax.set_ylabel(r'rel. count$_{event}$ / rel. time$_{event}$', fontsize=12)
-        ax.set_xticks(np.arange(5))
-        ax.set_xticklabels([r'chase$_{before}$', r'chasing', r'chase$_{end}$', r'chase$_{after}$', 'contact'], rotation=45)
+        ax.set_xticks(np.arange(6))
+        ax.set_xticklabels([r'chase$_{before}$', r'chasing', r'chase$_{end}$', r'chase$_{after}$', 'contact$_{before}$', 'contact$_{after}$'], rotation=45)
         ax.tick_params(labelsize=10)
         # ax.set_title(event_name)
         fig.suptitle(f'{event_name}: n={len(np.hstack(all_event_t))}')
@@ -420,30 +443,32 @@ def main(base_path):
         flat_chase_event_mask = np.hstack(all_chase_event_mask)
         flat_end_chase_event_mask = np.hstack(all_end_chase_event_mask)
         flat_after_chase_event_mask = np.hstack(all_after_chase_event_mask)
-        flat_around_countact_event_mask = np.hstack(all_around_countact_event_mask)
+        flat_before_countact_event_mask = np.hstack(all_before_contact_event_mask)
+        flat_after_countact_event_mask = np.hstack(all_after_contact_event_mask)
 
-        flat_pre_chase_event_mask[flat_around_countact_event_mask == 1] = 0
-        flat_chase_event_mask[flat_around_countact_event_mask == 1] = 0
-        flat_end_chase_event_mask[flat_around_countact_event_mask == 1] = 0
-        flat_after_chase_event_mask[flat_around_countact_event_mask == 1] = 0
+        flat_pre_chase_event_mask[(flat_before_countact_event_mask == 1) | (flat_after_countact_event_mask == 1)] = 0
+        flat_chase_event_mask[(flat_before_countact_event_mask == 1) | (flat_after_countact_event_mask == 1)] = 0
+        flat_end_chase_event_mask[(flat_before_countact_event_mask == 1) | (flat_after_countact_event_mask == 1)] = 0
+        flat_after_chase_event_mask[(flat_before_countact_event_mask == 1) | (flat_after_countact_event_mask == 1)] = 0
 
         event_context_values = [np.sum(flat_pre_chase_event_mask) / len(flat_pre_chase_event_mask),
                                 np.sum(flat_chase_event_mask) / len(flat_chase_event_mask),
                                 np.sum(flat_end_chase_event_mask) / len(flat_end_chase_event_mask),
                                 np.sum(flat_after_chase_event_mask) / len(flat_after_chase_event_mask),
-                                np.sum(flat_around_countact_event_mask) / len(flat_around_countact_event_mask)]
+                                np.sum(flat_before_countact_event_mask) / len(flat_before_countact_event_mask),
+                                np.sum(flat_after_countact_event_mask) / len(flat_after_countact_event_mask)]
 
         event_context_values.append(1 - np.sum(event_context_values))
 
         time_context_values = [np.sum(all_pre_chase_time), np.sum(all_chase_time), np.sum(all_end_chase_time),
-                               np.sum(all_after_chase_time), np.sum(all_around_countact_time)]
+                               np.sum(all_after_chase_time), np.sum(all_before_contact_time), np.sum(all_after_contact_time)]
 
         time_context_values.append(len(all_pre_chase_time) * 3*60*60 - np.sum(time_context_values))
         time_context_values /= np.sum(time_context_values)
 
         # fig, ax = plt.subplots(figsize=(12/2.54,12/2.54))
         size = 0.3
-        outer_colors = ['tab:red', 'tab:orange', 'yellow', 'tab:green', 'k', 'tab:grey']
+        outer_colors = ['tab:red', 'tab:orange', 'yellow', 'tab:green', 'k','tab:brown', 'tab:grey']
         ax_pie.pie(event_context_values, radius=1, colors=outer_colors,
                wedgeprops=dict(width=size, edgecolor='w'), startangle=90, center=(0, 1))
         ax_pie.pie(time_context_values, radius=1-size, colors=outer_colors,
@@ -455,15 +480,17 @@ def main(base_path):
                            Patch(facecolor='yellow', edgecolor='w', label='%.1f' % (event_context_values[2] * 100) + '%'),
                            Patch(facecolor='tab:green', edgecolor='w', label='%.1f' % (event_context_values[3] * 100) + '%'),
                            Patch(facecolor='k', edgecolor='w', label='%.1f' % (event_context_values[4] * 100) + '%'),
+                           Patch(facecolor='tab:brown', edgecolor='w', label='%.1f' % (event_context_values[5] * 100) + '%'),
                            Patch(facecolor='tab:red', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[0] * 100) + '%'),
                            Patch(facecolor='tab:orange', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[1] * 100) + '%'),
                            Patch(facecolor='yellow', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[2] * 100) + '%'),
                            Patch(facecolor='tab:green', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[3] * 100) + '%'),
-                           Patch(facecolor='k', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[4] * 100) + '%')]
+                           Patch(facecolor='k', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[4] * 100) + '%'),
+                           Patch(facecolor='tab:brown', alpha=0.6, edgecolor='w', label='%.1f' % (time_context_values[5] * 100) + '%')]
 
         ax_pie.legend(handles=legend_elements, loc='lower right', ncol=2, bbox_to_anchor=(1.15, -0.25), frameon=False, fontsize=9)
 
-        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{event_name}_categories.png'), dpi=300)
+        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr', f'{event_name}_categories.png'), dpi=300)
         plt.close()
         # plt.show()
 

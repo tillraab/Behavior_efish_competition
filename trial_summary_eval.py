@@ -136,31 +136,32 @@ def plot_meta_correlation(trial_summary, trial_mask, key1, key2, key1_name, key2
     if True:
         r_coll = []
         p_coll = []
-        print(f'\n{key1_name} - {key2_name}')
+        # print(f'\n{key1_name} - {key2_name}')
         for win_lose_key, sex in itertools.product(['sex_win', 'sex_lose'], ['m', 'f']):
+            print(win_lose_key, sex)
             k1 = trial_summary[key1][(trial_summary[win_lose_key] == sex) & (trial_summary["draw"] == 0) & trial_mask].to_numpy()
             k2 = trial_summary[key2][(trial_summary[win_lose_key] == sex) & (trial_summary["draw"] == 0) & trial_mask].to_numpy()
             mask = np.ones_like(k1, dtype=bool)
             mask[np.isnan(k1) | np.isnan(k2)] = 0
-            r, p = scp.spearmanr(k1[mask], k2[mask])
+            r, p = scp.pearsonr(k1[mask], k2[mask])
             r_coll.append(r)
             p_coll.append(p)
-            print(f'{win_lose_key}: {sex} --> spearman-r={r:.2f} p={p:.3f}')
+            # print(f'{win_lose_key}: {sex} --> spearman-r={r:.2f} p={p:.3f}')
         k1 = trial_summary[key1][(trial_summary["draw"] == 0) & trial_mask].to_numpy()
         k2 = trial_summary[key2][(trial_summary["draw"] == 0) & trial_mask].to_numpy()
         mask = np.ones_like(k1, dtype=bool)
         mask[np.isnan(k1) | np.isnan(k2)] = 0
-        r, p = scp.spearmanr(k1[mask], k2[mask])
+        r, p = scp.pearsonr(k1[mask], k2[mask])
 
-        ax[0].text(1, 1, f'male win: spaerman-r = {r_coll[0]:.2f} p={p_coll[0]:.3f}\n'
-                         f'female win: spaerman-r = {r_coll[1]:.2f} p={p_coll[1]:.3f}', ha='right', va='bottom', transform = ax[0].transAxes)
-        ax[1].text(1, 1, f'male lose: spaerman-r = {r_coll[2]:.2f} p={p_coll[2]:.3f}\n'
-                         f'female lose: spaerman-r = {r_coll[3]:.2f} p={p_coll[3]:.3f}', ha='right', va='bottom', transform = ax[1].transAxes)
-        ax[1].text(1, -.1, f'all: spaerman-r = {r:.2f} p={p:.3f}', ha='right', va='top', transform = ax[1].transAxes)
-        print(f'all --> spearman-r={r:.2f} p={p:.3f}')
+        ax[0].text(1, 1, f'male win: pearson-r = {r_coll[0]:.2f} p={p_coll[0]:.3f}\n'
+                         f'female win: pearson-r = {r_coll[1]:.2f} p={p_coll[1]:.3f}', ha='right', va='bottom', transform = ax[0].transAxes)
+        ax[1].text(1, 1, f'male lose: pearson-r = {r_coll[2]:.2f} p={p_coll[2]:.3f}\n'
+                         f'female lose: pearson-r = {r_coll[3]:.2f} p={p_coll[3]:.3f}', ha='right', va='bottom', transform = ax[1].transAxes)
+        ax[1].text(1, -.1, f'all: pearson-r = {r:.2f} p={p:.3f}', ha='right', va='top', transform = ax[1].transAxes)
+        # print(f'all --> spearman-r={r:.2f} p={p:.3f}')
 
     plt.setp(ax[0].get_xticklabels(), visible=False)
-    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'correlations_{key1}_{key2}.png'), dpi=300)
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'meta_correlations', f'corr_{key1}_{key2}.png'), dpi=300)
     plt.close()
 
 def plot_beh_count_vs_dmeta(trial_summary, trial_mask=None,
@@ -223,7 +224,7 @@ def plot_beh_count_vs_dmeta(trial_summary, trial_mask=None,
     plt.setp(ax[3].get_yticklabels(), visible=False)
     plt.tick_params(labelsize=10)
 
-    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', f'{save_str}.png'), dpi=300)
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'meta_correlations', f'{save_str}.png'), dpi=300)
     plt.close()
 
 
@@ -288,7 +289,9 @@ def plot_beh_conut_vs_experience(trial_summary, trial_mask = None, beh_key_win='
 
 
 def main(base_path):
-    # ToDo: for chirp and rise analysis different datasets!!!
+    if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures', 'meta_correlations')):
+        os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures', 'meta_correlations'))
+
     # trial_summary = pd.read_csv(os.path.join(base_path, 'trial_summary.csv'), index_col=0)
     trial_summary = pd.read_csv(os.path.join(base_path, 'trial_summary.csv'), index_col=0)
     chirp_notes = pd.read_csv(os.path.join(base_path, 'chirp_notes.csv'), index_col=0)
@@ -301,14 +304,14 @@ def main(base_path):
                              trial_summary['rises_lose'][(trial_summary["draw"] == 0) & trial_mask]))
         cc = np.concatenate((trial_summary['chirps_win'][(trial_summary["draw"] == 0) & trial_mask],
                              trial_summary['chirps_lose'][(trial_summary["draw"] == 0) & trial_mask]))
-        r, p = scp.spearmanr(rc, cc)
+        r, p = scp.pearsonr(rc, cc)
         print(f'Risescount - Chirpscount - all: Pearson-r={r:.2f} p={p:.3f}')
 
-        r, p = scp.spearmanr(trial_summary['rises_win'][(trial_summary["draw"] == 0) & trial_mask],
+        r, p = scp.pearsonr(trial_summary['rises_win'][(trial_summary["draw"] == 0) & trial_mask],
                              trial_summary['chirps_win'][(trial_summary["draw"] == 0) & trial_mask])
         print(f'Risescount - Chirpscount - win: Pearson-r={r:.2f} p={p:.3f}')
 
-        r, p = scp.spearmanr(trial_summary['rises_lose'][(trial_summary["draw"] == 0) & trial_mask],
+        r, p = scp.pearsonr(trial_summary['rises_lose'][(trial_summary["draw"] == 0) & trial_mask],
                              trial_summary['chirps_lose'][(trial_summary["draw"] == 0) & trial_mask])
         print(f'Risescount - Chirpscount - lose: Pearson-r={r:.2f} p={p:.3f}')
     plot_rise_vs_chirp_count(trial_summary, trial_mask)
@@ -369,50 +372,6 @@ def main(base_path):
     for i, j in itertools.combinations(np.arange(len(keys)), r = 2):
         plot_meta_correlation(trial_summary, trial_mask, key1=keys[i], key2=keys[j],
                               key1_name=keys_names[i], key2_name=keys_names[j])
-
-    # plot_meta_correlation(trial_summary, key1='med_chase_dur', key2='chirps_lose',
-    #                       key1_name=r'chase duration$_{median}$ [s]', key2_name=r'chirps$_{lose}$')
-    # plot_meta_correlation(trial_summary, key1='med_chase_dur', key2='rises_lose',
-    #                       key1_name=r'chase duration$_{median}$ [s]', key2_name=r'rises$_{lose}$')
-
-    # if True:
-    #     ### chirp count vs. dSize ###
-    #     for key in ['chirps_lose', 'chirps_win', 'rises_win', 'rises_lose']:
-    #         print('')
-    #         lose_chirps_male_win = trial_summary[key][(trial_summary['sex_win'] == 'm') & (trial_summary["draw"] == 0)]
-    #         lose_size_male_win = trial_summary['size_lose'][(trial_summary['sex_win'] == 'm') & (trial_summary["draw"] == 0)]
-    #         win_size_male_win = trial_summary['size_win'][(trial_summary['sex_win'] == 'm') & (trial_summary["draw"] == 0)]
-    #
-    #         r, p = scp.pearsonr((lose_size_male_win - win_size_male_win)*-1, lose_chirps_male_win)
-    #         print(f'(Male win) {key} - dSize: Pearson-r={r:.2f} p={p:.3f}')
-    #
-    #         lose_chirps_female_win = trial_summary[key][(trial_summary['sex_win'] == 'f') & (trial_summary["draw"] == 0)]
-    #         lose_size_female_win = trial_summary['size_lose'][(trial_summary['sex_win'] == 'f') & (trial_summary["draw"] == 0)]
-    #         win_size_female_win = trial_summary['size_win'][(trial_summary['sex_win'] == 'f') & (trial_summary["draw"] == 0)]
-    #
-    #         r, p = scp.pearsonr(lose_chirps_female_win, lose_size_female_win - win_size_female_win)
-    #         print(f'(Female win) {key} - dSize: Pearson-r={r:.2f} p={p:.3f}')
-    #
-    #         lose_chirps_male_lose = trial_summary[key][(trial_summary['sex_lose'] == 'm') & (trial_summary["draw"] == 0)]
-    #         lose_size_male_lose = trial_summary['size_lose'][(trial_summary['sex_lose'] == 'm') & (trial_summary["draw"] == 0)]
-    #         win_size_male_lose = trial_summary['size_win'][(trial_summary['sex_lose'] == 'm') & (trial_summary["draw"] == 0)]
-    #
-    #         r, p = scp.pearsonr(lose_chirps_male_lose, lose_size_male_lose - win_size_male_lose)
-    #         print(f'(Male lose) {key} - dSize: Pearson-r={r:.2f} p={p:.3f}')
-    #
-    #         lose_chirps_female_lose = trial_summary[key][(trial_summary['sex_lose'] == 'f') & (trial_summary["draw"] == 0)]
-    #         lose_size_female_lose = trial_summary['size_lose'][(trial_summary['sex_lose'] == 'f') & (trial_summary["draw"] == 0)]
-    #         win_size_female_lose = trial_summary['size_win'][(trial_summary['sex_lose'] == 'f') & (trial_summary["draw"] == 0)]
-    #
-    #         r, p = scp.pearsonr(lose_chirps_female_lose, lose_size_female_lose - win_size_female_lose)
-    #         print(f'(Female lose) {key} - dSize: Pearson-r={r:.2f} p={p:.3f}')
-    #
-    #         all_lose_chrips = trial_summary[key][(trial_summary["draw"] == 0)]
-    #         all_lose_size = trial_summary['size_lose'][(trial_summary["draw"] == 0)]
-    #         all_win_size = trial_summary['size_win'][(trial_summary["draw"] == 0)]
-    #         r, p = scp.pearsonr(all_lose_chrips, all_lose_size - all_win_size)
-    #
-    #         print(f'(all) {key} - dSize: Pearson-r={r:.2f} p={p:.3f}')
 
     plot_beh_conut_vs_experience(trial_summary, trial_mask, beh_key_win='chirps_win', beh_key_lose='chirps_lose',
                                  ylabel='chirps [n]', save_str='chirps_by_experince')
