@@ -240,15 +240,17 @@ def single_kde(event_dt, conv_t, kernal_w = 1, kernal_h = 0.2):
 
     return cp.asnumpy(single_kdes)
 
+
 def main(base_path):
     if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr')):
         os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr'))
 
-    trial_summary = pd.read_csv('trial_summary.csv', index_col=0)
+    trial_summary = pd.read_csv(os.path.join(base_path, 'trial_summary.csv'), index_col=0)
     chirp_notes = pd.read_csv(os.path.join(base_path, 'chirp_notes.csv'), index_col=0)
     # trial_summary = trial_summary[chirp_notes['good'] == 1]
     trial_mask = chirp_notes['good'] == 1
 
+    # ToDo: do chirp on chirp and rise on rise
     lose_chrips_centered_on_ag_off_t = []
     lose_chrips_centered_on_ag_on_t = []
     lose_chrips_centered_on_contact_t = []
