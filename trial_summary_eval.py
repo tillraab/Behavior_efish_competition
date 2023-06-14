@@ -86,7 +86,7 @@ def plot_beh_count_per_pairing(trial_summary, trial_mask=None,
     plt.close()
 
 
-def plot_meta_correlation(trial_summary, trial_mask, key1, key2, key1_name, key2_name, save_str='random_plot_title'):
+def plot_meta_correlation(trial_summary, trial_mask, key1, key2, key1_name, key2_name, abs_key_1=False, save_str=None):
     mek = ['k', 'None', 'None', 'k']
     markersize = 12
     win_colors = [male_color, male_color, female_color, female_color]
@@ -112,6 +112,9 @@ def plot_meta_correlation(trial_summary, trial_mask, key1, key2, key1_name, key2
         mask[(k1 == -1) | (k2 == -1)] = 0
         k1 = k1[mask]
         k2 = k2[mask]
+
+        k1 = np.abs(k1) if abs_key_1 else k1
+
         key1_collect.append(k1)
         key2_collect.append(k2)
 
@@ -141,9 +144,17 @@ def plot_meta_correlation(trial_summary, trial_mask, key1, key2, key1_name, key2
             print(win_lose_key, sex)
             k1 = trial_summary[key1][(trial_summary[win_lose_key] == sex) & (trial_summary["draw"] == 0) & trial_mask].to_numpy()
             k2 = trial_summary[key2][(trial_summary[win_lose_key] == sex) & (trial_summary["draw"] == 0) & trial_mask].to_numpy()
+
             mask = np.ones_like(k1, dtype=bool)
             mask[np.isnan(k1) | np.isnan(k2)] = 0
-            r, p = scp.pearsonr(k1[mask], k2[mask])
+            mask[(k1 == -1) | (k2 == -1)] = 0
+
+            k1 = k1[mask]
+            k2 = k2[mask]
+
+            k1 = np.abs(k1) if abs_key_1 else k1
+
+            r, p = scp.pearsonr(k1, k2)
             r_coll.append(r)
             p_coll.append(p)
             # print(f'{win_lose_key}: {sex} --> spearman-r={r:.2f} p={p:.3f}')
@@ -151,7 +162,13 @@ def plot_meta_correlation(trial_summary, trial_mask, key1, key2, key1_name, key2
         k2 = trial_summary[key2][(trial_summary["draw"] == 0) & trial_mask].to_numpy()
         mask = np.ones_like(k1, dtype=bool)
         mask[np.isnan(k1) | np.isnan(k2)] = 0
-        r, p = scp.pearsonr(k1[mask], k2[mask])
+        mask[(k1 == -1) | (k2 == -1)] = 0
+
+        k1 = k1[mask]
+        k2 = k2[mask]
+
+        k1 = np.abs(k1) if abs_key_1 else k1
+        r, p = scp.pearsonr(k1, k2)
 
         ax[0].text(1, 1, f'male win: pearson-r = {r_coll[0]:.2f} p={p_coll[0]:.3f}\n'
                          f'female win: pearson-r = {r_coll[1]:.2f} p={p_coll[1]:.3f}', ha='right', va='bottom', transform = ax[0].transAxes)
@@ -160,8 +177,10 @@ def plot_meta_correlation(trial_summary, trial_mask, key1, key2, key1_name, key2
         ax[1].text(1, -.1, f'all: pearson-r = {r:.2f} p={p:.3f}', ha='right', va='top', transform = ax[1].transAxes)
         # print(f'all --> spearman-r={r:.2f} p={p:.3f}')
 
+    save_str = f'corr_{key1}_{key2}' if not save_str else save_str
+
     plt.setp(ax[0].get_xticklabels(), visible=False)
-    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'meta_correlations', f'corr_{key1}_{key2}.png'), dpi=300)
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'meta_correlations', save_str + '.png'), dpi=300)
     plt.close()
 
 def plot_beh_count_vs_dmeta(trial_summary, trial_mask=None,
@@ -369,6 +388,15 @@ def main(base_path):
     keys = ['dsize', 'dEODf', 'chirps_win', 'chirps_lose', 'rises_win', 'rises_lose', 'chase_count', 'contact_count', 'med_chase_dur', 'comp_dur0', 'comp_dur1']
     keys_names = [r'$\Delta$size$_{win}$', r'$\Delta$EODf$_{win}$', r'chirps$_{win}$', r'chirps$_{lose}$', 'rises$_{win}$', 'rises$_{lose}$', 'chase$_{n}$', 'contact$_{n}$', 'med_chase_dur', 'comp_dur0', 'comp_dur1']
     # for key1, key2 in itertools.combinations(keys, r = 2):
+
+    plot_meta_correlation(trial_summary, trial_mask, key1='dEODf', key2='chirps_lose',
+                          key1_name=r'$\Delta$EODf$_{win}$', key2_name= r'chirps$_{lose}$',
+                          abs_key_1=True, save_str='corr_abs_dEODf_chirps_lose')
+
+    plot_meta_correlation(trial_summary, trial_mask, key1='dEODf', key2='med_chase_dur',
+                          key1_name=r'$\Delta$EODf$_{win}$', key2_name= 'med_chase_dur',
+                          abs_key_1=True, save_str='corr_abs_dEODf_med_chase_dur')
+
     for i, j in itertools.combinations(np.arange(len(keys)), r = 2):
         plot_meta_correlation(trial_summary, trial_mask, key1=keys[i], key2=keys[j],
                               key1_name=keys_names[i], key2_name=keys_names[j])
