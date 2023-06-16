@@ -23,7 +23,7 @@ def plot_transition_matrix(matrix, labels):
     plt.show()
 
 
-def plot_transition_diagram(matrix, labels, node_size, threshold=5):
+def plot_transition_diagram(matrix, labels, node_size, threshold=5, save_str = 'rdm'):
     matrix[matrix <= threshold] = 0
     matrix = np.around(matrix, decimals=1)
     fig, ax = plt.subplots(figsize=(21 / 2.54, 19 / 2.54))
@@ -71,7 +71,8 @@ def plot_transition_diagram(matrix, labels, node_size, threshold=5):
     ax.set_xlim(-1.3, 1.3)
     ax.set_ylim(-1.3, 1.3)
     # plt.title(title)
-    plt.show()
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', save_str + '.png'), dpi=300)
+    plt.close()
 
 def main(base_path):
     trial_summary = pd.read_csv(os.path.join(base_path, 'trial_summary.csv'), index_col=0)
@@ -159,7 +160,8 @@ def main(base_path):
     collective_event_counts = np.sum(all_event_counts, axis=0)
 
     plot_transition_matrix(collective_marcov_matrix, loop_labels)
-    plot_transition_diagram(collective_marcov_matrix / collective_event_counts.reshape(len(collective_event_counts), 1) * 100, loop_labels, collective_event_counts, threshold=5)
+    plot_transition_diagram(collective_marcov_matrix / collective_event_counts.reshape(len(collective_event_counts), 1) * 100,
+                            loop_labels, collective_event_counts, threshold=5, save_str='markov_all')
 
     # for i in range(len(all_marcov_matrix)):
     #     plot_transition_diagram(
