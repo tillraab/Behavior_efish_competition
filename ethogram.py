@@ -9,7 +9,7 @@ import networkx as nx
 
 from IPython import embed
 from event_time_correlations import load_and_converete_boris_events
-glob_colors = ['#BA2D22', '#53379B', '#F47F17', '#3673A4', '#AAB71B', '#DC143C', '#1E90FF']
+glob_colors = ['#BA2D22', '#53379B', '#F47F17', '#3673A4', '#AAB71B', '#DC143C', '#1E90FF', 'k']
 
 
 def plot_transition_matrix(matrix, labels):
@@ -139,9 +139,10 @@ def main(base_path):
         for enu_tar, label_tar in enumerate(loop_labels):
             n = len(event_times[:-1][(event_labels[1:] == label_tar) & (np.diff(event_times) > 5)])
             marcov_matrix[-1, enu_tar] = n
+        marcov_matrix[-1, 5] = 0
+        loop_labels.append('void')
+        event_counts = np.append(event_counts, marcov_matrix[-1].sum())
 
-        embed()
-        quit()
         ### get those cases where ag_on does not point to event and no event points to corresponding ag_off ... add thise cases in marcov matrix
         chase_on_idx = np.where(event_labels == loop_labels[4])[0]
         chase_off_idx = np.where(event_labels == loop_labels[5])[0]

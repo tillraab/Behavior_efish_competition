@@ -255,12 +255,14 @@ def main(base_path):
     lose_chrips_centered_on_ag_on_t = []
     lose_chrips_centered_on_contact_t = []
     lose_chrips_centered_on_win_rises = []
+    lose_chrips_centered_on_win_chirp = []
     lose_chirp_count = []
 
     win_chrips_centered_on_ag_off_t = []
     win_chrips_centered_on_ag_on_t = []
     win_chrips_centered_on_contact_t = []
     win_chrips_centered_on_lose_rises = []
+    win_chrips_centered_on_lose_chirp = []
     win_chirp_count = []
 
     lose_rises_centered_on_ag_off_t = []
@@ -317,24 +319,29 @@ def main(base_path):
             lose_chrips_centered_on_ag_on_t.append(event_centered_times(ag_on_off_t_GRID[:, 0], chirp_times[1]))
             lose_chrips_centered_on_contact_t.append(event_centered_times(contact_t_GRID, chirp_times[1]))
             lose_chrips_centered_on_win_rises.append(event_centered_times(rise_times[0], chirp_times[1]))
+            lose_chrips_centered_on_win_chirp.append(event_centered_times(chirp_times[0], chirp_times[1]))
             lose_chirp_count.append(len(chirp_times[1]))
 
             win_chrips_centered_on_ag_off_t.append(event_centered_times(ag_on_off_t_GRID[:, 1], chirp_times[0]))
             win_chrips_centered_on_ag_on_t.append(event_centered_times(ag_on_off_t_GRID[:, 0], chirp_times[0]))
             win_chrips_centered_on_contact_t.append(event_centered_times(contact_t_GRID, chirp_times[0]))
             win_chrips_centered_on_lose_rises.append(event_centered_times(rise_times[1], chirp_times[0]))
+            win_chrips_centered_on_lose_chirp.append(event_centered_times(chirp_times[1], chirp_times[0]))
+
             win_chirp_count.append(len(chirp_times[0]))
         else:
             lose_chrips_centered_on_ag_off_t.append(np.array([]))
             lose_chrips_centered_on_ag_on_t.append(np.array([]))
             lose_chrips_centered_on_contact_t.append(np.array([]))
             lose_chrips_centered_on_win_rises.append(np.array([]))
+            lose_chrips_centered_on_win_chirp.append(np.array([]))
             lose_chirp_count.append(np.nan)
 
             win_chrips_centered_on_ag_off_t.append(np.array([]))
             win_chrips_centered_on_ag_on_t.append(np.array([]))
             win_chrips_centered_on_contact_t.append(np.array([]))
             win_chrips_centered_on_lose_rises.append(np.array([]))
+            win_chrips_centered_on_lose_chirp.append(np.array([]))
             win_chirp_count.append(np.nan)
 
         # rises
@@ -369,11 +376,13 @@ def main(base_path):
              [lose_chrips_centered_on_ag_on_t, lose_chirp_count, r'chirp$_{lose}$ on chase$_{on}$'],
              [lose_chrips_centered_on_contact_t, lose_chirp_count, r'chirp$_{lose}$ on contact'],
              [lose_chrips_centered_on_win_rises, lose_chirp_count, r'chirp$_{lose}$ on rise$_{win}$'],
+             [lose_chrips_centered_on_win_chirp, lose_chirp_count, r'chirp$_{lose}$ on chirp$_{win}$'],
 
              [win_chrips_centered_on_ag_off_t, win_chirp_count, r'chirp$_{win}$ on chase$_{off}$'],
              [win_chrips_centered_on_ag_on_t, win_chirp_count, r'chirp$_{win}$ on chase$_{on}$'],
              [win_chrips_centered_on_contact_t, win_chirp_count, r'chirp$_{win}$ on contact'],
              [win_chrips_centered_on_lose_rises, win_chirp_count, r'chirp$_{win}$ on rise$_{lose}$'],
+             [win_chrips_centered_on_lose_chirp, win_chirp_count, r'chirp$_{win}$ on chirp$_{lose}$'],
 
              [lose_rises_centered_on_ag_off_t, lose_rises_count, r'rise$_{lose}$ on chase$_{off}$'],
              [lose_rises_centered_on_ag_on_t, lose_rises_count, r'rise$_{lose}$ on chase$_{on}$'],
