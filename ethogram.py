@@ -130,14 +130,18 @@ def main(base_path):
         event_times = np.array(event_times)[time_sorter]
         event_labels = np.array(event_labels)[time_sorter]
 
-        marcov_matrix = np.zeros((len(loop_labels), len(loop_labels)))
+        marcov_matrix = np.zeros((len(loop_labels)+1, len(loop_labels)+1))
 
         for enu_ori, label_ori in enumerate(loop_labels):
             for enu_tar, label_tar in enumerate(loop_labels):
                 n = len(event_times[:-1][(event_labels[:-1] == label_ori) & (event_labels[1:] == label_tar) & (np.diff(event_times) <= 5)])
                 marcov_matrix[enu_ori, enu_tar] = n
+        for enu_tar, label_tar in enumerate(loop_labels):
+            n = len(event_times[:-1][(event_labels[1:] == label_tar) & (np.diff(event_times) > 5)])
+            marcov_matrix[-1, enu_tar] = n
 
-
+        embed()
+        quit()
         ### get those cases where ag_on does not point to event and no event points to corresponding ag_off ... add thise cases in marcov matrix
         chase_on_idx = np.where(event_labels == loop_labels[4])[0]
         chase_off_idx = np.where(event_labels == loop_labels[5])[0]
