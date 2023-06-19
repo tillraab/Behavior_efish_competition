@@ -13,9 +13,23 @@ from event_time_correlations import load_and_converete_boris_events, kde, gauss
 female_color, male_color = '#e74c3c', '#3498db'
 
 def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
+    # ToDo: finish this !!!
     iei = []
+    weighted_mean_iei = []
+    median_iei = []
     for i in range(len(event_times)):
-        iei.append(np.diff(event_times[i]))
+        trial_iei = np.diff(event_times[i][event_times[i] <= 3600*3])
+        iei.append(trial_iei)
+
+        if len(trial_iei) == 0:
+            weighted_mean_iei.append(np.nan)
+            median_iei.append(np.nan)
+        else:
+            weighted_mean_iei.append(np.sum((trial_iei) * trial_iei) / np.sum(trial_iei))
+            median_iei.append(np.median(trial_iei))
+
+    weighted_mean_iei = np.array(weighted_mean_iei)
+    median_iei = np.array(median_iei)
 
     fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
     gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.9)
@@ -41,12 +55,15 @@ def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
                 color, linestyle = female_color, '-'
                 sp = 3
 
-
         conv_y = np.arange(0, np.percentile(np.hstack(iei), 80), .5)
         kde_array = kde(iei[i], conv_y, kernal_w=kernal_w, kernal_h=1)
 
         # kde_array /= np.sum(kde_array)
         ax[sp].plot(conv_y, kde_array, zorder=2, color=color, linestyle=linestyle, lw=2)
+
+    # ax_m = ax[0].twinx()
+    # ax_m.boxplot([weighted_mean_iei[(win_sex == 'm') & (win_sex == 'm') & ~np.isnan(weighted_mean_iei)],
+    #               median_iei[(win_sex == 'm') & (win_sex == 'm') & ~np.isnan(median_iei)]], sym='', vert=False)
 
     ax[0].set_xlim(conv_y[0], conv_y[-1])
     ax[0].set_ylabel('KDE', fontsize=12)
@@ -170,13 +187,11 @@ def relative_rate_progression(all_event_t, title=''):
 
 
 def main(base_path):
-    # ToDo: for chirp and rise analysis different datasets!!!
     if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures', 'event_meta')):
         os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures', 'event_meta'))
 
     if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr')):
         os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr'))
-
 
 
     trial_summary = pd.read_csv(os.path.join(base_path, 'trial_summary.csv'), index_col=0)
