@@ -13,7 +13,6 @@ from event_time_correlations import load_and_converete_boris_events, kde, gauss
 female_color, male_color = '#e74c3c', '#3498db'
 
 def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
-    # ToDo: finish this !!!
     iei = []
     weighted_mean_iei = []
     median_iei = []
@@ -32,12 +31,10 @@ def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
     median_iei = np.array(median_iei)
 
     fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
-    gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.9)
+    gs = gridspec.GridSpec(1, 2, left=0.1, bottom=0.2, right=0.95, top=0.9, width_ratios=[5, 1], wspace=.3)
     ax = []
     ax.append(fig.add_subplot(gs[0, 0]))
-    ax.append(fig.add_subplot(gs[0, 1], sharey=ax[0], sharex=ax[0]))
-    ax.append(fig.add_subplot(gs[1, 0], sharey=ax[0], sharex=ax[0]))
-    ax.append(fig.add_subplot(gs[1, 1], sharey=ax[0], sharex=ax[0]))
+    ax.append(fig.add_subplot(gs[0, 1]))
 
     for i in range(len(iei)):
         if win_sex[i] == 'm':
@@ -59,27 +56,29 @@ def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
         kde_array = kde(iei[i], conv_y, kernal_w=kernal_w, kernal_h=1)
 
         # kde_array /= np.sum(kde_array)
-        ax[sp].plot(conv_y, kde_array, zorder=2, color=color, linestyle=linestyle, lw=2)
+        ax[0].plot(conv_y, kde_array, zorder=2, color=color, linestyle=linestyle, lw=2)
 
-    # ax_m = ax[0].twinx()
-    # ax_m.boxplot([weighted_mean_iei[(win_sex == 'm') & (win_sex == 'm') & ~np.isnan(weighted_mean_iei)],
-    #               median_iei[(win_sex == 'm') & (win_sex == 'm') & ~np.isnan(median_iei)]], sym='', vert=False)
+
+    ax[1].boxplot([weighted_mean_iei[~np.isnan(weighted_mean_iei)],
+                   median_iei[~np.isnan(median_iei)]], positions=[0, 1], sym='', widths=0.5)
 
     ax[0].set_xlim(conv_y[0], conv_y[-1])
     ax[0].set_ylabel('KDE', fontsize=12)
-    ax[2].set_ylabel('KDE', fontsize=12)
-    ax[2].set_xlabel('time [s]', fontsize=12)
-    ax[3].set_xlabel('time [s]', fontsize=12)
+    ax[0].set_xlabel('inter event interval [s]', fontsize=12)
     fig.suptitle(title, fontsize=12)
 
     for a in ax:
         a.tick_params(labelsize=10)
 
-    plt.setp(ax[1].get_yticklabels(), visible=False)
-    plt.setp(ax[3].get_yticklabels(), visible=False)
-
-    plt.setp(ax[0].get_xticklabels(), visible=False)
-    plt.setp(ax[1].get_xticklabels(), visible=False)
+    ax[1].set_xticks(np.arange(2))
+    ax[1].set_xticklabels([r'weighted$_{time}$', 'median'], rotation=45)
+    ax[1].set_ylabel('inter event interval [s]', fontsize=12)
+    # ax[0]
+    # plt.setp(ax[1].get_yticklabels(), visible=False)
+    # plt.setp(ax[3].get_yticklabels(), visible=False)
+    #
+    # plt.setp(ax[0].get_xticklabels(), visible=False)
+    # plt.setp(ax[1].get_xticklabels(), visible=False)
 
     plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_meta', f'{title}_iei.png'), dpi=300)
     plt.close()
