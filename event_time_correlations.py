@@ -279,6 +279,9 @@ def main(base_path):
     win_rises_centered_on_lose_chirps = []
     win_rises_count = []
 
+    ag_off_centered_on_ag_on = []
+    ag_count = []
+
     sex_win = []
     sex_lose = []
 
@@ -362,6 +365,9 @@ def main(base_path):
         win_rises_centered_on_lose_chirps.append(event_centered_times(chirp_times[1], rise_times[0]))
         win_rises_count.append(len(rise_times[0]))
 
+        ag_off_centered_on_ag_on.append(event_centered_times(ag_on_off_t_GRID[:, 0], ag_on_off_t_GRID[:, 1]))
+        ag_count.append(len(ag_on_off_t_GRID))
+
         sex_win.append(trial['sex_win'])
         sex_lose.append(trial['sex_lose'])
 
@@ -399,7 +405,9 @@ def main(base_path):
              [win_rises_centered_on_ag_off_t, win_rises_count, r'rise$_{win}$ on chase$_{off}$'],
              [win_rises_centered_on_ag_on_t, win_rises_count, r'rise$_{win}$ on chase$_{on}$'],
              [win_rises_centered_on_contact_t, win_rises_count, r'rise$_{win}$ on contact'],
-             [win_rises_centered_on_lose_chirps, win_rises_count, r'rise$_{win}$ on chirp$_{lose}$']]:
+             [win_rises_centered_on_lose_chirps, win_rises_count, r'rise$_{win}$ on chirp$_{lose}$'],
+
+             [ag_off_centered_on_ag_on, ag_count,  r'chase$_{off}$ on chase$_{on}$']]:
 
         save_str = title.replace('$', '').replace('{', '').replace('}', '').replace(' ', '_')
 
