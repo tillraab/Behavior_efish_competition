@@ -257,7 +257,6 @@ def main(base_path):
     lose_chrips_centered_on_win_rises = []
     lose_chrips_centered_on_win_chirp = []
     lose_chirps_centered_on_lose_rises = []
-    lose_chirp_count = []
 
     win_chrips_centered_on_ag_off_t = []
     win_chrips_centered_on_ag_on_t = []
@@ -265,22 +264,25 @@ def main(base_path):
     win_chrips_centered_on_lose_rises = []
     win_chrips_centered_on_lose_chirp = []
     win_chirps_centered_on_win_rises = []
-    win_chirp_count = []
 
     lose_rises_centered_on_ag_off_t = []
     lose_rises_centered_on_ag_on_t = []
     lose_rises_centered_on_contact_t = []
     lose_rises_centered_on_win_chirps = []
-    lose_rises_count = []
 
     win_rises_centered_on_ag_off_t = []
     win_rises_centered_on_ag_on_t = []
     win_rises_centered_on_contact_t = []
     win_rises_centered_on_lose_chirps = []
-    win_rises_count = []
 
     ag_off_centered_on_ag_on = []
-    ag_count = []
+
+    lose_chirp_count = []
+    win_chirp_count = []
+    lose_rises_count = []
+    win_rises_count = []
+    chase_count = []
+    contact_count = []
 
     sex_win = []
     sex_lose = []
@@ -366,7 +368,8 @@ def main(base_path):
         win_rises_count.append(len(rise_times[0]))
 
         ag_off_centered_on_ag_on.append(event_centered_times(ag_on_off_t_GRID[:, 0], ag_on_off_t_GRID[:, 1]))
-        ag_count.append(len(ag_on_off_t_GRID))
+        chase_count.append(len(ag_on_off_t_GRID))
+        contact_count.append(len(contact_t_GRID))
 
         sex_win.append(trial['sex_win'])
         sex_lose.append(trial['sex_lose'])
@@ -381,34 +384,63 @@ def main(base_path):
 
     conv_t = cp.arange(-max_dt, max_dt+conv_t_dt, conv_t_dt)
     conv_t_numpy = cp.asnumpy(conv_t)
-    # kde_array = kde(np.hstack(lose_chrips_centered_on_ag_off_t), conv_t, kernal_w = 1, kernal_h = 1)
+
+    # embed()
+    # quit()
+
+    # for centered_times, event_counts, title in \
+    #         [[lose_chrips_centered_on_ag_off_t, lose_chirp_count, r'chirp$_{lose}$ on chase$_{off}$'],
+    #          [lose_chrips_centered_on_ag_on_t, lose_chirp_count, r'chirp$_{lose}$ on chase$_{on}$'],
+    #          [lose_chrips_centered_on_contact_t, lose_chirp_count, r'chirp$_{lose}$ on contact'],
+    #          [lose_chrips_centered_on_win_rises, lose_chirp_count, r'chirp$_{lose}$ on rise$_{win}$'],
+    #          [lose_chrips_centered_on_win_chirp, lose_chirp_count, r'chirp$_{lose}$ on chirp$_{win}$'],
+    #          [lose_chirps_centered_on_lose_rises, lose_chirp_count, r'chirp$_{lose}$ on rises$_{lose}$'],
+    #
+    #          [win_chrips_centered_on_ag_off_t, win_chirp_count, r'chirp$_{win}$ on chase$_{off}$'],
+    #          [win_chrips_centered_on_ag_on_t, win_chirp_count, r'chirp$_{win}$ on chase$_{on}$'],
+    #          [win_chrips_centered_on_contact_t, win_chirp_count, r'chirp$_{win}$ on contact'],
+    #          [win_chrips_centered_on_lose_rises, win_chirp_count, r'chirp$_{win}$ on rise$_{lose}$'],
+    #          [win_chrips_centered_on_lose_chirp, win_chirp_count, r'chirp$_{win}$ on chirp$_{lose}$'],
+    #          [win_chirps_centered_on_win_rises, win_chirp_count, r'chirp$_{win}$ on rises$_{win}$'],
+    #
+    #          [lose_rises_centered_on_ag_off_t, lose_rises_count, r'rise$_{lose}$ on chase$_{off}$'],
+    #          [lose_rises_centered_on_ag_on_t, lose_rises_count, r'rise$_{lose}$ on chase$_{on}$'],
+    #          [lose_rises_centered_on_contact_t, lose_rises_count, r'rise$_{lose}$ on contact'],
+    #          [lose_rises_centered_on_win_chirps, lose_rises_count, r'rise$_{lose}$ on chirp$_{win}$'],
+    #
+    #          [win_rises_centered_on_ag_off_t, win_rises_count, r'rise$_{win}$ on chase$_{off}$'],
+    #          [win_rises_centered_on_ag_on_t, win_rises_count, r'rise$_{win}$ on chase$_{on}$'],
+    #          [win_rises_centered_on_contact_t, win_rises_count, r'rise$_{win}$ on contact'],
+    #          [win_rises_centered_on_lose_chirps, win_rises_count, r'rise$_{win}$ on chirp$_{lose}$'],
+    #
+    #          [ag_off_centered_on_ag_on, chase_count,  r'chase$_{off}$ on chase$_{on}$']]:
+
     for centered_times, event_counts, title in \
-            [[lose_chrips_centered_on_ag_off_t, lose_chirp_count, r'chirp$_{lose}$ on chase$_{off}$'],
-             [lose_chrips_centered_on_ag_on_t, lose_chirp_count, r'chirp$_{lose}$ on chase$_{on}$'],
-             [lose_chrips_centered_on_contact_t, lose_chirp_count, r'chirp$_{lose}$ on contact'],
-             [lose_chrips_centered_on_win_rises, lose_chirp_count, r'chirp$_{lose}$ on rise$_{win}$'],
-             [lose_chrips_centered_on_win_chirp, lose_chirp_count, r'chirp$_{lose}$ on chirp$_{win}$'],
-             [lose_chirps_centered_on_lose_rises, lose_chirp_count, r'chirp$_{lose}$ on rises$_{lose}$'],
+            [[lose_chrips_centered_on_ag_off_t, chase_count, r'chirp$_{lose}$ on chase$_{off}$'],
+             [lose_chrips_centered_on_ag_on_t, chase_count, r'chirp$_{lose}$ on chase$_{on}$'],
+             [lose_chrips_centered_on_contact_t, contact_count, r'chirp$_{lose}$ on contact'],
+             [lose_chrips_centered_on_win_rises, win_rises_count, r'chirp$_{lose}$ on rise$_{win}$'],
+             [lose_chrips_centered_on_win_chirp, win_chirp_count, r'chirp$_{lose}$ on chirp$_{win}$'],
+             [lose_chirps_centered_on_lose_rises, lose_rises_count, r'chirp$_{lose}$ on rises$_{lose}$'],
 
-             [win_chrips_centered_on_ag_off_t, win_chirp_count, r'chirp$_{win}$ on chase$_{off}$'],
-             [win_chrips_centered_on_ag_on_t, win_chirp_count, r'chirp$_{win}$ on chase$_{on}$'],
-             [win_chrips_centered_on_contact_t, win_chirp_count, r'chirp$_{win}$ on contact'],
-             [win_chrips_centered_on_lose_rises, win_chirp_count, r'chirp$_{win}$ on rise$_{lose}$'],
-             [win_chrips_centered_on_lose_chirp, win_chirp_count, r'chirp$_{win}$ on chirp$_{lose}$'],
-             [win_chirps_centered_on_win_rises, win_chirp_count, r'chirp$_{win}$ on rises$_{win}$'],
+             [win_chrips_centered_on_ag_off_t, chase_count, r'chirp$_{win}$ on chase$_{off}$'],
+             [win_chrips_centered_on_ag_on_t, chase_count, r'chirp$_{win}$ on chase$_{on}$'],
+             [win_chrips_centered_on_contact_t, contact_count, r'chirp$_{win}$ on contact'],
+             [win_chrips_centered_on_lose_rises, lose_rises_count, r'chirp$_{win}$ on rise$_{lose}$'],
+             [win_chrips_centered_on_lose_chirp, lose_chirp_count, r'chirp$_{win}$ on chirp$_{lose}$'],
+             [win_chirps_centered_on_win_rises, win_rises_count, r'chirp$_{win}$ on rises$_{win}$'],
 
-             [lose_rises_centered_on_ag_off_t, lose_rises_count, r'rise$_{lose}$ on chase$_{off}$'],
-             [lose_rises_centered_on_ag_on_t, lose_rises_count, r'rise$_{lose}$ on chase$_{on}$'],
-             [lose_rises_centered_on_contact_t, lose_rises_count, r'rise$_{lose}$ on contact'],
-             [lose_rises_centered_on_win_chirps, lose_rises_count, r'rise$_{lose}$ on chirp$_{win}$'],
+             [lose_rises_centered_on_ag_off_t, chase_count, r'rise$_{lose}$ on chase$_{off}$'],
+             [lose_rises_centered_on_ag_on_t, chase_count, r'rise$_{lose}$ on chase$_{on}$'],
+             [lose_rises_centered_on_contact_t, contact_count, r'rise$_{lose}$ on contact'],
+             [lose_rises_centered_on_win_chirps, win_chirp_count, r'rise$_{lose}$ on chirp$_{win}$'],
 
-             [win_rises_centered_on_ag_off_t, win_rises_count, r'rise$_{win}$ on chase$_{off}$'],
-             [win_rises_centered_on_ag_on_t, win_rises_count, r'rise$_{win}$ on chase$_{on}$'],
-             [win_rises_centered_on_contact_t, win_rises_count, r'rise$_{win}$ on contact'],
-             [win_rises_centered_on_lose_chirps, win_rises_count, r'rise$_{win}$ on chirp$_{lose}$'],
+             [win_rises_centered_on_ag_off_t, chase_count, r'rise$_{win}$ on chase$_{off}$'],
+             [win_rises_centered_on_ag_on_t, chase_count, r'rise$_{win}$ on chase$_{on}$'],
+             [win_rises_centered_on_contact_t, contact_count, r'rise$_{win}$ on contact'],
+             [win_rises_centered_on_lose_chirps, lose_chirp_count, r'rise$_{win}$ on chirp$_{lose}$'],
 
-             [ag_off_centered_on_ag_on, ag_count,  r'chase$_{off}$ on chase$_{on}$']]:
-
+             [ag_off_centered_on_ag_on, chase_count, r'chase$_{off}$ on chase$_{on}$']]:
         save_str = title.replace('$', '').replace('{', '').replace('}', '').replace(' ', '_')
 
         ###########################################################################################################
@@ -491,15 +523,19 @@ def main(base_path):
         fig = plt.figure(figsize=(20/2.54, 12/2.54))
         gs = gridspec.GridSpec(1, 1, left=0.1, bottom=0.1, right=0.95, top=0.95)
         ax = fig.add_subplot(gs[0, 0])
-        # ax.fill_between(conv_t_numpy, perm_p1/np.sum(event_counts), perm_p99/np.sum(event_counts), color='cornflowerblue', alpha=.8)
-        # ax.plot(conv_t_numpy, perm_p50/np.sum(event_counts), color='dodgerblue', alpha=1, lw=3)
-        ax.fill_between(conv_t_numpy, perm_p1/len(np.hstack(centered_times)), perm_p99/len(np.hstack(centered_times)), color='cornflowerblue', alpha=.8)
-        ax.plot(conv_t_numpy, perm_p50/len(np.hstack(centered_times)), color='dodgerblue', alpha=1, lw=3)
 
-        # ax.fill_between(conv_t_numpy, jk_p1/np.sum(event_counts)/jack_pct, jk_p99/np.sum(event_counts)/jack_pct, color='tab:red', alpha=.8)
-        # ax.plot(conv_t_numpy, jk_p50/np.sum(event_counts)/jack_pct, color='firebrick', alpha=1, lw=3)
-        ax.fill_between(conv_t_numpy, jk_p1/len(np.hstack(centered_times))/jack_pct, jk_p99/len(np.hstack(centered_times))/jack_pct, color='tab:red', alpha=.8)
-        ax.plot(conv_t_numpy, jk_p50/len(np.hstack(centered_times))/jack_pct, color='firebrick', alpha=1, lw=3)
+        # ax.fill_between(conv_t_numpy, perm_p1/len(np.hstack(centered_times)), perm_p99/len(np.hstack(centered_times)), color='cornflowerblue', alpha=.8)
+        # ax.plot(conv_t_numpy, perm_p50/len(np.hstack(centered_times)), color='dodgerblue', alpha=1, lw=3)
+        #
+        # ax.fill_between(conv_t_numpy, jk_p1/len(np.hstack(centered_times))/jack_pct, jk_p99/len(np.hstack(centered_times))/jack_pct, color='tab:red', alpha=.8)
+        # ax.plot(conv_t_numpy, jk_p50/len(np.hstack(centered_times))/jack_pct, color='firebrick', alpha=1, lw=3)
+
+        ax.fill_between(conv_t_numpy, perm_p1/np.nansum(event_counts), perm_p99/np.nansum(event_counts), color='cornflowerblue', alpha=.8)
+        ax.plot(conv_t_numpy, perm_p50/np.nansum(event_counts), color='dodgerblue', alpha=1, lw=3)
+
+        ax.fill_between(conv_t_numpy, jk_p1/np.nansum(event_counts)/jack_pct, jk_p99/np.nansum(event_counts)/jack_pct, color='tab:red', alpha=.8)
+        ax.plot(conv_t_numpy, jk_p50/np.nansum(event_counts)/jack_pct, color='firebrick', alpha=1, lw=3)
+
 
         ax_m = ax.twinx()
         for enu, centered_events in enumerate(centered_times):

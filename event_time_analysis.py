@@ -585,13 +585,16 @@ def main(base_path):
                                        [r'chirps$_{lose}$', r'chirps$_{win}$', r'rises$_{lose}$', r'rises$_{win}$']):
         event_category_signal(all_event_t, all_contact_t, all_ag_on_t, all_ag_off_t, win_sex, lose_sex, event_name)
 
-    embed()
-    quit()
-
+    #################################
     chase_dur = []
     chase_chirp_count = []
     dt_start_first_chirp = []
     dt_end_first_chirp = []
+
+    dt_start_all_chirp = []
+    dt_end_all_chirp = []
+    chase_dur_all_chirp = []
+
     for ag_on_t, ag_off_t, chirp_times_lose in zip(all_ag_on_t, all_ag_off_t, all_chirp_times_lose):
         if len(chirp_times_lose) == 0:
             continue
@@ -602,49 +605,129 @@ def main(base_path):
             if len(chirp_t_oi) >= 1:
                 dt_start_first_chirp.append(chirp_t_oi[0] - a_on)
                 dt_end_first_chirp.append(a_off - chirp_t_oi[0])
+
+                dt_start_all_chirp.extend(chirp_t_oi - a_on)
+                dt_end_all_chirp.extend(a_off - chirp_t_oi)
+                chase_dur_all_chirp.extend(np.ones_like(chirp_t_oi) * (a_off - a_on))
             else:
                 dt_start_first_chirp.append(np.nan)
                 dt_end_first_chirp.append(np.nan)
 
-    fig = plt.figure(figsize=(21/2.54, 19/2.54))
-    gs = gridspec.GridSpec(2, 2, left=.15, bottom=0.1, right=0.95, top=0.95)
+    dt_start_first_chirp = np.array(dt_start_first_chirp)
+    dt_end_first_chirp = np.array(dt_end_first_chirp)
+
+    dt_start_all_chirp = np.array(dt_start_all_chirp)
+    dt_end_all_chirp = np.array(dt_end_all_chirp)
+    chase_dur_all_chirp = np.array(chase_dur_all_chirp)
+
+    chase_chirp_count = np.array(chase_chirp_count)
+    chase_dur = np.array(chase_dur)
+    chirp_rate = chase_chirp_count / chase_dur
+
+    chase_dur_per_chirp_count = []
+    positions = np.arange(np.max(chase_chirp_count)+1)
+    for cc in positions:
+        chase_dur_per_chirp_count.append([])
+        chase_dur_per_chirp_count[-1].extend(chase_dur[chase_chirp_count == cc])
+
+    ################################################
+
+    chase_dur_pct99 = np.percentile(chase_dur, 99)
+    chase_dur_bins = np.arange(0, chase_dur_pct99+1, 2.5)
+    chase_dur_count_above_th = np.zeros_like(chase_dur_bins[:-1])
+
+    for enu, chase_dur_th in enumerate(chase_dur_bins[:-1]):
+        chase_dur_count_above_th[enu] = len(chase_dur[chase_dur >= chase_dur_th])
+
+    ################################################
+
+    fig = plt.figure(figsize=(21/2.54, 28/2.54))
+    gs = gridspec.GridSpec(3, 2, left=.15, bottom=0.1, right=0.95, top=0.95)
     ax = []
     ax.append(fig.add_subplot(gs[0, 0]))
     ax.append(fig.add_subplot(gs[0, 1], sharex=ax[0]))
     ax.append(fig.add_subplot(gs[1, 0], sharex=ax[0]))
     ax.append(fig.add_subplot(gs[1, 1], sharex=ax[0]))
 
+    ax.append(fig.add_subplot(gs[2, 0], sharex=ax[0]))
+    ax.append(fig.add_subplot(gs[2, 1], sharex=ax[0]))
+
     ax[0].plot(chase_dur, chase_chirp_count, '.')
+    ax[0].boxplot(chase_dur_per_chirp_count, positions=positions, vert=False, sym='')
     ax[1].plot(chase_dur, np.array(chase_chirp_count) / np.array(chase_dur), '.')
+
     ax[2].plot(chase_dur, dt_start_first_chirp, '.')
     ax[3].plot(chase_dur, dt_end_first_chirp, '.')
-
     ax[2].plot([0, 60], [0, 60], '-k', lw=1)
     ax[3].plot([0, 60], [0, 60], '-k', lw=1)
 
-    ax[2].set_xlabel(r'chase$_{duration}$ [s]', fontsize=12)
-    ax[3].set_xlabel(r'chase$_{duration}$ [s]', fontsize=12)
+    n, _ = np.histogram(dt_start_first_chirp, bins=chase_dur_bins)
+    n = n / np.sum(n) / (chase_dur_bins[1] - chase_dur_bins[0])
+    n = n / chase_dur_count_above_th
+    n = n / np.max(n) * chase_dur_pct99
+    ax[2].barh(chase_dur_bins[:-1] + (chase_dur_bins[1] - chase_dur_bins[0]) / 2, n,
+               height=(chase_dur_bins[1] - chase_dur_bins[0]) * 0.8, color='firebrick', alpha=0.5, zorder=2)
+
+    n, _ = np.histogram(dt_end_first_chirp, bins=chase_dur_bins)
+    n = n / np.sum(n) / (chase_dur_bins[1] - chase_dur_bins[0])
+    n = n / chase_dur_count_above_th
+    n = n / np.max(n) * chase_dur_pct99
+    ax[3].barh(chase_dur_bins[:-1] + (chase_dur_bins[1] - chase_dur_bins[0]) / 2, n,
+               height=(chase_dur_bins[1] - chase_dur_bins[0]) * 0.8, color='firebrick', alpha=0.5, zorder=2)
+    ax[3].invert_yaxis()
+    ax[2].set_xlim(right=chase_dur_pct99 + 2)
+    ax[2].set_ylim(top=chase_dur_pct99 + 2)
+    ax[3].set_xlim(right=chase_dur_pct99 + 2)
+    ax[3].set_ylim(bottom=chase_dur_pct99 + 2)
+
+
+
+    ax[4].plot(chase_dur_all_chirp, dt_start_all_chirp, '.')
+    ax[5].plot(chase_dur_all_chirp, dt_end_all_chirp, '.')
+    ax[4].plot([0, 60], [0, 60], '-k', lw=1)
+    ax[5].plot([0, 60], [0, 60], '-k', lw=1)
+
+    n, _ = np.histogram(dt_start_all_chirp, bins=chase_dur_bins)
+    n = n / np.sum(n) / (chase_dur_bins[1] - chase_dur_bins[0])
+    n = n / chase_dur_count_above_th
+    n = n / np.max(n) * chase_dur_pct99
+    ax[4].barh(chase_dur_bins[:-1] + (chase_dur_bins[1] - chase_dur_bins[0])/2, n, height=(chase_dur_bins[1] - chase_dur_bins[0])*0.8, color='firebrick', alpha=0.5, zorder=2)
+
+    n, _ = np.histogram(dt_end_all_chirp, bins=chase_dur_bins)
+    n = n / np.sum(n) / (chase_dur_bins[1] - chase_dur_bins[0])
+    n = n / chase_dur_count_above_th
+    n = n / np.max(n) * chase_dur_pct99
+    ax[5].barh(chase_dur_bins[:-1] + (chase_dur_bins[1] - chase_dur_bins[0])/2, n, height=(chase_dur_bins[1] - chase_dur_bins[0])*0.8, color='firebrick', alpha=0.5, zorder=2)
+    ax[5].invert_yaxis()
+
+    ax[4].set_xlim(right=chase_dur_pct99+2)
+    ax[4].set_ylim(top=chase_dur_pct99+2)
+    ax[5].set_xlim(right=chase_dur_pct99+2)
+    ax[5].set_ylim(bottom=chase_dur_pct99+2)
+
+
+
+    ax[4].set_xlabel(r'chase$_{duration}$ [s]', fontsize=12)
+    ax[5].set_xlabel(r'chase$_{duration}$ [s]', fontsize=12)
+
     ax[0].set_ylabel('chirps [n]', fontsize=12)
     ax[1].set_ylabel('chirp rate [Hz]', fontsize=12)
     ax[2].set_ylabel(r'$\Delta$t chase$_{on}$ - chirp$_{0}$', fontsize=12)
     ax[3].set_ylabel(r'$\Delta$t chirp$_{0}$ - chase$_{off}$', fontsize=12)
+    ax[4].set_ylabel(r'$\Delta$t chase$_{on}$ - chirps', fontsize=12)
+    ax[5].set_ylabel(r'$\Delta$t chirps - chase$_{off}$', fontsize=12)
 
+    # embed()
+    # quit()
 
-
-    chase_chirp_count = np.array(chase_chirp_count)
-    chase_dur = np.array(chase_dur)
-
-    chirp_rate = chase_chirp_count / chase_dur
-
-    r, p = scp.pearsonr(chase_dur[chase_chirp_count >= 3], chase_chirp_count[chase_chirp_count >= 3])
-    ax[0].text(1, 1, f'r= {r:.2f} p={p:.3f}', transform=ax[0].transAxes, ha='right', va='bottom')
-
-    r, p = scp.pearsonr(chase_dur[chase_chirp_count >= 3], chirp_rate[chase_chirp_count >= 3])
-    ax[1].text(1, 1, f'r= {r:.2f} p={p:.3f}', transform=ax[1].transAxes, ha='right', va='bottom')
     plt.show()
 
-    fig, ax = plt.subplots()
-
+    # fig, ax = plt.subplots()
+    # n, bin_edges = np.histogram(dt_start_first_chirp[~np.isnan(dt_start_first_chirp)] / chase_dur[~np.isnan(dt_start_first_chirp)], bins = np.arange(0, 1.05, .05))
+    # ax.bar(bin_edges[:-1] + (bin_edges[1]-bin_edges[0])/2, n/np.sum(n)/(bin_edges[1] - bin_edges[0]), width=0.8*(bin_edges[1]-bin_edges[0]))
+    #
+    # n, bin_edges = np.histogram(dt_end_first_chirp[~np.isnan(dt_end_first_chirp)] / chase_dur[~np.isnan(dt_end_first_chirp)], bins = np.arange(0, 1.05, .05))
+    # ax.bar(bin_edges[:-1] + (bin_edges[1]-bin_edges[0])/2, n/np.sum(n)/(bin_edges[1] - bin_edges[0]), width=0.8*(bin_edges[1]-bin_edges[0]))
 
 if __name__ == '__main__':
     main(sys.argv[1])
