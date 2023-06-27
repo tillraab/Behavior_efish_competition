@@ -83,48 +83,7 @@ def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
     plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_meta', f'{title}_iei.png'), dpi=300)
     plt.close()
     # plt.show()
-
-    # for iei, kernal_w in zip([ici_lose, ici_win, iri_lose, iri_win],
-    #                          [1, 1, 5, 50]):
-    #
-    #     fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
-    #     gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.95)
-    #     ax = []
-    #     ax.append(fig.add_subplot(gs[0, 0]))
-    #     ax.append(fig.add_subplot(gs[0, 1], sharey=ax[0], sharex=ax[0]))
-    #     ax.append(fig.add_subplot(gs[1, 0], sharey=ax[0], sharex=ax[0]))
-    #     ax.append(fig.add_subplot(gs[1, 1], sharey=ax[0], sharex=ax[0]))
-    #
-    #     for i in range(len(iei)):
-    #         if win_sex[i] == 'm':
-    #             if lose_sex[i] == 'm':
-    #                 color, linestyle = male_color, '-'
-    #                 sp = 0
-    #             else:
-    #                 color, linestyle = male_color, '--'
-    #                 sp = 1
-    #         else:
-    #             if lose_sex[i] == 'm':
-    #                 color, linestyle = female_color, '--'
-    #                 sp = 2
-    #             else:
-    #                 color, linestyle = female_color, '-'
-    #                 sp = 3
-    #
-    #
-    #         conv_y = np.arange(0, np.percentile(np.hstack(iei), 90), .5)
-    #         kde_array = kde(iei[i], conv_y, kernal_w=kernal_w, kernal_h=1)
-    #
-    #         # kde_array /= np.sum(kde_array)
-    #         ax[sp].plot(conv_y, kde_array, zorder=2, color=color, linestyle=linestyle, lw=2)
-    #
-    #     plt.setp(ax[1].get_yticklabels(), visible=False)
-    #     plt.setp(ax[3].get_yticklabels(), visible=False)
-    #
-    #
-    #     plt.setp(ax[0].get_xticklabels(), visible=False)
-    #     plt.setp(ax[1].get_xticklabels(), visible=False)
-    #     plt.show()
+    return iei
 
 
 def relative_rate_progression(all_event_t, title=''):
@@ -563,11 +522,51 @@ def main(base_path):
     lose_sex = np.array(lose_sex)
 
     ### inter event intervalls ###
-    iei_analysis(all_chirp_times_lose, win_sex, lose_sex, kernal_w=1, title=r'chirps$_{lose}$')
-    iei_analysis(all_chirp_times_win,  win_sex, lose_sex, kernal_w=1, title=r'chirps$_{win}$')
-    iei_analysis(all_rise_times_lose, win_sex, lose_sex, kernal_w=5, title=r'rises$_{lose}$')
-    iei_analysis(all_rise_times_win, win_sex, lose_sex, kernal_w=50, title=r'rises$_{win}$')
+    inter_chirp_interval_lose = iei_analysis(all_chirp_times_lose, win_sex, lose_sex, kernal_w=1, title=r'chirps$_{lose}$')
+    _ = iei_analysis(all_chirp_times_win,  win_sex, lose_sex, kernal_w=1, title=r'chirps$_{win}$')
+    _ = iei_analysis(all_rise_times_lose, win_sex, lose_sex, kernal_w=5, title=r'rises$_{lose}$')
+    _ = iei_analysis(all_rise_times_win, win_sex, lose_sex, kernal_w=50, title=r'rises$_{win}$')
 
+    embed()
+    quit()
+    fig, ax = plt.subplots()
+    ax.hist(np.hstack(inter_chirp_interval_lose), bins = np.arange(0, 20, 0.05))
+    ylim = ax.get_ylim()
+    med_ici = np.nanmedian(np.hstack(inter_chirp_interval_lose))
+    ax.plot([med_ici, med_ici], [ylim[0], ylim[1]], '-k', lw=2)
+    plt.show()
+
+    burst_chirp_mask = []
+    for enu, ici in enumerate(inter_chirp_interval_lose):
+        if len(ici) >= 1:
+            trial_burst_chirp_mask = np.zeros_like(ici)
+            trial_burst_chirp_mask[ici < med_ici] = 1
+            trial_burst_chirp_mask[1:][(ici[:-1] < med_ici) & (ici[1:] > med_ici)] = 2
+
+            last = 2 if trial_burst_chirp_mask[-1] == 1 else 0
+            trial_burst_chirp_mask = np.append(trial_burst_chirp_mask, np.array(last))
+
+            burst_chirp_mask.append(trial_burst_chirp_mask)
+        else:
+            burst_chirp_mask.append(np.array([]))
+
+    for i in range(len(burst_chirp_mask)):
+        fig, ax = plt.subplots()
+
+        ct_lose = all_chirp_times_lose[i][all_chirp_times_lose[i] <= 3600*3]
+        ax.plot(all_chirp_times_lose[i], np.ones_like(all_chirp_times_lose[i]), '|', markersize=12, color='grey')
+
+        ax.plot(ct_lose[burst_chirp_mask[i] == 0],
+                np.ones_like(ct_lose[burst_chirp_mask[i] == 0]), '.', markersize=8, color='k')
+
+        ax.plot(ct_lose[burst_chirp_mask[i] == 1],
+                np.ones_like(ct_lose[burst_chirp_mask[i] == 1])*2, '.', markersize=8, color='k')
+
+        ax.plot(ct_lose[burst_chirp_mask[i] == 2],
+                np.ones_like(ct_lose[burst_chirp_mask[i] == 2])*3, '.', markersize=8, color='firebrick')
+
+        ax.set_ylim(.5, 3.5)
+        plt.show()
     ### event progressions ###
     print('')
     relative_rate_progression(all_chirp_times_lose, title=r'chirp$_{lose}$')
