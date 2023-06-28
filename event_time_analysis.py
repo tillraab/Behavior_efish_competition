@@ -17,15 +17,15 @@ def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
     weighted_mean_iei = []
     median_iei = []
     for i in range(len(event_times)):
-        trial_iei = np.diff(event_times[i][event_times[i] <= 3600*3])
-        iei.append(trial_iei)
+        night_iei = np.diff(event_times[i][event_times[i] <= 3600*3])
+        iei.append(np.diff(event_times[i]))
 
-        if len(trial_iei) == 0:
+        if len(night_iei) == 0:
             weighted_mean_iei.append(np.nan)
             median_iei.append(np.nan)
         else:
-            weighted_mean_iei.append(np.sum((trial_iei) * trial_iei) / np.sum(trial_iei))
-            median_iei.append(np.median(trial_iei))
+            weighted_mean_iei.append(np.sum((night_iei) * night_iei) / np.sum(night_iei))
+            median_iei.append(np.median(night_iei))
 
     weighted_mean_iei = np.array(weighted_mean_iei)
     median_iei = np.array(median_iei)
@@ -530,18 +530,24 @@ def main(base_path):
     embed()
     quit()
     fig, ax = plt.subplots()
-    ax.hist(np.hstack(inter_chirp_interval_lose), bins = np.arange(0, 20, 0.05))
+    n, bin_edges = np.histogram(np.hstack(inter_chirp_interval_lose), bins = np.arange(0, 20, 0.05))
+    # ax.hist(np.hstack(inter_chirp_interval_lose), bins = np.arange(0, 20, 0.05))
+    ax.bar(bin_edges[:-1] + (bin_edges[1] - bin_edges[0])/2, n/np.sum(n)/(bin_edges[1] - bin_edges[0]), width=(bin_edges[1] - bin_edges[0]))
     ylim = ax.get_ylim()
     med_ici = np.nanmedian(np.hstack(inter_chirp_interval_lose))
     ax.plot([med_ici, med_ici], [ylim[0], ylim[1]], '-k', lw=2)
     plt.show()
 
+    chirp_dt_burst_th = med_ici
+    print(np.nanpercentile(np.hstack(inter_chirp_interval_lose), (50, 75, 95)))
+    # chirp_dt_burst_th = bin_edges[np.argmax(n)] - (bin_edges[1] - bin_edges[0]) / 2
+
     burst_chirp_mask = []
     for enu, ici in enumerate(inter_chirp_interval_lose):
         if len(ici) >= 1:
             trial_burst_chirp_mask = np.zeros_like(ici)
-            trial_burst_chirp_mask[ici < med_ici] = 1
-            trial_burst_chirp_mask[1:][(ici[:-1] < med_ici) & (ici[1:] > med_ici)] = 2
+            trial_burst_chirp_mask[ici < chirp_dt_burst_th] = 1
+            trial_burst_chirp_mask[1:][(ici[:-1] < chirp_dt_burst_th) & (ici[1:] >= chirp_dt_burst_th)] = 2
 
             last = 2 if trial_burst_chirp_mask[-1] == 1 else 0
             trial_burst_chirp_mask = np.append(trial_burst_chirp_mask, np.array(last))
@@ -551,21 +557,45 @@ def main(base_path):
             burst_chirp_mask.append(np.array([]))
 
     for i in range(len(burst_chirp_mask)):
-        fig, ax = plt.subplots()
+    # for i in range(5):
+        # fig, ax = plt.subplots()
+        if len(burst_chirp_mask[i]) == 0:
+            continue
 
-        ct_lose = all_chirp_times_lose[i][all_chirp_times_lose[i] <= 3600*3]
-        ax.plot(all_chirp_times_lose[i], np.ones_like(all_chirp_times_lose[i]), '|', markersize=12, color='grey')
+        chirp_idx_burst_start = np.arange(len(all_chirp_times_lose[i])-1)[(burst_chirp_mask[i][:-1] != 1) & (burst_chirp_mask[i][1:] == 1)] + 1
+        if burst_chirp_mask[i][0] == 1:
 
-        ax.plot(ct_lose[burst_chirp_mask[i] == 0],
-                np.ones_like(ct_lose[burst_chirp_mask[i] == 0]), '.', markersize=8, color='k')
+            chirp_idx_burst_start  = np.append(0, chirp_idx_burst_start)
+        chirp_idx_burst_end = np.arange(len(all_chirp_times_lose[i]))[(burst_chirp_mask[i] == 2)]
 
-        ax.plot(ct_lose[burst_chirp_mask[i] == 1],
-                np.ones_like(ct_lose[burst_chirp_mask[i] == 1])*2, '.', markersize=8, color='k')
+        chirp_idx_burst_start = np.array(chirp_idx_burst_start, dtype=int)
+        chirp_idx_burst_end = np.array(chirp_idx_burst_end, dtype=int)
 
-        ax.plot(ct_lose[burst_chirp_mask[i] == 2],
-                np.ones_like(ct_lose[burst_chirp_mask[i] == 2])*3, '.', markersize=8, color='firebrick')
+        chirps_in_burst = chirp_idx_burst_end - chirp_idx_burst_start + 1
+        if len(chirps_in_burst) == 0:
+            continue
 
-        ax.set_ylim(.5, 3.5)
+        chirps_in_burst_distro = np.zeros(np.max(chirps_in_burst))
+        for j in range(np.max(chirps_in_burst)):
+            if j == 0:
+                chirps_in_burst_distro[j] = len(burst_chirp_mask[i][burst_chirp_mask[i] == 0])
+            else:
+                chirps_in_burst_distro[j] = len(chirps_in_burst[chirps_in_burst == j + 1])
+
+        fig = plt.figure(figsize=(21/2.54, 19/2.54))
+        gs = gridspec.GridSpec(2, 1, left=0.1, bottom=0.1, right=0.95, top=0.95)
+        ax = []
+        ax.append(fig.add_subplot(gs[0, 0]))
+        ax.append(fig.add_subplot(gs[1, 0]))
+        ax[0].plot(all_chirp_times_lose[i], np.ones_like(all_chirp_times_lose[i]), '|', markersize=20, color='grey')
+
+        for cbs, cbe in zip(all_chirp_times_lose[i][chirp_idx_burst_start], all_chirp_times_lose[i][chirp_idx_burst_end]):
+            ax[0].plot([cbs, cbe], [1, 1], '-k', lw=2)
+        ax[0].set_ylim(.5, 1.5)
+
+        ax[1].bar(np.arange(len(chirps_in_burst_distro))+1, chirps_in_burst_distro)
+        ax[1].plot(np.arange(len(chirps_in_burst_distro))+1,
+                   chirps_in_burst_distro*(np.arange(len(chirps_in_burst_distro))+1), color='firebrick', lw=2)
         plt.show()
     ### event progressions ###
     print('')
@@ -592,21 +622,27 @@ def main(base_path):
 
     dt_start_all_chirp = []
     dt_end_all_chirp = []
+    all_chirp_mask = []
     chase_dur_all_chirp = []
 
-    for ag_on_t, ag_off_t, chirp_times_lose in zip(all_ag_on_t, all_ag_off_t, all_chirp_times_lose):
+    for ag_on_t, ag_off_t, chirp_times_lose, trial_chirp_burst_mask in \
+            zip(all_ag_on_t, all_ag_off_t, all_chirp_times_lose, burst_chirp_mask):
         if len(chirp_times_lose) == 0:
             continue
         for a_on, a_off in zip(ag_on_t, ag_off_t):
             chase_dur.append(a_off - a_on)
             chirp_t_oi = chirp_times_lose[(chirp_times_lose > a_on) & (chirp_times_lose <= a_off)]
+            chirp_t_oi_mask = trial_chirp_burst_mask[(chirp_times_lose > a_on) & (chirp_times_lose <= a_off)]
+
             chase_chirp_count.append(len(chirp_t_oi))
+
             if len(chirp_t_oi) >= 1:
                 dt_start_first_chirp.append(chirp_t_oi[0] - a_on)
                 dt_end_first_chirp.append(a_off - chirp_t_oi[0])
 
                 dt_start_all_chirp.extend(chirp_t_oi - a_on)
                 dt_end_all_chirp.extend(a_off - chirp_t_oi)
+                all_chirp_mask.extend(chirp_t_oi_mask)
                 chase_dur_all_chirp.extend(np.ones_like(chirp_t_oi) * (a_off - a_on))
             else:
                 dt_start_first_chirp.append(np.nan)
@@ -617,6 +653,7 @@ def main(base_path):
 
     dt_start_all_chirp = np.array(dt_start_all_chirp)
     dt_end_all_chirp = np.array(dt_end_all_chirp)
+    all_chirp_mask = np.array(all_chirp_mask)
     chase_dur_all_chirp = np.array(chase_dur_all_chirp)
 
     chase_chirp_count = np.array(chase_chirp_count)
@@ -681,8 +718,10 @@ def main(base_path):
 
 
 
-    ax[4].plot(chase_dur_all_chirp, dt_start_all_chirp, '.')
-    ax[5].plot(chase_dur_all_chirp, dt_end_all_chirp, '.')
+    ax[4].plot(chase_dur_all_chirp[all_chirp_mask == 0], dt_start_all_chirp[all_chirp_mask == 0], '.', color='cornflowerblue')
+    ax[4].plot(chase_dur_all_chirp[all_chirp_mask != 0], dt_start_all_chirp[all_chirp_mask != 0], '.', color='k')
+    ax[5].plot(chase_dur_all_chirp[all_chirp_mask == 0], dt_end_all_chirp[all_chirp_mask == 0], '.', color='cornflowerblue')
+    ax[5].plot(chase_dur_all_chirp[all_chirp_mask != 0], dt_end_all_chirp[all_chirp_mask != 0], '.', color='k')
     ax[4].plot([0, 60], [0, 60], '-k', lw=1)
     ax[5].plot([0, 60], [0, 60], '-k', lw=1)
 
