@@ -82,6 +82,32 @@ def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
 
     plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_meta', f'{title}_iei.png'), dpi=300)
     plt.close()
+
+    embed()
+    quit()
+
+
+
+    all_r = []
+    all_p = []
+    for lag in np.arange(1, 6):
+        fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
+        gs = gridspec.GridSpec(1, 1, left=.1, bottom=.1, right=0.95, top=0.95)
+        ax = fig.add_subplot(gs[0, 0])
+        plot_x = []
+        plot_y = []
+        for trial_iei in iei:
+            plot_x.extend(trial_iei[:-lag])
+            plot_y.extend(trial_iei[lag:])
+        ax.plot(plot_x, plot_y, '.', color='k')
+        r, p = scp.pearsonr(plot_x, plot_y)
+        all_r.append(r)
+        all_p.append(p)
+
+        ax.set_xlim(-1, 120)
+        ax.set_ylim(-1, 120)
+        plt.show()
+
     # plt.show()
     return iei
 
@@ -527,11 +553,9 @@ def main(base_path):
     _ = iei_analysis(all_rise_times_lose, win_sex, lose_sex, kernal_w=5, title=r'rises$_{lose}$')
     _ = iei_analysis(all_rise_times_win, win_sex, lose_sex, kernal_w=50, title=r'rises$_{win}$')
 
-    embed()
-    quit()
+
     fig, ax = plt.subplots()
     n, bin_edges = np.histogram(np.hstack(inter_chirp_interval_lose), bins = np.arange(0, 20, 0.05))
-    # ax.hist(np.hstack(inter_chirp_interval_lose), bins = np.arange(0, 20, 0.05))
     ax.bar(bin_edges[:-1] + (bin_edges[1] - bin_edges[0])/2, n/np.sum(n)/(bin_edges[1] - bin_edges[0]), width=(bin_edges[1] - bin_edges[0]))
     ylim = ax.get_ylim()
     med_ici = np.nanmedian(np.hstack(inter_chirp_interval_lose))
@@ -556,9 +580,17 @@ def main(base_path):
         else:
             burst_chirp_mask.append(np.array([]))
 
+
+    fig = plt.figure(figsize=(21/2.54, 19/2.54))
+    gs = gridspec.GridSpec(1, 2, left=0.1, bottom=0.1, right=0.95, top=0.95)
+    ax = []
+    ax.append(fig.add_subplot(gs[0, 0]))
+    ax.append(fig.add_subplot(gs[0, 1]))
+
+    all_chirps_in_burst_distro = []
+
     for i in range(len(burst_chirp_mask)):
-    # for i in range(5):
-        # fig, ax = plt.subplots()
+        ax[0].plot(all_chirp_times_lose[i], np.ones_like(all_chirp_times_lose[i]) * i, '|', markersize=12, color='grey')
         if len(burst_chirp_mask[i]) == 0:
             continue
 
@@ -582,21 +614,22 @@ def main(base_path):
             else:
                 chirps_in_burst_distro[j] = len(chirps_in_burst[chirps_in_burst == j + 1])
 
-        fig = plt.figure(figsize=(21/2.54, 19/2.54))
-        gs = gridspec.GridSpec(2, 1, left=0.1, bottom=0.1, right=0.95, top=0.95)
-        ax = []
-        ax.append(fig.add_subplot(gs[0, 0]))
-        ax.append(fig.add_subplot(gs[1, 0]))
-        ax[0].plot(all_chirp_times_lose[i], np.ones_like(all_chirp_times_lose[i]), '|', markersize=20, color='grey')
-
         for cbs, cbe in zip(all_chirp_times_lose[i][chirp_idx_burst_start], all_chirp_times_lose[i][chirp_idx_burst_end]):
-            ax[0].plot([cbs, cbe], [1, 1], '-k', lw=2)
-        ax[0].set_ylim(.5, 1.5)
+            ax[0].plot([cbs, cbe], [i, i], '-k', lw=2)
 
-        ax[1].bar(np.arange(len(chirps_in_burst_distro))+1, chirps_in_burst_distro)
-        ax[1].plot(np.arange(len(chirps_in_burst_distro))+1,
-                   chirps_in_burst_distro*(np.arange(len(chirps_in_burst_distro))+1), color='firebrick', lw=2)
-        plt.show()
+        all_chirps_in_burst_distro.append(chirps_in_burst_distro)
+
+    max_chirps_in_burst = np.max(list(map(lambda x: len(x), all_chirps_in_burst_distro)))
+    collective_chirps_in_burst = np.zeros((len(all_chirps_in_burst_distro), max_chirps_in_burst))
+    for trial in range(len(all_chirps_in_burst_distro)):
+        collective_chirps_in_burst[trial, :len(all_chirps_in_burst_distro[trial])] = all_chirps_in_burst_distro[trial]
+
+    ax[1].bar(np.arange(collective_chirps_in_burst.shape[1])+1, collective_chirps_in_burst.sum(0))
+    ax[1].plot(np.arange(collective_chirps_in_burst.shape[1])+1,
+               collective_chirps_in_burst.sum(0) * (np.arange(collective_chirps_in_burst.shape[1])+1), color='firebrick', lw=2)
+
+    plt.show()
+
     ### event progressions ###
     print('')
     relative_rate_progression(all_chirp_times_lose, title=r'chirp$_{lose}$')
@@ -718,10 +751,10 @@ def main(base_path):
 
 
 
-    ax[4].plot(chase_dur_all_chirp[all_chirp_mask == 0], dt_start_all_chirp[all_chirp_mask == 0], '.', color='cornflowerblue')
-    ax[4].plot(chase_dur_all_chirp[all_chirp_mask != 0], dt_start_all_chirp[all_chirp_mask != 0], '.', color='k')
-    ax[5].plot(chase_dur_all_chirp[all_chirp_mask == 0], dt_end_all_chirp[all_chirp_mask == 0], '.', color='cornflowerblue')
-    ax[5].plot(chase_dur_all_chirp[all_chirp_mask != 0], dt_end_all_chirp[all_chirp_mask != 0], '.', color='k')
+    ax[4].plot(chase_dur_all_chirp[all_chirp_mask == 0], dt_start_all_chirp[all_chirp_mask == 0], '.', color='cornflowerblue', alpha = 0.5)
+    ax[4].plot(chase_dur_all_chirp[all_chirp_mask != 0], dt_start_all_chirp[all_chirp_mask != 0], '.', color='k', alpha = 0.5)
+    ax[5].plot(chase_dur_all_chirp[all_chirp_mask == 0], dt_end_all_chirp[all_chirp_mask == 0], '.', color='cornflowerblue', alpha = 0.5)
+    ax[5].plot(chase_dur_all_chirp[all_chirp_mask != 0], dt_end_all_chirp[all_chirp_mask != 0], '.', color='k', alpha = 0.5)
     ax[4].plot([0, 60], [0, 60], '-k', lw=1)
     ax[5].plot([0, 60], [0, 60], '-k', lw=1)
 
@@ -729,13 +762,27 @@ def main(base_path):
     n = n / np.sum(n) / (chase_dur_bins[1] - chase_dur_bins[0])
     n = n / chase_dur_count_above_th
     n = n / np.max(n) * chase_dur_pct99
-    ax[4].barh(chase_dur_bins[:-1] + (chase_dur_bins[1] - chase_dur_bins[0])/2, n, height=(chase_dur_bins[1] - chase_dur_bins[0])*0.8, color='firebrick', alpha=0.5, zorder=2)
+    ax[4].barh(chase_dur_bins[:-1] + (chase_dur_bins[1] - chase_dur_bins[0])/4, n, height=(chase_dur_bins[1] - chase_dur_bins[0])*0.4, color='firebrick', alpha=0.52, zorder=2)
+
+    n, _ = np.histogram(dt_start_all_chirp[all_chirp_mask != 0], bins=chase_dur_bins)
+    n = n / np.sum(n) / (chase_dur_bins[1] - chase_dur_bins[0])
+    n = n / chase_dur_count_above_th
+    n = n / np.max(n) * chase_dur_pct99
+    ax[4].barh(chase_dur_bins[:-1] + (chase_dur_bins[1] - chase_dur_bins[0])/4*3, n, height=(chase_dur_bins[1] - chase_dur_bins[0])*0.4, color='k', alpha=0.52, zorder=2)
+
 
     n, _ = np.histogram(dt_end_all_chirp, bins=chase_dur_bins)
     n = n / np.sum(n) / (chase_dur_bins[1] - chase_dur_bins[0])
     n = n / chase_dur_count_above_th
     n = n / np.max(n) * chase_dur_pct99
-    ax[5].barh(chase_dur_bins[:-1] + (chase_dur_bins[1] - chase_dur_bins[0])/2, n, height=(chase_dur_bins[1] - chase_dur_bins[0])*0.8, color='firebrick', alpha=0.5, zorder=2)
+    ax[5].barh(chase_dur_bins[:-1] + (chase_dur_bins[1] - chase_dur_bins[0])/4, n, height=(chase_dur_bins[1] - chase_dur_bins[0])*0.4, color='firebrick', alpha=0.5, zorder=2)
+
+    n, _ = np.histogram(dt_end_all_chirp[all_chirp_mask != 0], bins=chase_dur_bins)
+    n = n / np.sum(n) / (chase_dur_bins[1] - chase_dur_bins[0])
+    n = n / chase_dur_count_above_th
+    n = n / np.max(n) * chase_dur_pct99
+    ax[5].barh(chase_dur_bins[:-1] + (chase_dur_bins[1] - chase_dur_bins[0])/4*3, n, height=(chase_dur_bins[1] - chase_dur_bins[0])*0.4, color='k', alpha=0.5, zorder=2)
+
     ax[5].invert_yaxis()
 
     ax[4].set_xlim(right=chase_dur_pct99+2)
@@ -755,17 +802,10 @@ def main(base_path):
     ax[4].set_ylabel(r'$\Delta$t chase$_{on}$ - chirps', fontsize=12)
     ax[5].set_ylabel(r'$\Delta$t chirps - chase$_{off}$', fontsize=12)
 
-    # embed()
-    # quit()
-
     plt.show()
 
-    # fig, ax = plt.subplots()
-    # n, bin_edges = np.histogram(dt_start_first_chirp[~np.isnan(dt_start_first_chirp)] / chase_dur[~np.isnan(dt_start_first_chirp)], bins = np.arange(0, 1.05, .05))
-    # ax.bar(bin_edges[:-1] + (bin_edges[1]-bin_edges[0])/2, n/np.sum(n)/(bin_edges[1] - bin_edges[0]), width=0.8*(bin_edges[1]-bin_edges[0]))
-    #
-    # n, bin_edges = np.histogram(dt_end_first_chirp[~np.isnan(dt_end_first_chirp)] / chase_dur[~np.isnan(dt_end_first_chirp)], bins = np.arange(0, 1.05, .05))
-    # ax.bar(bin_edges[:-1] + (bin_edges[1]-bin_edges[0])/2, n/np.sum(n)/(bin_edges[1] - bin_edges[0]), width=0.8*(bin_edges[1]-bin_edges[0]))
+    embed()
+    quit()
 
 if __name__ == '__main__':
     main(sys.argv[1])
