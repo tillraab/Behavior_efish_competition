@@ -83,30 +83,26 @@ def iei_analysis(event_times, win_sex, lose_sex, kernal_w, title=''):
     plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_meta', f'{title}_iei.png'), dpi=300)
     plt.close()
 
-    embed()
-    quit()
 
-
-
-    all_r = []
-    all_p = []
-    for lag in np.arange(1, 6):
-        fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
-        gs = gridspec.GridSpec(1, 1, left=.1, bottom=.1, right=0.95, top=0.95)
-        ax = fig.add_subplot(gs[0, 0])
-        plot_x = []
-        plot_y = []
-        for trial_iei in iei:
-            plot_x.extend(trial_iei[:-lag])
-            plot_y.extend(trial_iei[lag:])
-        ax.plot(plot_x, plot_y, '.', color='k')
-        r, p = scp.pearsonr(plot_x, plot_y)
-        all_r.append(r)
-        all_p.append(p)
-
-        ax.set_xlim(-1, 120)
-        ax.set_ylim(-1, 120)
-        plt.show()
+    # all_r = []
+    # all_p = []
+    # for lag in np.arange(1, 6):
+    #     fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
+    #     gs = gridspec.GridSpec(1, 1, left=.1, bottom=.1, right=0.95, top=0.95)
+    #     ax = fig.add_subplot(gs[0, 0])
+    #     plot_x = []
+    #     plot_y = []
+    #     for trial_iei in iei:
+    #         plot_x.extend(trial_iei[:-lag])
+    #         plot_y.extend(trial_iei[lag:])
+    #     ax.plot(plot_x, plot_y, '.', color='k')
+    #     r, p = scp.pearsonr(plot_x, plot_y)
+    #     all_r.append(r)
+    #     all_p.append(p)
+    #
+    #     ax.set_xlim(-1, 120)
+    #     ax.set_ylim(-1, 120)
+    #     plt.show()
 
     # plt.show()
     return iei

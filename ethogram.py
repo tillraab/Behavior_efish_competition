@@ -146,9 +146,8 @@ def main(base_path):
         event_times = np.array(event_times)[time_sorter]
         event_labels = np.array(event_labels)[time_sorter]
 
-        ###  create marcov_matrix 1: which beh 2 is triggered by beh. 1 ?
+        ###  create marcov_matrix for one trial !!!
         marcov_matrix = np.zeros((len(loop_labels)+1, len(loop_labels)+1))
-        ###  create marcov_matrix 2: beh 2 is triggered by which beh. 1 ?
 
         for enu_ori, label_ori in enumerate(loop_labels):
             for enu_tar, label_tar in enumerate(loop_labels):
