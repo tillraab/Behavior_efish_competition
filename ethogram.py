@@ -98,6 +98,16 @@ def main(base_path):
 
     all_marcov_matrix = []
     all_event_counts = []
+    all_agonistic_categorie = []
+    all_chase_durs = []
+
+    # agonistic categorie plot
+    fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
+    gs = gridspec.GridSpec(1, 1, left=0.1, bottom=0.1, right=0.95, top=0.95)
+    ax = fig.add_subplot(gs[0, 0])
+    got_examples = [False, False, False, False]
+    example_skips = [3, 4, 1, 0]
+
     for index, trial in trial_summary.iterrows():
         trial_path = os.path.join(base_path, trial['recording'])
 
@@ -174,7 +184,107 @@ def main(base_path):
         # plot_transition_matrix(marcov_matrix, loop_labels)
 
         # plot_transition_diagram(marcov_matrix, loop_labels, node_size=event_counts)
-        # plot_transition_diagram(marcov_matrix / event_counts.reshape(len(event_counts), 1) * 100, loop_labels, node_size=event_counts)
+        # plot_transition_diagram(marcov_matrix / event_counts.reshape(len(event_counts), 1) * 100, loop_labels, node_size=event_counts)+
+
+
+        agonitic_categorie = np.zeros(len(ag_on_off_t_GRID))
+        chase_durs = np.zeros_like(agonitic_categorie)
+
+        all_agonistic_categorie.append(agonitic_categorie)
+        all_chase_durs.append(chase_durs)
+
+        ### plotting
+
+        for enu, (chase_on_time, chase_off_time) in enumerate(ag_on_off_t_GRID):
+            chase_dur = chase_off_time - chase_on_time
+            chase_durs[enu] = chase_dur
+
+            chirp_dt = chase_dur if chase_dur < 5 else 5
+            max_dt = 5
+
+            rise_before, chirp_arround_end = False, False
+
+            if np.any(((chase_on_time - rise_times[1]) > 0) & ((chase_on_time - rise_times[1]) < max_dt)):
+                rise_times_oi = rise_times[1][((chase_on_time - rise_times[1]) > 0) & ((chase_on_time - rise_times[1]) < max_dt)]
+                rise_before = True
+
+            if np.any( ((chase_off_time - chirp_times[1]) < chirp_dt) & ((chirp_times[1] - chase_off_time) < max_dt)):
+                chirp_time_oi = chirp_times[1][((chase_off_time - chirp_times[1]) < chirp_dt) & ((chirp_times[1] - chase_off_time) < max_dt)]
+                chirp_arround_end = True
+
+            if rise_before:
+                if chirp_arround_end:
+                    agonitic_categorie[enu] = 1
+                else:
+                    agonitic_categorie[enu] = 2
+            else:
+                if chirp_arround_end:
+                    agonitic_categorie[enu] = 3
+                else:
+                    agonitic_categorie[enu] = 4
+
+            if agonitic_categorie[enu] == 1 and not got_examples[0]:
+                if chase_dur > 10:
+                    if np.any((chirp_time_oi - chase_off_time) < 0) and np.any((chirp_time_oi - chase_off_time) > 0):
+                        if example_skips[int(agonitic_categorie[enu] - 1)] == 0:
+                            ax.fill_between([0, 10],
+                                            np.array([-.2, -.2]) + agonitic_categorie[enu],
+                                            np.array([.2, .2]) + agonitic_categorie[enu], color='tab:grey')
+                            for ct in chirp_time_oi:
+                                ax.plot([ct - chase_off_time + 10, ct - chase_off_time + 10],
+                                        [agonitic_categorie[enu] - .2, agonitic_categorie[enu] + .2], color='k', lw=2)
+                            for rt in rise_times_oi:
+                                ax.plot([rt - chase_on_time, rt - chase_on_time],
+                                        [agonitic_categorie[enu] - .2, agonitic_categorie[enu] + .2], color='firebrick', lw=2)
+                            got_examples[0] = True
+                        else:
+                            example_skips[int(agonitic_categorie[enu] - 1)] -= 1
+
+            elif agonitic_categorie[enu] == 2 and not got_examples[1]:
+                if chase_dur > 10:
+                    if example_skips[int(agonitic_categorie[enu] - 1)] == 0:
+                        ax.fill_between([0, 10],
+                                        np.array([-.2, -.2]) + agonitic_categorie[enu],
+                                        np.array([.2, .2]) + agonitic_categorie[enu], color='tab:grey')
+                        for rt in rise_times_oi:
+                            ax.plot([rt - chase_on_time, rt - chase_on_time],
+                                    [agonitic_categorie[enu] - .2, agonitic_categorie[enu] + .2], color='firebrick', lw=2)
+                        got_examples[1] = True
+                    else:
+                        example_skips[int(agonitic_categorie[enu] - 1)] -= 1
+
+            elif agonitic_categorie[enu] == 3 and not got_examples[2]:
+                if chase_dur > 10:
+                    if np.any((chirp_time_oi - chase_off_time) < 0) and np.any((chirp_time_oi - chase_off_time) > 0):
+                        if example_skips[int(agonitic_categorie[enu] - 1)] == 0:
+                            ax.fill_between([0, 10],
+                                            np.array([-.2, -.2]) + agonitic_categorie[enu],
+                                            np.array([.2, .2]) + agonitic_categorie[enu], color='tab:grey')
+                            for ct in chirp_time_oi:
+                                ax.plot([ct - chase_off_time + 10, ct - chase_off_time + 10],
+                                        [agonitic_categorie[enu] - .2, agonitic_categorie[enu] + .2], color='k', lw=2)
+                            got_examples[2] = True
+                        else:
+                            example_skips[int(agonitic_categorie[enu] - 1)] -= 1
+
+
+            elif agonitic_categorie[enu] == 4 and not got_examples[3]:
+                if chase_dur > 10:
+                    ax.fill_between([0, 10],
+                                    np.array([-.2, -.2]) + agonitic_categorie[enu],
+                                    np.array([.2, .2]) + agonitic_categorie[enu], color='tab:grey')
+                    got_examples[3] = True
+            else:
+                pass
+
+    for i in range(4):
+
+    ax.plot([0, 0], [0, 5], '--', color='k', lw=1)
+    ax.plot([10, 10], [0, 5], '--', color='k', lw=1)
+    ax.set_ylim(0.5, 4.5)
+    plt.show()
+    embed()
+    quit()
     all_marcov_matrix = np.array(all_marcov_matrix)
     all_event_counts = np.array(all_event_counts)
 
@@ -220,6 +330,53 @@ def main(base_path):
 
     embed()
     quit()
+    ### agonistic categories
+
+    # stacked
+    stacked_agonistic_categories = np.hstack(all_agonistic_categorie)
+    stacked_all_chase_durs = np.hstack(all_chase_durs)
+
+    # idx_cat_4 = np.where(stacked_agonistic_categories == 4)[0]
+    # idx_cat_4 = idx_cat_4[np.argsort(stacked_all_chase_durs[idx_cat_4])]
+    # idx_cat_3 = np.where(stacked_agonistic_categories == 3)[0]
+    # idx_cat_3 = idx_cat_3[np.argsort(stacked_all_chase_durs[idx_cat_3])]
+    # idx_cat_2 = np.where(stacked_agonistic_categories == 2)[0]
+    # idx_cat_2 = idx_cat_2[np.argsort(stacked_all_chase_durs[idx_cat_2])]
+    # idx_cat_1 = np.where(stacked_agonistic_categories == 1)[0]
+    # idx_cat_1 = idx_cat_1[np.argsort(stacked_all_chase_durs[idx_cat_1])]
+    #
+    # fig, ax = plt.subplots(figsize=(20/2.54, 12/2.54))
+    # ax.plot(10 - stacked_all_chase_durs[idx_cat_4], np.arange(len(idx_cat_4)))
+    # ax.plot(10 - stacked_all_chase_durs[idx_cat_3], np.arange(len(idx_cat_4), len(idx_cat_3) + len(idx_cat_4)))
+    # ax.plot(10 - stacked_all_chase_durs[idx_cat_2], np.arange(len(idx_cat_3) + len(idx_cat_4), len(idx_cat_2) + len(idx_cat_3) + len(idx_cat_4)))
+    # ax.plot(10 - stacked_all_chase_durs[idx_cat_1], np.arange(len(idx_cat_2) + len(idx_cat_3) + len(idx_cat_4), len(idx_cat_1) + len(idx_cat_2) + len(idx_cat_3) + len(idx_cat_4)))
+    # ax.set_xlim(0, 10)
+    # plt.show()
+
+
+    fig, ax = plt.subplots(figsize=(20/2.54, 12/2.54))
+    ax.bar(np.arange(4),
+           [len(stacked_agonistic_categories[stacked_agonistic_categories == 1]),
+            len(stacked_agonistic_categories[stacked_agonistic_categories == 2]),
+            len(stacked_agonistic_categories[stacked_agonistic_categories == 3]),
+            len(stacked_agonistic_categories[stacked_agonistic_categories == 4])])
+    ax.set_xticks(np.arange(4))
+    ax.set_xticklabels([r'rise$_{pre}$ + chirp$_{end}$', r'rise$_{pre}$ + _', r'_ + chirp$_{end}$', '_ + _'])
+    plt.show()
+
+    # pct
+    pct_agon_categorie = np.zeros(shape=(len(all_agonistic_categorie), 4))
+    for enu, agonitic_categorie in enumerate(all_agonistic_categorie):
+        for cat in np.arange(4):
+            pct_agon_categorie[enu, cat] = len(agonitic_categorie[agonitic_categorie == cat+1]) / len(agonitic_categorie)
+
+    fig, ax = plt.subplots(figsize=(20 / 2.54, 12 / 2.54))
+    ax.bar(np.arange(4), pct_agon_categorie.mean(0))
+    ax.errorbar(np.arange(4), pct_agon_categorie.mean(0), yerr=pct_agon_categorie.std(0), fmt='', color='k', linestyle='None')
+    ax.set_xticks(np.arange(4))
+    ax.set_xticklabels([r'rise$_{pre}$ + chirp$_{end}$', r'rise$_{pre}$ + _', r'_ + chirp$_{end}$', '_ + _'])
+    plt.show()
+
     pass
 
 
