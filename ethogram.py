@@ -10,6 +10,8 @@ import pandas as pd
 import scipy.stats as scp
 import networkx as nx
 
+from thunderfish.powerspectrum import decibel
+
 from IPython import embed
 from event_time_correlations import load_and_converete_boris_events
 glob_colors = ['#BA2D22', '#53379B', '#F47F17', '#3673A4', '#AAB71B', '#DC143C', '#1E90FF', 'k']
@@ -90,6 +92,40 @@ def plot_transition_diagram(matrix, labels, node_size, ax, threshold=5,
     ax.set_ylim(-1.3, 1.3)
     ax.set_title(title, fontsize=12)
 
+def create_marcov_matrix(individual_event_times, individual_event_labels):
+    event_times = []
+    event_labels = []
+    for ll, t in zip(individual_event_labels, individual_event_times):
+        event_times.extend(t)
+        event_labels.extend(np.full(len(t), ll))
+
+    time_sorter = np.argsort(event_times)
+    event_times = np.array(event_times)[time_sorter]
+    event_labels = np.array(event_labels)[time_sorter]
+
+    marcov_matrix = np.zeros((len(individual_event_labels) + 1, len(individual_event_labels) + 1))
+    for enu_ori, label_ori in enumerate(individual_event_labels):
+        for enu_tar, label_tar in enumerate(individual_event_labels):
+            n = len(event_times[:-1][(event_labels[:-1] == label_ori) & (event_labels[1:] == label_tar) & (
+                        np.diff(event_times) <= 5)])
+            marcov_matrix[enu_ori, enu_tar] = n
+    for enu_tar, label_tar in enumerate(individual_event_labels):
+        n = len(event_times[:-1][(event_labels[1:] == label_tar) & (np.diff(event_times) > 5)])
+        marcov_matrix[-1, enu_tar] = n
+    marcov_matrix[-1, 5] = 0
+
+    individual_event_labels.append('void')
+
+    ### get those cases where ag_on does not point to event and no event points to corresponding ag_off ... add thise cases in marcov matrix
+    chase_on_idx = np.where(event_labels == individual_event_labels[4])[0]
+    chase_off_idx = np.where(event_labels == individual_event_labels[5])[0]
+    helper_mask = np.ones_like(chase_on_idx)
+    helper_mask[np.diff(event_times)[chase_on_idx] <= 5] = 0
+    helper_mask[np.diff(event_times)[chase_off_idx - 1] <= 5] = 0
+
+    marcov_matrix[4, 5] += np.sum(helper_mask)
+
+    return marcov_matrix
 def main(base_path):
     if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures', 'markov')):
         os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures', 'markov'))
@@ -102,24 +138,27 @@ def main(base_path):
     all_marcov_matrix = []
     all_event_counts = []
     all_agonistic_categorie = []
-    all_chase_durs = []
 
     # agonistic categorie plot
-    fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
-    gs = gridspec.GridSpec(2, 1, left=0.1, bottom=0.1, right=0.9, top=0.95, height_ratios=[1, 4], hspace=0)
-    ax = fig.add_subplot(gs[1, 0])
-    ax_spec = fig.add_subplot(gs[0, 0], sharex=ax)
-    plt.setp(ax_spec.get_xticklabels(), visible=False)
+    # fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
+    # gs = gridspec.GridSpec(2, 1, left=0.1, bottom=0.1, right=0.9, top=0.95, height_ratios=[1, 4], hspace=0)
+    # ax = fig.add_subplot(gs[1, 0])
+    # ax_spec = fig.add_subplot(gs[0, 0], sharex=ax)
+    # plt.setp(ax_spec.get_xticklabels(), visible=False)
+    #
+    # for i in range(1, 5):
+    #     ax.fill_between([0, 4], np.array([-.2, -.2]) + i, np.array([.2, .2]) + i, color='tab:grey')
+    #     ax.fill_between([5, 10], np.array([-.2, -.2]) + i, np.array([.2, .2]) + i, color='tab:grey')
+    #
+    #     fill_dots = np.arange(4, 5.1, 0.125)
+    #     ax.plot(fill_dots, np.ones_like(fill_dots)*i, '.', color='tab:grey', markersize=3)
 
-    for i in range(1, 5):
-        ax.fill_between([0, 4], np.array([-.2, -.2]) + i, np.array([.2, .2]) + i, color='tab:grey')
-        ax.fill_between([5, 10], np.array([-.2, -.2]) + i, np.array([.2, .2]) + i, color='tab:grey')
-
-        fill_dots = np.arange(4, 5.1, 0.125)
-        ax.plot(fill_dots, np.ones_like(fill_dots)*i, '.', color='tab:grey', markersize=3)
-
-    got_examples = [False, False, False, False]
-    example_skips = [3, 4, 3, 0]
+    got_examples = [False, False, False]
+    example_ag_on_off = [[], [], []]
+    example_chirp_times = [[], [], []]
+    example_rise_times = [[], [], []]
+    example_1_path = ''
+    example_skips = [3, 4, 3]
 
     for index, trial in trial_summary.iterrows():
         trial_path = os.path.join(base_path, trial['recording'])
@@ -155,77 +194,39 @@ def main(base_path):
         rise_idx_int = [np.array(rise_idx[i][~np.isnan(rise_idx[i])], dtype=int) for i in range(len(rise_idx))]
         rise_times = [times[rise_idx_int[0]], times[rise_idx_int[1]]]
 
-        event_times = []
-        event_labels = []
-        loop_times = [chirp_times[1], rise_times[1], chirp_times[0], rise_times[0], ag_on_off_t_GRID[:, 0],
-                      ag_on_off_t_GRID[:, 1], contact_t_GRID]
-        loop_labels = [r'chirp$_{lose}$', r'rise$_{lose}$', r'chirp$_{win}$', r'rise$_{win}$', r'chace$_{on}$', r'chace$_{off}$', 'contact']
-        event_counts = np.array([len(chirp_times[1]), len(rise_times[1]), len(chirp_times[0]), len(rise_times[0]), len(ag_on_off_t_GRID), len(ag_on_off_t_GRID), len(contact_t_GRID)])
-        for ll, t in zip(loop_labels, loop_times):
-            event_times.extend(t)
-            event_labels.extend(np.full(len(t), ll))
+        # trial marcov matrix
+        individual_event_times = [chirp_times[1], rise_times[1], chirp_times[0], rise_times[0], ag_on_off_t_GRID[:, 0],
+                                  ag_on_off_t_GRID[:, 1], contact_t_GRID]
+        individual_event_labels = [r'chirp$_{lose}$', r'rise$_{lose}$', r'chirp$_{win}$', r'rise$_{win}$',
+                                   r'chace$_{on}$', r'chace$_{off}$', 'contact']
 
-        time_sorter = np.argsort(event_times)
-        event_times = np.array(event_times)[time_sorter]
-        event_labels = np.array(event_labels)[time_sorter]
-
-        ###  create marcov_matrix for one trial !!!
-        marcov_matrix = np.zeros((len(loop_labels)+1, len(loop_labels)+1))
-
-        for enu_ori, label_ori in enumerate(loop_labels):
-            for enu_tar, label_tar in enumerate(loop_labels):
-                n = len(event_times[:-1][(event_labels[:-1] == label_ori) & (event_labels[1:] == label_tar) & (np.diff(event_times) <= 5)])
-                marcov_matrix[enu_ori, enu_tar] = n
-        for enu_tar, label_tar in enumerate(loop_labels):
-            n = len(event_times[:-1][(event_labels[1:] == label_tar) & (np.diff(event_times) > 5)])
-            marcov_matrix[-1, enu_tar] = n
-        marcov_matrix[-1, 5] = 0
-        loop_labels.append('void')
-        event_counts = np.append(event_counts, marcov_matrix[-1].sum())
-
-        ### get those cases where ag_on does not point to event and no event points to corresponding ag_off ... add thise cases in marcov matrix
-        chase_on_idx = np.where(event_labels == loop_labels[4])[0]
-        chase_off_idx = np.where(event_labels == loop_labels[5])[0]
-        helper_mask = np.ones_like(chase_on_idx)
-        helper_mask[np.diff(event_times)[chase_on_idx] <= 5] = 0
-        helper_mask[np.diff(event_times)[chase_off_idx-1] <= 5] = 0
-
-        marcov_matrix[4, 5] += np.sum(helper_mask)
-
+        marcov_matrix = create_marcov_matrix(individual_event_times, individual_event_labels)
         all_marcov_matrix.append(marcov_matrix)
+
+        # compute and store trial event counts
+        event_counts = np.array(list(map(lambda x: len(x), individual_event_times)))
+        event_counts = np.append(event_counts, marcov_matrix[-1].sum())
         all_event_counts.append(event_counts)
-        # plot_transition_matrix(marcov_matrix, loop_labels)
 
-        # plot_transition_diagram(marcov_matrix, loop_labels, node_size=event_counts)
-        # plot_transition_diagram(marcov_matrix / event_counts.reshape(len(event_counts), 1) * 100, loop_labels, node_size=event_counts)+
-
-
+        # agonistic categories
         agonitic_categorie = np.zeros(len(ag_on_off_t_GRID))
-        chase_durs = np.zeros_like(agonitic_categorie)
-
-        all_agonistic_categorie.append(agonitic_categorie)
-        all_chase_durs.append(chase_durs)
-
-        ### plotting
-
         for enu, (chase_on_time, chase_off_time) in enumerate(ag_on_off_t_GRID):
             chase_dur = chase_off_time - chase_on_time
-            chase_durs[enu] = chase_dur
-
             chirp_dt = chase_dur if chase_dur < 5 else 5
             max_dt = 5
 
+            # check if rise before chase / chirp at end
             rise_before, chirp_arround_end = False, False
-
             if np.any(((chase_on_time - rise_times[1]) > 0) & ((chase_on_time - rise_times[1]) < max_dt)):
                 rise_times_oi = rise_times[1][((chase_on_time - rise_times[1]) > 0) & ((chase_on_time - rise_times[1]) < max_dt)]
                 rise_before = True
 
             if np.any( ((chase_off_time - chirp_times[1]) < chirp_dt) & ((chirp_times[1] - chase_off_time) < max_dt)):
-                # chirp_time_oi = chirp_times[1][((chase_off_time - chirp_times[1]) < chirp_dt) & ((chirp_times[1] - chase_off_time) < max_dt)]
+                # ToDo: check if I realy get all chirps... currently not the case
                 chirp_time_oi = chirp_times[1][((chase_off_time - chirp_times[1]) < chase_dur) & ((chirp_times[1] - chase_off_time) < max_dt)]
                 chirp_arround_end = True
 
+            # define agonistic categorie based on rise/chirp occurance
             if rise_before:
                 if chirp_arround_end:
                     agonitic_categorie[enu] = 1
@@ -241,21 +242,18 @@ def main(base_path):
                 if chase_dur > 10:
                     if np.any((chirp_time_oi - chase_off_time) < 0) and np.any((chirp_time_oi - chase_off_time) > 0):
                         if example_skips[int(agonitic_categorie[enu] - 1)] == 0:
-                            for ct in chirp_time_oi:
-                                ax.plot([ct - chase_off_time + 10, ct - chase_off_time + 10],
-                                        [agonitic_categorie[enu] - .2, agonitic_categorie[enu] + .2], color='k', lw=2)
-                            for rt in rise_times_oi:
-                                ax.plot([rt - chase_on_time, rt - chase_on_time],
-                                        [agonitic_categorie[enu] - .2, agonitic_categorie[enu] + .2], color='firebrick', lw=2)
+                            example_ag_on_off[int(agonitic_categorie[enu] - 1)].extend([chase_on_time, chase_off_time])
+                            example_chirp_times[int(agonitic_categorie[enu] - 1)].extend(chirp_time_oi)
+                            example_rise_times[int(agonitic_categorie[enu] - 1)].extend(rise_times_oi)
+                            example_1_path = trial_path
                             got_examples[0] = True
                         else:
                             example_skips[int(agonitic_categorie[enu] - 1)] -= 1
             elif agonitic_categorie[enu] == 2 and not got_examples[1]:
                 if chase_dur > 10:
                     if example_skips[int(agonitic_categorie[enu] - 1)] == 0:
-                        for rt in rise_times_oi:
-                            ax.plot([rt - chase_on_time, rt - chase_on_time],
-                                    [agonitic_categorie[enu] - .2, agonitic_categorie[enu] + .2], color='firebrick', lw=2)
+                        example_ag_on_off[int(agonitic_categorie[enu] - 1)].extend([chase_on_time, chase_off_time])
+                        example_rise_times[int(agonitic_categorie[enu] - 1)].extend(rise_times_oi)
                         got_examples[1] = True
                     else:
                         example_skips[int(agonitic_categorie[enu] - 1)] -= 1
@@ -263,27 +261,69 @@ def main(base_path):
                 if chase_dur > 10:
                     if np.any((chirp_time_oi - chase_off_time) < 0) and np.any((chirp_time_oi - chase_off_time) > 0):
                         if example_skips[int(agonitic_categorie[enu] - 1)] == 0:
-                            for ct in chirp_time_oi:
-                                ax.plot([ct - chase_off_time + 10, ct - chase_off_time + 10],
-                                        [agonitic_categorie[enu] - .2, agonitic_categorie[enu] + .2], color='k', lw=2)
+                            example_ag_on_off[int(agonitic_categorie[enu] - 1)].extend([chase_on_time, chase_off_time])
+                            example_chirp_times[int(agonitic_categorie[enu] - 1)].extend(chirp_time_oi)
                             got_examples[2] = True
                         else:
                             example_skips[int(agonitic_categorie[enu] - 1)] -= 1
             else:
                 pass
 
-    ### agonistic categories
-    stacked_agonistic_categories = np.hstack(all_agonistic_categorie)
-    stacked_all_chase_durs = np.hstack(all_chase_durs)
+        all_agonistic_categorie.append(agonitic_categorie)
 
+    ###  agonistic categorie example figure
+    fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
+    gs = gridspec.GridSpec(2, 1, left=0.1, bottom=0.1, right=0.9, top=0.95, height_ratios=[1, 4], hspace=0)
+    ax = fig.add_subplot(gs[1, 0])
+    ax_spec = fig.add_subplot(gs[0, 0], sharex=ax)
+    plt.setp(ax_spec.get_xticklabels(), visible=False)
+
+    for i in range(1, 5):
+        ax.fill_between([0, 4], np.array([-.2, -.2]) + i, np.array([.2, .2]) + i, color='tab:grey')
+        ax.fill_between([5, 10], np.array([-.2, -.2]) + i, np.array([.2, .2]) + i, color='tab:grey')
+
+        fill_dots = np.arange(4, 5.1, 0.125)
+        ax.plot(fill_dots, np.ones_like(fill_dots)*i, '.', color='tab:grey', markersize=3)
+
+    for enu, (chirp_time_oi, rise_times_oi, ag_on_off) in enumerate(zip(example_chirp_times, example_rise_times, example_ag_on_off)):
+        chase_on_time, chase_off_time = ag_on_off
+
+        for ct in chirp_time_oi:
+            ax.plot([ct - chase_off_time + 10, ct - chase_off_time + 10], [enu + .8, enu + 1.2], color='k', lw=2)
+        for rt in rise_times_oi:
+            ax.plot([rt - chase_on_time, rt - chase_on_time], [enu + .8, enu + 1.2], color='firebrick', lw=2)
+
+    stacked_agonistic_categories = np.hstack(all_agonistic_categorie)
     pct_each_categorie = np.zeros(4)
     for enu, cat in enumerate(range(1, 5)):
         pct_each_categorie[enu] = len(stacked_agonistic_categories[stacked_agonistic_categories == cat]) / len(stacked_agonistic_categories)
+        ax.text(15.2, enu + 1, f'{pct_each_categorie[enu] * 100:.1f}' + ' $\%$', clip_on=False, fontsize=14, ha='left', va='center')
 
-    # example plot
-    for enu, cat_pct in enumerate(pct_each_categorie):
-        ax.text(15.2, enu+1, f'{cat_pct*100:.1f}' + ' $\%$', clip_on=False, fontsize=14, ha='left', va='center')
+    # plot correct spectrogram
+    ex1_df_idx = trial_summary[trial_summary['recording'] == os.path.split(example_1_path)[-1]].index.to_numpy()[0]
+    lose_id = trial_summary.iloc[ex1_df_idx]['lose_ID']
+    # ToDo: use fill_spec
+    spec = np.load(os.path.join(example_1_path, 'spec.npy'))
+    times = np.load(os.path.join(example_1_path, 'times.npy'))
+    fund_v = np.load(os.path.join(example_1_path, 'fund_v.npy'))
+    ident_v = np.load(os.path.join(example_1_path, 'ident_v.npy'))
+    idx_v = np.load(os.path.join(example_1_path, 'idx_v.npy'))
 
+    artificial_t_axis = np.linspace(times[0], times[-1], spec.shape[1])
+    artificial_f_axis = np.linspace(0, 2000, spec.shape[0])
+    # plt.pcolormesh(artificial_t_axis, artificial_f_axis, decibel(spec), vmin=-100, vmax=-50)
+    lose_freq_in_snippet = fund_v[(ident_v == lose_id) & (times[idx_v] > example_ag_on_off[0][0]-5) & (times[idx_v] < example_ag_on_off[0][1]+5)]
+    max_f, min_f = np.max(lose_freq_in_snippet) + 10, np.min(lose_freq_in_snippet) - 10
+
+    t_idx0 = np.where(artificial_t_axis >= example_ag_on_off[0][0] - 5)[0][0]
+    t_idx1 = np.where(artificial_t_axis <= example_ag_on_off[0][1] + 5)[0][-1]
+    f_idx0 = np.where(artificial_f_axis >= min_f)[0][0]
+    f_idx1 = np.where(artificial_f_axis <= max_f)[0][-1]
+
+    # ToDo this does not work. fix it tomorow
+    ax_spec.pcolormesh(artificial_t_axis[t_idx0:t_idx1+2] - example_ag_on_off[0][0],
+                       artificial_f_axis[f_idx0:f_idx1+2],
+                       decibel(spec[t_idx0:t_idx1+1, f_idx0:f_idx1+1]), vmin=-100, vmax=-50)
 
     ax.plot([0, 0], [0.8, 5], '--', color='k', lw=1)
     ax.plot([10, 10], [0.8, 5], '--', color='k', lw=1)
@@ -297,15 +337,20 @@ def main(base_path):
     ax.tick_params(axis='y', labelsize=20)
     ax.tick_params(axis = 'x', labelsize=10)
 
+
     legend_elements = [Line2D([0], [0], color='firebrick', lw=2, label=r'rise$_{lose}$'),
                        Line2D([0], [0], color='k', lw=2, label=r'chirp$_{lose}$'),
                        Patch(facecolor='tab:grey', edgecolor='w', label= 'chase event')]
 
-    ax.legend(handles=legend_elements, loc='upper right', ncol=3, bbox_to_anchor=(1, 1), frameon=False, fontsize=10, facecolor='white')
+    ax_spec.legend(handles=legend_elements, loc='lower right', ncol=3, bbox_to_anchor=(1, 1), frameon=False, fontsize=10, facecolor='white')
     ax.spines[['right', 'top']].set_visible(False)
     plt.show()
 
-    # bar plot
+    embed()
+    quit()
+
+    ### bar plot - agonistic categories counts/pct #####################################################################
+
     fig, ax = plt.subplots(figsize=(20/2.54, 12/2.54))
     ax.bar(np.arange(4),
            [len(stacked_agonistic_categories[stacked_agonistic_categories == 1]),
@@ -330,28 +375,28 @@ def main(base_path):
     plt.show()
 
 
-    ### marcov models
+    ### marcov models plots ############################################################################################
     all_marcov_matrix = np.array(all_marcov_matrix)
     all_event_counts = np.array(all_event_counts)
 
     collective_marcov_matrix = np.sum(all_marcov_matrix, axis=0)
     collective_event_counts = np.sum(all_event_counts, axis=0)
 
-    plot_transition_matrix(collective_marcov_matrix, loop_labels)
+    plot_transition_matrix(collective_marcov_matrix, individual_event_labels)
 
     fig, ax = plt.subplots(figsize=(21 / 2.54, 19 / 2.54))
     fig.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95)
 
     plot_transition_diagram(
         collective_marcov_matrix / collective_event_counts.reshape(len(collective_event_counts), 1) * 100,
-        loop_labels, collective_event_counts, ax, threshold=5, color_by_origin=True, title='origin triggers target [%]')
+        individual_event_labels, collective_event_counts, ax, threshold=5, color_by_origin=True, title='origin triggers target [%]')
     plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'markov', 'markov_destination' + '.png'), dpi=300)
     plt.close()
 
     fig, ax = plt.subplots(figsize=(21 / 2.54, 19 / 2.54))
     fig.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95)
     plot_transition_diagram(collective_marcov_matrix / collective_event_counts * 100,
-                            loop_labels, collective_event_counts, ax, threshold=5, color_by_target=True,
+                            individual_event_labels, collective_event_counts, ax, threshold=5, color_by_target=True,
                             title='target triggered by origin [%]')
     plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'markov', 'markov_origin' + '.png'), dpi=300)
     plt.close()
@@ -362,7 +407,7 @@ def main(base_path):
 
         plot_transition_diagram(
             marcov_matrix / event_counts.reshape(len(event_counts), 1) * 100,
-            loop_labels, event_counts, ax, threshold=5, color_by_origin=True,
+            individual_event_labels, event_counts, ax, threshold=5, color_by_origin=True,
             title='origin triggers target [%]')
         plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'markov', f'markov_{i}_destination' + '.png'),
                     dpi=300)
@@ -371,11 +416,12 @@ def main(base_path):
         fig, ax = plt.subplots(figsize=(21 / 2.54, 19 / 2.54))
         fig.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95)
         plot_transition_diagram(marcov_matrix / event_counts * 100,
-                                loop_labels, event_counts, ax, threshold=5, color_by_target=True,
+                                individual_event_labels, event_counts, ax, threshold=5, color_by_target=True,
                                 title='target triggered by origin [%]')
         plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'markov', f'markov_{i}_origin' + '.png'),
                     dpi=300)
         plt.close()
+    ####################################################################################################################
 
     embed()
     quit()
