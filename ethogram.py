@@ -126,6 +126,43 @@ def create_marcov_matrix(individual_event_times, individual_event_labels):
     marcov_matrix[4, 5] += np.sum(helper_mask)
 
     return marcov_matrix
+
+def fine_spec_plot(ax, example_1_path, trial_summary, example_ag_on_off):
+
+    ex1_df_idx = trial_summary[trial_summary['recording'] == os.path.split(example_1_path)[-1]].index.to_numpy()[0]
+    lose_id = trial_summary.iloc[ex1_df_idx]['lose_ID']
+
+    fine_spec_shape = np.load(os.path.join(example_1_path, 'fill_spec_shape.npy'))
+    fine_spec = np.memmap(os.path.join(example_1_path, 'fill_spec.npy'), dtype='float', mode='r', shape=(fine_spec_shape[0], fine_spec_shape[1]), order='F')
+    fine_times = np.load(os.path.join(example_1_path, 'fill_times.npy'))
+    spec_freqs = np.load(os.path.join(example_1_path, 'fill_freqs.npy'))
+
+    times = np.load(os.path.join(example_1_path, 'times.npy'))
+    fund_v = np.load(os.path.join(example_1_path, 'fund_v.npy'))
+    ident_v = np.load(os.path.join(example_1_path, 'ident_v.npy'))
+    idx_v = np.load(os.path.join(example_1_path, 'idx_v.npy'))
+
+    # artificial_t_axis = np.linspace(times[0], times[-1], spec.shape[1])
+    # artificial_f_axis = np.linspace(0, 2000, spec.shape[0])
+    # plt.pcolormesh(artificial_t_axis, artificial_f_axis, decibel(spec), vmin=-100, vmax=-50)
+    lose_freq_in_snippet = fund_v[(ident_v == lose_id) & (times[idx_v] > example_ag_on_off[0][0]-5) & (times[idx_v] < example_ag_on_off[0][1]+5)]
+    max_f, min_f = np.max(lose_freq_in_snippet) + 25, np.min(lose_freq_in_snippet) - 25
+
+    f_idx0 = np.where(spec_freqs <= min_f)[0][-1]
+    f_idx1 = np.where(spec_freqs >= max_f)[0][0]
+
+    t_idx0 = np.where(fine_times <= example_ag_on_off[0][0] - 5)[0][-1]
+    t_idx1 = np.where(fine_times >= example_ag_on_off[0][0] + 4)[0][0]
+    ax.pcolormesh(fine_times[t_idx0:t_idx1+1] - example_ag_on_off[0][0], spec_freqs[f_idx0:f_idx1+1],
+                  decibel(fine_spec[f_idx0:f_idx1+1, t_idx0:t_idx1+1]))
+
+    t_idx0 = np.where(fine_times <= example_ag_on_off[0][1] - 5)[0][-1]
+    t_idx1 = np.where(fine_times >= example_ag_on_off[0][1] + 5)[0][0]
+    ax.pcolormesh(fine_times[t_idx0:t_idx1+1] - example_ag_on_off[0][1] + 10, spec_freqs[f_idx0:f_idx1+1],
+                  decibel(fine_spec[f_idx0:f_idx1+1, t_idx0:t_idx1+1]))
+
+    ax.fill_between([4, 5], [spec_freqs[f_idx0], spec_freqs[f_idx0]], [spec_freqs[f_idx1], spec_freqs[f_idx1]], color='white')
+
 def main(base_path):
     if not os.path.exists(os.path.join(os.path.split(__file__)[0], 'figures', 'markov')):
         os.makedirs(os.path.join(os.path.split(__file__)[0], 'figures', 'markov'))
@@ -158,7 +195,7 @@ def main(base_path):
     example_chirp_times = [[], [], []]
     example_rise_times = [[], [], []]
     example_1_path = ''
-    example_skips = [3, 4, 3]
+    example_skips = [15, 4, 3] #3, 5, 9, 15, 19
 
     for index, trial in trial_summary.iterrows():
         trial_path = os.path.join(base_path, trial['recording'])
@@ -222,9 +259,10 @@ def main(base_path):
                 rise_before = True
 
             if np.any( ((chase_off_time - chirp_times[1]) < chirp_dt) & ((chirp_times[1] - chase_off_time) < max_dt)):
-                # ToDo: check if I realy get all chirps... currently not the case
+
                 chirp_time_oi = chirp_times[1][((chase_off_time - chirp_times[1]) < chase_dur) & ((chirp_times[1] - chase_off_time) < max_dt)]
                 chirp_arround_end = True
+
 
             # define agonistic categorie based on rise/chirp occurance
             if rise_before:
@@ -273,7 +311,7 @@ def main(base_path):
 
     ###  agonistic categorie example figure
     fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
-    gs = gridspec.GridSpec(2, 1, left=0.1, bottom=0.1, right=0.9, top=0.95, height_ratios=[1, 4], hspace=0)
+    gs = gridspec.GridSpec(2, 1, left=0.1, bottom=0.1, right=0.9, top=0.9, height_ratios=[1, 4], hspace=0)
     ax = fig.add_subplot(gs[1, 0])
     ax_spec = fig.add_subplot(gs[0, 0], sharex=ax)
     plt.setp(ax_spec.get_xticklabels(), visible=False)
@@ -300,34 +338,13 @@ def main(base_path):
         ax.text(15.2, enu + 1, f'{pct_each_categorie[enu] * 100:.1f}' + ' $\%$', clip_on=False, fontsize=14, ha='left', va='center')
 
     # plot correct spectrogram
-    ex1_df_idx = trial_summary[trial_summary['recording'] == os.path.split(example_1_path)[-1]].index.to_numpy()[0]
-    lose_id = trial_summary.iloc[ex1_df_idx]['lose_ID']
-    # ToDo: use fill_spec
-    spec = np.load(os.path.join(example_1_path, 'spec.npy'))
-    times = np.load(os.path.join(example_1_path, 'times.npy'))
-    fund_v = np.load(os.path.join(example_1_path, 'fund_v.npy'))
-    ident_v = np.load(os.path.join(example_1_path, 'ident_v.npy'))
-    idx_v = np.load(os.path.join(example_1_path, 'idx_v.npy'))
+    fine_spec_plot(ax_spec, example_1_path, trial_summary, example_ag_on_off)
 
-    artificial_t_axis = np.linspace(times[0], times[-1], spec.shape[1])
-    artificial_f_axis = np.linspace(0, 2000, spec.shape[0])
-    # plt.pcolormesh(artificial_t_axis, artificial_f_axis, decibel(spec), vmin=-100, vmax=-50)
-    lose_freq_in_snippet = fund_v[(ident_v == lose_id) & (times[idx_v] > example_ag_on_off[0][0]-5) & (times[idx_v] < example_ag_on_off[0][1]+5)]
-    max_f, min_f = np.max(lose_freq_in_snippet) + 10, np.min(lose_freq_in_snippet) - 10
+    ##########################################
 
-    t_idx0 = np.where(artificial_t_axis >= example_ag_on_off[0][0] - 5)[0][0]
-    t_idx1 = np.where(artificial_t_axis <= example_ag_on_off[0][1] + 5)[0][-1]
-    f_idx0 = np.where(artificial_f_axis >= min_f)[0][0]
-    f_idx1 = np.where(artificial_f_axis <= max_f)[0][-1]
-
-    # ToDo this does not work. fix it tomorow
-    ax_spec.pcolormesh(artificial_t_axis[t_idx0:t_idx1+2] - example_ag_on_off[0][0],
-                       artificial_f_axis[f_idx0:f_idx1+2],
-                       decibel(spec[t_idx0:t_idx1+1, f_idx0:f_idx1+1]), vmin=-100, vmax=-50)
-
-    ax.plot([0, 0], [0.8, 5], '--', color='k', lw=1)
-    ax.plot([10, 10], [0.8, 5], '--', color='k', lw=1)
-    ax.set_ylim(0.25, 4.5)
+    ax.plot([0, 0], [0.5, 5], '--', color='k', lw=1)
+    ax.plot([10, 10], [0.5, 5], '--', color='k', lw=1)
+    ax.set_ylim(0.5, 4.5)
     ax.set_xlim(-5, 15)
     ax.set_yticks([1, 2, 3, 4])
     # ax.set_yticklabels([r'rise$_{pre}$  $&$ chirp$_{end}$', r'only rise$_{pre}$', r'only chirp$_{end}$', 'no communication'])
@@ -343,11 +360,12 @@ def main(base_path):
                        Patch(facecolor='tab:grey', edgecolor='w', label= 'chase event')]
 
     ax_spec.legend(handles=legend_elements, loc='lower right', ncol=3, bbox_to_anchor=(1, 1), frameon=False, fontsize=10, facecolor='white')
+    ax_spec.set_ylabel('EODf [Hz]', fontsize=12)
     ax.spines[['right', 'top']].set_visible(False)
+
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'markov', 'agonistic_categories' + '.png'), dpi=300)
     plt.show()
 
-    embed()
-    quit()
 
     ### bar plot - agonistic categories counts/pct #####################################################################
 
