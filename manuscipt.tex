@@ -1,0 +1,854 @@
+%% Author_tex.tex
+%% V1.0
+%% developed by Nova Techset
+%%
+%% This file describes the coding for COB.cls
+
+\documentclass[vruler,JEB]{COB}%%%%where COB is the template name
+
+%The authors can define any packages after the \documentclass{COB} command.
+
+%\usepackage{amsmath} for dealing with mathematics,
+%\usepackage{amsthm} for dealing with theorem environments,
+%\usepackage{cite} for dealing with citations
+%\usepackage{hyperref} for linking the cross references
+%\usepackage{graphics} for dealing with figures.
+%\usepackage{algorithmic} for describing algorithms
+%\usepackage{subfig} for getting the subfigures e.g., "Figure 1a and 1b" etc.
+%\usepackage{url} It provides better support for handling and breaking URLs.
+
+\usepackage{widetext-TI}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{condition}{Condition}
+
+% our own packages and commands 
+\usepackage[mediumspace,mediumqspace,Gray, squaren]{SIunits} 
+
+\newcommand{\aptero}{\textit{Apteronotus}}
+\newcommand{\Albi}{\textit{Apteronotus albifrons}}
+\newcommand{\albi}{\textit{A. albifrons}}
+\newcommand{\Lepto}{\textit{Apteronotus leptorhynchus}}
+\newcommand{\lepto}{\textit{A. leptorhynchus}}
+\newcommand{\Rostratus}{\textit{Apteronotus rostratus}}
+\newcommand{\rostratus}{\textit{A. rostratus}}
+\newcommand{\Macros}{\textit{Apteronotus macrostomus}}
+\newcommand{\macros}{\textit{A. macrostomus}}
+\newcommand{\Eig}{\textit{Eigenmannia virescens}}
+\newcommand{\eig}{\textit{E. virescens}}
+\newcommand{\sterno}{\textit{Sternopygus}}
+
+% references to panels of a figure within the caption:
+\newcommand{\figitem}[1]{\textsf{\bfseries\uppercase{#1}}\penalty10000 }
+% references to panels of a figure within the text:
+\newcommand{\panel}[1]{\textsf{#1}}
+% references to figures:
+\newcommand{\fref}[1]{\textup{\ref{#1}}}
+\newcommand{\subfref}[2]{\textup{\ref{#1}}\,\panel{#2}}
+% references to figures in normal text:
+\newcommand{\fig}{fig.}
+\newcommand{\Fig}{Fig.}
+\newcommand{\figs}{figs.}
+\newcommand{\Figs}{Figs.}
+\newcommand{\figref}[1]{\fig~\fref{#1}}
+\newcommand{\Figref}[1]{\Fig~\fref{#1}}
+\newcommand{\figsref}[1]{\figs~\fref{#1}}
+\newcommand{\Figsref}[1]{\Figs~\fref{#1}}
+\newcommand{\subfigref}[2]{\fig~\subfref{#1}{#2}}
+\newcommand{\Subfigref}[2]{\Fig~\subfref{#1}{#2}}
+\newcommand{\subfigsref}[2]{\figs~\subfref{#1}{#2}}
+\newcommand{\Subfigsref}[2]{\Figs~\subfref{#1}{#2}}
+% references to figures within brackets:
+\newcommand{\figb}{fig.}
+\newcommand{\Figb}{Fig.}
+\newcommand{\figsb}{figs.}
+\newcommand{\Figsb}{Figs.}
+\newcommand{\figrefb}[1]{\figb~\fref{#1}}
+\newcommand{\Figrefb}[1]{\Figb~\fref{#1}}
+\newcommand{\figsrefb}[1]{\figsb~\fref{#1}}
+\newcommand{\Figsrefb}[1]{\Figsb~\fref{#1}}
+\newcommand{\subfigrefb}[2]{\figb~\subfref{#1}{#2}}
+\newcommand{\Subfigrefb}[2]{\Figb~\subfref{#1}{#2}}
+\newcommand{\subfigsrefb}[2]{\figsb~\subfref{#1}{#2}}
+\newcommand{\Subfigsrefb}[2]{\Figsb~\subfref{#1}{#2}}
+
+
+%The author can find the documentation of the above style file and any additional
+%supporting files if required from "http://www.ctan.org"
+
+% *** Do not adjust lengths that control margins, column widths, etc. ***
+
+\begin{document}
+
+\supertitle{Research Article}
+
+\title{Electrocommunication signals indicate motivation to compete during dyadic interactions of an electric fish}
+
+%\author{First author$^{1}$ and Second author$^{2}$}
+\author{Till Raab$^{1,2\dagger}$, Sercan Bayezit$^{1}$, Saskia Erdle $^{1}$, Jan Benda$^{1,2,3}$}
+
+\address{\add{1}{Institute for Neurobiology, Eberhard Karls Universit\"at, T\"ubingen, Germany}
+\add{2}{Centre for Integrative Neuroscience, Eberhard Karls Universit\"at, T\"ubingen, Germany}
+\add{3}{Bernstein Centre for Computational Neuroscience, Eberhard Karls Universit\"at, T\"ubingen, Germany}}
+
+\corres{\email{till.raab@uni-tuebingen.de}}
+
+\date{Received 1 May 2018; revised 5 December 2018}
+
+\maketitle
+
+\begin{abstract}
+Animals across species compete for limited resources. While in some species competition behavior is solely based on own abilities, others assess their opponents to facilitate these interactions. Using cues and communication signals, contestants gather information about their opponent, adjust their behavior accordingly, and can thereby avoid high costs of escalating fights. We tracked electrocommunication signals, in particular ``rises'', and agonistic behaviors of the gymnotiform electric fish \Lepto{} in staged competition experiments. A larger body-size relative to the opponent was the sole significant predictor for winners. Sex and the frequency of the continuously emitted electric field were only mildly influencing competition outcome. In males, correlations of body-size and winning were stronger than in females and, especially when losing against females, communication and agonistic interactions were enhanced, hinting towards males being more motivated to compete. Fish that lost competitions emitted the majority of rises, whereby their quantity depended on the competitors' relative size and sex. The emission of rises was costly since it provoked ritualized biting or chasing behaviors by the other fish. Despite winners being accurately predictable based on rise numbers already after the initial 25 minutes, losers continued to emit rises. The number of rises emitted by losers and the duration of chasing behaviors depended in similar ways on physical attributes of contestants. The detailed evaluation of these correlations hint towards \lepto{} adjusting their competition behavior according to mutual assessment, where rises could signal a loser's motivation to continue assessment through ritualized fighting. 
+\end{abstract}
+
+\keywords{staged competition, resource holding potential, assessment, communication, weakly electric fish}
+
+\section{Introduction}  % 930 words
+
+Across animal species fighting is a key behavior to secure access to limited resources \citep{Cluttonbrock1979, Chapman1995, Markham2015}. However, competition is costly because of the energy and time allocated to it and the increased risk of injury or death (e.g. \citealp{Briffa2004}). Therefore, individual behavioral decisions during contests are strongly dependent on the associated potential benefits and costs \citep{ArnottElwood2008, ArnottElwood2009}. Often, the best predictor for the outcome of competitions is the contestants' fighting ability, also called resource holding potential (RHP, \citealp{Parker1974}). Usually, larger and stronger individuals win contests, because their physical advantages, i.e. higher RHP, directly reflect their increased endurance and potential to inflict damage \citep{Archer1988}. Additional factors like weaponry, experience, sex, or positional advantages also influence RHP (reviewed in \citealp{ArnottElwood2008}). 
+
+Behaviors and the course of competition have been shown to be either based on the assessment of solely the own RHP or by integrating both, the own and opponent's RHP \citep{Taylor2001, Enquist1990, Huyghe2005}. In the first case (self-assessment), costs resulting from competition are accumulated until an endurance threshold, set by an individual's RHP, is reached and the respective individual retreats \citep{ArnottElwood2009}. Competition costs either arise exclusively from own behaviors (pure self-assessment, \citealp{Taylor2003}) or are supplemented by costs inflicted by opponents (cumulative assessment, \citealp{Payne1998}). In both cases no direct information about an opponent and its RHP is gathered. Alternatively, in mutual assessment the contestants assess each other's RHP, compare it to the own, and adjust their behavior according to the difference \citep{EnquistLeimar1987}. The huge benefit of this strategy is its economic efficiency. Individuals can recognize their inferiority and retreat long before their endurance threshold is reached, thereby saving metabolic costs for both competitors.
+
+Besides passive cues signaling RHP, actively produced communication signals may facilitate interactions during animal conflict \citep{ArnottElwood2009, Seyfarth2010}. They can directly indicate and reflect an individual's RHP \citep{Davies1978, Cluttonbrock1979}, but also convey
+additional information influencing contest and its outcome, like motivation and behavioral intent (e.g. aggression: \citealp{Kareklas2019, Westby1970}, or submission: \citealp{Hupe2008, Silva2012}) or social status \citep{Fernald2014}. Such low cost signals have been shown to reduce the intensity and duration of contests or even convey sufficient information to resolve conflicts without the necessity of physical competitions \citep{Parker1974, Cluttonbrock1979, Jason1990}.
+
+To prevent high costs of repetitive fights with the same opponents, dominance hierarchies are established in various species \citep{Creel1996, Janson1985, Cluttonbrock1979}. In dominance hierarchies the necessity of fighting is reduced since access to resources is regulated through social status, favoring those individuals of higher rank \citep{Wauters1992, Taves2009}. The organization and characteristics of dominance hierarchies vary across species \citep{Janson1985, Cigliano1993, Sapolsky2005}. While in group-living species complex social structures, like for example a leader-follower dynamic, can emerge \citep{Strandburg2018}, in solitary species dominance is rather associated with resource-based benefits, like the occupation of higher quality territories and increased reproductive success (e.g. \citealp{Cigliano1993}). Differences in the abundance and dispersion of food can further lead to variations regarding the skewness in access to resources across social ranks. In bottom-up egalitarian hierarchies resources are more equally distributed \citep{Sapolsky2005}, whereas in top-down despotic hierarchies access to resources is strongly skewed in favor for dominant individuals \citep{Kappeler2008}.
+
+Dominance hierarchies have also been suggested for the nocturnal gymnotiform electric fish \Lepto{} \citep{Dunlap2002,Stamper2010,Raab2019}. \lepto{} competes for mates during mating season only \citep{Hagedorn1985, Henninger2018}, otherwise they rival for optimal shelters \citep{Dunlap2002}. The corresponding competitions are characterized by ritualized fighting behaviors accompanied by electrocommunication signals \citep{Triefenbach2008, Smith2013}. While body-size has been shown to be the main determinant for the outcome of competitions in gymnotiformes \citep{Silva2012, Triefenbach2008, Dunlap2002}, the influence of other factors like sex and communication signals require further investigation.
+
+Electric signaling has been shown to be an integral aspect of agonistic behaviors in gymnotiform fish \citep{Westby1970, Silva2012, Hupe2008,Henninger2018}. The frequency of their continuous electric organ discharge (EOD) has been suggested to signal an individual's physical condition, dominance status, or aggressiveness \citep{Westby1970, Hagedorn1985, Cuddy2012}. The sexually dimorphic EOD frequency (EODf) of \lepto{} indicates identity and sex \citep{Henninger2020}, with males having higher EODfs than females \citep{Meyer1987}. While some studies also suggest EODf to indicate dominance \citep{Hagedorn1985, Dunlap2002, Henninger2018, Raab2019}, others were not able to replicate this correlation \citep{Triefenbach2008}.
+
+For generating distinct electrocommunication signals electric fish modulate their EODf on various time scales \citep{Benda2020}. So called ``chirps'' are several types of brief (10 -- 500\,ms), transient increases in EODf \citep{Engler2000, Zakon2002,Hupe2008b}. ``Small'' and ``long chirps'' are used in courtship for synchronizing spawning \citep{Henninger2018} and at the same time the very same small chirps are used as submissive signals to reduce attacks in agonistic encounters \citep{Hupe2008, Henninger2018}. Another category of electrocommunication signals, so called ``rises'', are characterized by a moderate increase in EODf by no more than a few tens of Hertz followed by an approximately exponential decay back to baseline EODf over a second to almost a minute \citep{Hopkins1974,Engler2000,Tallarovic2002,Zakon2002}. The function of rises is still discussed controversially. They have been suggested to signal aggression or motivation to attack \citep{Tallarovic2005, Triefenbach2008}, submission \citep{Hopkins1974, Serrano2003}, ``victory cries'' \citep{Dye1987}, to evoke or precede attacks \citep{Hopkins1974, Triefenbach2008}, or to just by a general expression of stress \citep{Smith2013}. An enhancement of sensory acquisition by rises is highly unlikely, because their mild increase in EODf only marginally influences encoding in electrorecptor afferents \citep{Walz2014}.
+
+Using recently developed techniques for tracking electrocommunication signals in freely behaving electric fish \citep{Henninger2018,Madhav2018,Henninger2020} in addition with infrared video recordings, we recorded electric and physical interactions of pairs of \lepto{} in staged competitions over a superior shelter. Compared to previous studies we significantly expanded the observation times (from ten minutes to six hours) and the number of interacting pairs of fish. We evaluated the influence of body-size, weight, sex, and EODf on the outcome of competitions. Analyzing relations between rises, agonistic interactions, and physical difference between competitors we were able to uncover the fish's assessment strategy, quantify behavioral difference between the sexes, and identify potential uses of rises of \lepto{} during competitions. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Methods}    % 1480 words
+
+\subsection{Aminals}
+
+A total of 21 mature \lepto{} (9 males, 12 females) not in breeding condition, obtained from a tropical fish supplier, were used. Fish were selected randomly from multiple populations to reduce familiarity effects and sorted into four mixed-sex groups of five or six fish (males/females in group 1: 2/4, 2: 1/4, 3: 3/2, 4: 3/2). Males were identified by their higher EODf (see below) and elongated snout. The sex of one third of the fish was verified after the competition experiments via post mortem gonadal inspection in the context of electrophysiological experiments (approved by Regierungspr\"asidium T\"ubingen, permit no. ZP 1/16) which verified sex assignments for most of the fish with EOD frequencies close to the male-female-cutoff of 740\,Hz (\Subfigrefb{fishsetup}{A}). Fish were housed individually in 54\,l tanks at a light-dark cycle of 12\,h/12\,h prior to the experiments and in between competition trials. Each tank was equipped with a plastic tube for shelter, a water filter, and an electrical heater. Water temperature was constant at $25\pm0.5$\,\celsius{} and water conductivity 200\,\micro\siemens\per\centi\meter. Fish were fed frozen \textit{Chironomus plumosus} on a daily basis. The competition experiments complied with national and European law and were approved by the Regierungspr\"asidium T\"ubingen (permit no. ZP 04/20 G). 
+
+\subsection{Setup}
+
+The competition experiments were run in a 100\,l tank equipped with a 10\,cm long and 4\,cm wide PVC half-tube as a superior shelter in the center, surrounded by four additional, less optimal shelters (two 5\,cm long, 4\,cm diameter PVC half-tubes and two $3\times 5$\,\centi\meter\squared{} tables, \Subfigrefb{fishsetup}{C}). Water temperature and conductivity as well as light-dark cycle were identical to those in the housing tanks. A heating mat was placed below the tank and powered with DC current. Two air-powered water-filters were placed behind PVC boards with netted windows in the corners of the tank to not offer additional shelter. 15 monopolar electrodes at low-noise buffer headstages were mounted on the bottom of the tank. The reference electrode was placed behind a PVC board in one corner of the tank. Electric signals were amplified ($100\times$ gain, 100\,Hz low-pass filter, EXT-16B, npi electronic, Tamm, Germany) digitized at 20\,kHz per channel with 16 bit resolution (USB-1608GX-2AO, Measurement Computing) and stored on 64\,GB USB sticks using custom written software running on a Raspberry PI 3B.  Water temperature was measured every 5\,min (Dallas DS18B20 1-wire temperature sensor). Infrared-videos were recorded at 25 frames per second with a camera (Allied Vision Guppy PRO) mounted on top of the tank for all trials of groups 3 and 4. The tank was continuously illuminated by $2\times 4$ infrared lights (ABUS 840\,nm) located on the long sides outside the tank.  For the synchronization of video and electric recordings we used LED-light pulses of 100\,ms duration triggered by the computer-amplifier system in intervals of 5 seconds. The LED was mounted on the edge of the tank not perceivable by the competing fish, but detectable in the video-recordings. The tank, camera and illumination was placed inside a faraday cage.
+
+\subsection{Experimental procedure}
+
+In each competition trial two fish were freely swimming and interacting in the experimental tank for 6\,h. Participating fish were taken from their housing tanks and simultaneous released into the experimental tank. The first 3\,h of each trial took place during the dark-phase and the second 3\,h during the light-phase of the circadian rhythm the fish were accustomed to. This limited the experiment to one trial per day. The winner of each trial was identified by its presence within the superior shelter during the light-phase of the trial. Fish were transferred back into their housing tanks after the trial. Pairings for each trial were selected systematically to (i) ensure all possible combinations within each group to be tested (10 combinations for groups of five fish, 15 for the six-fish group), (ii) keep the experience level for all fish equal, and (iii) prevent a single fish to be tested on two consecutive days. Weight and length (body-size) of each fish was assessed once a week starting in the week before the competition trials. 
+
+With 21 fish in four groups we ended up with a total of 45 pairings and trials. Technical failure lead to loss of the electric recordings for the initial four trials of group four. In another three trials we were unable to extract EODf traces and electrocommunication signals from the electric recordings because the EODf difference between fish were to low ($<0.5$\,Hz). In a single trial, that we discuss separately, we were unable to determine the winner, because both fish shared the superior shelter at the end of the trail. The remaining 37 trials were analyzed in detail.
+
+\subsection{Preprocessing of electric and video recordings}
+
+After computing spectrograms for each channel with fast Fourier transformation (FFT, $n_{\rm fft}=2^{15}$, corresponds to 1.63\,s, 80\,\% overlap) we first detected peaks in a power spectrum summed over the channels and assigned them to the fundamental EODfs and their harmonics of the two fish. Based on EODfs and the distribution of power in the channels we tracked electric signals over time and obtained EODf traces for each of the two fish \citep{Henninger2018,Henninger2020, Madhav2018}.
+
+To asses baseline EODf we computed the 5th percentile of non-overlapping, 5 minute long EODf trace snippets. EODf is sensitive to temperature changes, which were inevitable throughout the single trials and averaged at 1\,\celsius. We computed the $Q_{10}$-values resulting from temperature and EODf differences of each 5 minute snippet and used the median of 1.37 over all fish to adjust each fish's EODf to 25\,\celsius{} (EODf$_{25}$). The EODf$_{25}$ was used to assess an individuals sex, with EODf$_{25} > 740$\,Hz assumed to originate from males. As noted above, the sex of half of the fish was verified via post mortem gonadal inspection.
+
+EODf difference for each pair of fish was estimated from the difference of the median baseline EODfs of the competitors during the light-phase of each trial, where EODfs stayed comparably stable. Rises were identified by detecting their characteristic onset peak in each EODf trace based on a minimum difference of 5\,Hz between a peak and the preceding trough \citep{Todd1999}. Then the size of the rise, its maximum increase in EODf, was calculated by subtracting the baseline EODf from this peak frequency. 
+
+We manually extracted two categories of agonistic interactions from the infrared video recordings using the event logging software BORIS \citep{Friard2016}. For agonistic interactions without physical contact that were characterized as high velocity, directed movements towards a competitor (e.g. chasing behavior) we recorded onset and end times. Agonstic physical contacts between competitors like ritualized biting or head bumping were detected as point events.   
+
+\subsection{Data analysis}
+
+The recorded data and custom analysis scripts are available on request.
+Data were analyzed in Python version 3.6.8 using numpy \citep{vanderWalt2011}, scipy \citep{Oliphant2007} and matplotlib \citep{Hunter2007} packages. All averages are given with their standard deviation. Mann-Whitney $U$ tests were used to asses significance of differences between two populations and Pearson's test and correlation coefficient~$r$ for assessing correlations. The influence of various factors on competition outcome was quantified by paired $t$-tests and by the area under the curve (AUC) of a receiver-operating characteristics (ROC). Generalized linear models (GLM)
+\begin{equation}
+ \label{glmmodel}
+ y = \frac{1}{1 + \exp{(c_0 + \sum c_i \cdot x_i)}}
+\end{equation}
+with a logistic link function were used to estimate the combined effects of several factors $x_i$ (continuous: EODf, size, $\Delta$EODf and $\Delta$size, categorical: sex), linearly combined with coefficients $c_i$ and an offset $c_0$, on the outcome of the competitions $y$ (winner or looser). The performance of the GLMs was again assessed by the AUC of a ROC-analysis. Standard deviations of AUC values were obtained by 1000 times bootstrapping the data.
+
+To evaluate the influence of the contestants' physical attributed on the quantity of emitted rises throughout a trial simple correlations were supplemented by multiple linear regression models. For each model we performed backwards elimination model selection with an elimination criterion of $\alpha > 0.05$.
+
+Temporal coupling between rises and agonistic interactions was quantified by a cross-correlation analysis, i.e. by estimating the averaged rate of rises centered on agonistic events (onset of chasing behaviors or physical contact). For this the temporal differences, $\Delta$time, between agonistic onsets and rises up to $\pm 60$\,sec were convolved with a Gaussian kernel with a standard deviation of 1\,s. Statistical significance was assessed by a permutation test. The null hypothesis of rises not being correlated with agonistic interaction events was obtained by computing the cross-correlation as described above from 1000 random variants of shuffled  rise intervals. From this distribution we determined the 1st and 99th percentiles. In addition, we computed the 98\,\% confidence interval for the estimated cross-correlation by 1000 times jackknife resampling where we randomly excluded 10\,\% of the rises.
+
+We used a time window 5\,s prior to agonistic onsets to quantify the average number of rises per agonistic event and to compare them to the corresponding time fractions, the number of agonistic events multiplied with the 5\,s window relative to the total dark-period time of 3\,h . The time window of 5\,s was chosen to approximately cover the time of significantly elevated rise rates that we observed before the agonistic events in the cross-correlation analysis.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Results}   % 3600 words
+
+In 37 trials we observed and analyzed pairs of \lepto{} (6 male pairs, 10 female pairs, and 21 mixed-sex pairs) competing for a superior shelter. The 9 males differed from the 12 females by their higher EOD frequency as expected from the sexual dimorphism in EODf in \lepto{}. The fish's size ranged from 9 to 19\,cm and was independent of sex ($U=51.5$, $p=0.443$, \Subfigrefb{fishsetup}{A}). Fish size strongly correlated with body-weight (3.3--20.3\,g, $r=0.94$, $p<0.001$, \Subfigrefb{fishsetup}{B}) and we therefore excluded weight from the following analysis.
+
+\begin{figure*}[!h]
+
+\centerline{\includegraphics[width=5.5in]{Fig1CompetitionExample}}
+\caption{Behaviors and interactions of \lepto{} during a typical competition trial. \figitem{A} Spectrogram of an electric recording comprising the EODf trace of a fish while emitting a rise as communication signal. Rises are abrupt increases in EODf followed by an exponential decay back to baseline EODf. Rises were detected using their characteristic onset peak (black triangle). \figitem{B} Spectrogram of a 200\,second snipped of a electric recording comprising EODf traces of two fish. In the lower EODf trace a series of 10 rises can be seen. \figitem{C, D} Ritualized agonistic interactions in \lepto{} comprise non-physical chasing (panel~\panel{C}) and short physical agonistic interactions like biting or head bumping (panel~\panel{D}). Both were initiated by fish later winning a trial. \figitem{E} \lepto{} continuously emits EODs with an individual specific frequency. EODf traces of both competing fish (blue male and green female, bottom panel), time points of physical contacts, onsets of chasing behavior, and detected rises (top panels) recorded during the full 6\,h trial with the first 3\,h in darkness (gray) and the last 3\,h during light.}
+\label{trial}
+\end{figure*}
+
+%\begin{figure}[p]
+%  \includegraphics{Fig1CompetitionExample}
+%  \caption{\label{trial} Behaviors and interactions of \lepto{} during a typical competition trial. \figitem{A} Spectrogram of an electric recording comprising the EODf trace of a fish while emitting a rise as communication signal. Rises are abrupt increases in EODf followed by an exponential decay back to baseline EODf. Rises were detected using their characteristic onset peak (black triangle). \figitem{B} Spectrogram of a 200\,second snipped of a electric recording comprising EODf traces of two fish. In the lower EODf trace a series of 10 rises can be seen. \figitem{C, D} Ritualized agonistic interactions in \lepto{} comprise non-physical chasing (panel~\panel{C}) and short physical agonistic interactions like biting or head bumping (panel~\panel{D}). Both were initiated by fish later winning a trial. \figitem{E} \lepto{} continuously emits EODs with an individual specific frequency. EODf traces of both competing fish (blue male and green female, bottom panel), time points of physical contacts, onsets of chasing behavior, and detected rises (top panels) recorded during the full 6\,h trial with the first 3\,h in darkness (gray) and the last 3\,h during light.}
+%\end{figure}
+
+We were able to track electric behaviors of the competitors based on the individual-specific EODf traces, including the detection of rises (electrocommunication signals, \Subfigrefb{trial}{A,B}). Complementary infrared-video recordings obtained during the 20 trials of group 3 and 4 were used to detect ritualized agonistic behaviors, i.e. chasing (\Subfigrefb{trial}{C}) and physical contacts like biting or head bumping (\Subfigrefb{trial}{D}). In a typical competition trial (\Subfigrefb{trial}{E}) the competing fish's overall activity was much higher during the initial, three hour dark-phase as demonstrated by the higher rates of agonistic interactions and rise emission. During the subsequent three hour light-phase, the activity ceased almost entirely and one fish spent substantially more time within or closer to the superior shelter ($99.27 \pm 0.006$\,\%). This fish was identified as the winner. EODfs of the two fish usually differed clearly and decreased over the course of the experiment because of slightly decreasing water temperature.
+
+\subsection{Larger fish win competition}
+
+\begin{figure}[!h]
+\centerline{\includegraphics[width=2.8in]{Fig2bodysize}}
+\caption{Body-size and size difference of winners and losers. Colors and marker style indicate different pairings and the outcome of competitions. Each competition trial contributes two data points, one for the winner and one for the loser. Blue represents males, red females. Pentagons indicate winners, circles losers. Black marker edges indicate same-sex pairings. Winners and losers of each sex pairing were offset in panel~\panel{A} and jittered in panels~\panel{B}--\panel{F}. \figitem{A} Winners were larger than their opponents as indicated by a logistic fit and corresponding kernel histograms. \figitem{B, C, D, E} Winners were larger in all sex pairings, whereby this effect was more distinct for winning males (\panel{B} \& \panel{D}). \figitem{F} Distributions of absolute body-size of winners and losers largely overlap. Grey lines connect pairs competing in a trial.}
+\label{bodysize}
+\end{figure}
+
+%\begin{figure}[tp]
+%  \includegraphics{Fig2bodysize}
+%  \caption{\label{bodysize} Body-size and size difference of winners and losers. Colors and marker style indicate different pairings and the outcome of competitions. Each competition trial contributes two data points, one for the winner and one for the loser. Blue represents males, red females. Pentagons indicate winners, circles losers. Black marker edges indicate same-sex pairings. Winners and losers of each sex pairing were offset in panel~\panel{A} and jittered in panels~\panel{B}--\panel{F}. \figitem{A} Winners were larger than their opponents as indicated by a logistic fit and corresponding kernel histograms. \figitem{B, C, D, E} Winners were larger in all sex pairings, whereby this effect was more distinct for winning males (\panel{B} \& \panel{D}). \figitem{F} Distributions of absolute body-size of winners and losers largely overlap. Grey lines connect pairs competing in a trial.}
+%\end{figure}
+
+The larger fish of each pairing was more likely to win the competition ($t=5.3$, $p<0.001$, \Subfigrefb{bodysize}{A}). Winners are correctly assigned with a probability of 90\,\% based on size difference (in the sense of the AUC of a ROC analysis, \Subfigrefb{glm}{C}). In particular in trials won by males, most of the winners were larger than the losers (male-male: 5 out of 6, $t=2.9$, $p=0.04$; male-female: 11 out of 14, $t=3.9$, $p=0.002$; \Subfigrefb{bodysize}{B, D}). In trials won by females, this influence of size difference was similarly pronounced but not significant (female-female: 8 out of 10 winners were larger, $t=2.1$, $p=0.07$; female-male: 6 out of 7 winners were larger, $t=2.0$, $p=0.09$; \Subfigrefb{bodysize}{C, E}). In 12 of the 21 mixed-sex pairings the males were larger than the competing females, of which only a single male lost. Of the nine larger females three lost. Absolute size, on the other hand, did not predict competition outcome ($\text{AUC}=67$\,\%, \Subfigrefb{bodysize}{F}). Note that neither in males nor in females EODf correlated with size (males: $r=0.47$, $p=0.20$; females: $r=0.04$, $p=0.90$) and that size was independent of sex (\Subfigrefb{fishsetup}{A}).
+
+\subsection{Fish with higher EODf seem to win competition}
+
+Previous studies suggest EODf to be an indicator for dominance in \lepto{} \citep{Dunlap2002, Henninger2018, Raab2019}. Indeed, winning fish had on average higher EODfs in comparison to their opponents ($t=2.1$, $p=0.04$, \Subfigrefb{eodf}{A}). However, in same sex pairings analyzed separately, EODf did not predict competition outcome neither in males ($t=0.79$, $p=0.47$, \Subfigrefb{eodf}{B}) nor in females ($t=1.4$, $p=0.19$, \Subfigrefb{eodf}{C}), but the positive coefficient of the logistic regressions suggests a mild influence of EODf on the outcome of competitions. Further, in mixed-sex pairings, winning males always had higher EODfs and winning females always lower EODfs than their opponent, because of the sexual dimorphic EODfs in \lepto{} (\Subfigrefb{eodf}{D, E}). These mixed-sex competitions were more often won by males than by females (14 out of 21, Binomial test 14 or more males winning assuming equal chances for both sexes: $p=0.10$). This asymmetry results in an $\text{AUC}=82$\,\% for discriminating winners from losers based solely on sex as a rough proxy for EODf. Although the difference in EODf potentially contains more detailed information than sex alone, it does not discriminate winners from loser better than sex ($\text{AUC}=75$\,\%). Absolute EODf is even less informative about competition outcome ($\text{AUC}=65$\,\%, \Subfigrefb{eodf}{F}).
+
+\subsection{Factors influencing competition outcome}
+
+%\begin{table}[t]
+%  \caption{\label{glm_table} Generalized linear model assessing the significance of different physical factors on winning competitions. For each factors $i$ coefficients $c_i$ (Eqn.~\ref{glmmodel}), $t$-statistics, and significance is given. The competitors' size difference is the only significant factor of the model, indicating its predominant importance for winning competitions.}
+%  \renewcommand{\arraystretch}{0.9}
+%  \begin{center}
+%  \begin{tabular}{ L{2.5cm} R{2cm} R{2cm} R{2cm} }
+%    \hline
+%    factor \trh & \trh coefficient & \trh t-value & \trh p-value \\
+%    \hline
+%    sex$_{f1}$ \trt & \trt $-1.437$ & \trt $-0.498$ & \trt $0.618$ \\
+%    sex$_{f2}$ & $0.174$ & $0.067$ & $0.946$\\
+%    size$_{f1}$ & $0.046$ & $0.255$ & $0.799$\\
+%    size$_{f2}$ & $-0.371$ & $-1.918$ & $0.055$\\
+%    EODf$_{f1}$ & $0.002$ & $0.199$ & $0.842$\\
+%    EODf$_{f2}$ & $-0.005$ & $-0.456$ & $0.648$\\
+%    $\Delta$size & $0.417$ & $2.392$ & $0.017$\\
+%    $\Delta$EODf & $0.007$ & $0.760$ & $0.447$\\
+%    \hline
+%  \end{tabular}
+%  \end{center}
+%  \renewcommand{\arraystretch}{1}
+%\end{table} 
+
+\begin{table}[!h]
+\processtable{Generalized linear model assessing the significance of different physical factors on winning competitions. For each factors $i$ coefficients $c_i$ (Eqn.~\ref{glmmodel}), $t$-statistics, and significance is given. The competitors' size difference is the only significant factor of the model, indicating its predominant importance for winning competitions.\label{glm_table}}%%%Table caption goes here
+{\begin{tabular}{lrrr}%%%The number of columns has to be defined here
+    \hline
+    \TCH{factor} & \TCH{coefficient} & \TCH{t-value} & \TCH{p-value}\\
+    \hline
+    sex$_{f1}$ & $-1.437$ & $-0.498$ & $0.618$ \\
+    sex$_{f2}$ & $0.174$ & $0.067$ & $0.946$\\
+    size$_{f1}$ & $0.046$ & $0.255$ & $0.799$\\
+    size$_{f2}$ & $-0.371$ & $-1.918$ & $0.055$\\
+    EODf$_{f1}$ & $0.002$ & $0.199$ & $0.842$\\
+    EODf$_{f2}$ & $-0.005$ & $-0.456$ & $0.648$\\
+    $\Delta$size & $0.417$ & $2.392$ & $0.017$\\
+    $\Delta$EODf & $0.007$ & $0.760$ & $0.447$\\
+    \hline
+\end{tabular}}{}
+
+\end{table}%%%End of the table
+
+We constructed a generalized linear model (GLM, Eqn.~\ref{glmmodel}), predicting the competition outcome based on all measured physical factors (size, size difference, EODf, EODf difference, and sex; \Subfigrefb{glm}{A--C}). As expected from the single-factor analysis, size difference is the only factor significantly contributing to the prediction of winners ($t=2.4$, $p=0.02$, Table~\ref{glm_table}). The model correctly predicts the outcome of 34 of the 37 competition trials with an AUC of 94\,\% (\Subfigref{glm}{C}). Two-factor GLMs based on size differences and either sex or EODf differences perform similarly well ($\text{AUC} = 93$\,\%) and slightly better than size difference alone ($\text{AUC} = 90$\,\%), further questioning the role of EODfs in predicting competition outcome (\Subfigref{glm}{C}). The outcome of competitions were independent from previous encounters. Auto correlations of win-lose-histories did not differ from those of random sequences, where winners and losers were assigned randomly (permutation test). 
+
+\subsection{Rises}
+
+We detected in total 8\,530 rises using their characteristic onset EODf peak (\Subfigrefb{trial}{A, B}). The size of rises, the peak EODf relative to baseline EODf before, ranged from the detection threshold of 5\,Hz up to 68\,Hz with a mean of 17\,Hz. We were not able to detect any dependency of our results on the size of rises. In the following we therefore focus on an analysis of their quantity and timing.
+
+\subsection{Losing fish emit more rises during the active-phase}
+
+\begin{figure*}[!h]
+\centerline{\includegraphics[width=5.5in]{Fig3Rises}}
+\caption{Rise rates of winners and losers. \figitem{A} Rises were predominantly produced by losers of competitions during the dark-phase (shaded). Winners during the dark-phase produced equally little rises as both winners and losers during the light-phase (white background). \figitem{B} Losers of competitions reliably produced more rises than winners in the dark, although absolute and relative numbers of rises varied considerably between trials. \figitem{C} Time resolved discrimination performance between winners and losers based on differences in cumulative rise counts for the first 30\,min of the trials. The AUC of ROC analysis asymptotes to almost 100\,\% after about 25\,min, indicating the outcome of the trials to be already determined the latest from this time on. For comparison, the dashed line at 94\,\% indicates the performance of the GLM including all physical characteristics of the fish from \Subfigrefb{glm}{C}. \figitem{D} Time course of loser rise rates during the dark-phase. Rise rates of each trial (gray) were normalized to their mean rate. On average (black) rise rates reached a constant level after about 30\,min. \figitem{E} Fraction of rises of losing fish quantified in 15\,min time windows is consistently larger than 50\,\% (dashed line) throughout the whole dark period. Individual trials in gray, average over trials in black.}
+\label{EODfriserates}
+\end{figure*}
+
+%\begin{figure}[tp]
+%  \includegraphics{Fig3Rises}
+%  \caption{\label{EODfriserates} Rise rates of winners and losers. \figitem{A} Rises were predominantly produced by losers of competitions during the dark-phase (shaded). Winners during the dark-phase produced equally little rises as both winners and losers during the light-phase (white background). \figitem{B} Losers of competitions reliably produced more rises than winners in the dark, although absolute and relative numbers of rises varied considerably between trials. \figitem{C} Time resolved discrimination performance between winners and losers based on differences in cumulative rise counts for the first 30\,min of the trials. The AUC of ROC analysis asymptotes to almost 100\,\% after about 25\,min, indicating the outcome of the trials to be already determined the latest from this time on. For comparison, the dashed line at 94\,\% indicates the performance of the GLM including all physical characteristics of the fish from \Subfigrefb{glm}{C}. \figitem{D} Time course of loser rise rates during the dark-phase. Rise rates of each trial (gray) were normalized to their mean rate. On average (black) rise rates reached a constant level after about 30\,min. \figitem{E} Fraction of rises of losing fish quantified in 15\,min time windows is consistently larger than 50\,\% (dashed line) throughout the whole dark period. Individual trials in gray, average over trials in black.}
+%\end{figure}
+
+Rises were primarily emitted during the dark-phases, i.e.\ when fish were active ($t=6.7$, $p<0.001$). Fish that later in the light-phase did \emph{not} occupy the superior shelter, produced ten-fold more rises in the dark-phase ($184 \pm 105$) than their winning opponents ($18\pm 17$, $t=9.5$, $p<0.001$, \Subfigrefb{EODfriserates}{A}). Loser rise counts were highly variable. They ranged from 0 to 419 rises per trial with a $CV$ of $0.63$. 
+
+The difference between winners and losers in quantitative rise emission during the dark-phase almost perfectly predicts winners ($\text{AUC} = 99.9$\,\%, \Subfigsrefb{EODfriserates}{B}). Initially, discrimination performance exponentially increases from chance level to maximum discrimination starting at 5\,min after the beginning of a trial with a time constant of about 5\,min (\Subfigrefb{EODfriserates}{C}). The prediction level of 94\,\% based on the physical factors (\Figrefb{glm}) is clearly surpassed after about 20\,min. In that time losing fish emitted on average $7.0 \pm 5.7$ rises and winners just $1.2 \pm 1.2$.
+
+The losing fish kept emitting higher numbers of rises than the winning fish throughout the dark-phase of trials (\Subfigrefb{EODfriserates}{D}). In none of the trials did the competitors switch this behavior  (\Subfigrefb{EODfriserates}{E}). The few instances were the fractions of rise counts of losing fish fall below 50\,\% are time windows containing very few rises.
+
+Because of the low numbers of rises produced during the day and by winning fish, we focus in the following on rises produced by losing fish during the night. As detailed in the following, the number of rises produced by losing fish were dependent on the competitor's sex, their physical differences, and the number of trials the fish already participated in. In contrast, we found no such dependencies for the number of rises emitted by winning fish.
+ 
+\subsection{Loser against females emit more rises}
+
+\begin{figure*}[!h]
+\centerline{\includegraphics[width=5.5in]{Fig4RiseDependencies}}
+\caption{Dependence of rise counts of \emph{losing} fish on physical differences between competitors and experience in the experiment. \figitem{A} In trials won by females (red) losers emit slightly more rises than in trials won by males (blue). The first symbol in pairing categories indicates the winner's sex. \figitem{B} With increasing EODf difference to the winning fish ($\Delta\text{EODf} = \text{EODf}_{\text{loser}} - \text{EODf}_{\text{winner}}$), losing fish produced more rises. This effect rests on losing males emitting on average more rises than losing females in mixed-sex competitions (panel~\panel{A}) and males having higher EODfs than females. \figitem{C} In trials won by males (blue), the smaller the size difference to the winner ($\Delta\text{size} = \text{size}_{\text{loser}} - \text{size}_{\text{winner}}$) the more rises were produced by the losing opponent of either sex. In trials won by females (red), the opposite effect was observed. This effect can however also result from overall higher rise rates and larger size differences of males compared to females when losing against females (panel~\panel{A}). Correlation coefficients and their significance are displayed in corresponding colors. \figitem{D} With increasing experience in the experiments, losing fish produced fewer rises per trial.}
+\label{risefactors}
+\end{figure*}
+
+%\begin{figure}[tp]
+%  \includegraphics{Fig4RiseDependencies}
+%  \caption{\label{risefactors} Dependence of rise counts of \emph{losing} fish on physical differences between competitors and experience in the experiment. \figitem{A} In trials won by females (red) losers emit slightly more rises than in trials won by males (blue). The first symbol in pairing categories indicates the winner's sex. \figitem{B} With increasing EODf difference to the winning fish ($\Delta\text{EODf} = \text{EODf}_{\text{loser}} - \text{EODf}_{\text{winner}}$), losing fish produced more rises. This effect rests on losing males emitting on average more rises than losing females in mixed-sex competitions (panel~\panel{A}) and males having higher EODfs than females. \figitem{C} In trials won by males (blue), the smaller the size difference to the winner ($\Delta\text{size} = \text{size}_{\text{loser}} - \text{size}_{\text{winner}}$) the more rises were produced by the losing opponent of either sex. In trials won by females (red), the opposite effect was observed. This effect can however also result from overall higher rise rates and larger size differences of males compared to females when losing against females (panel~\panel{A}). Correlation coefficients and their significance are displayed in corresponding colors. \figitem{D} With increasing experience in the experiments, losing fish produced fewer rises per trial.}
+%\end{figure}
+
+In trials won by males, the losing competitor of either sex produced less rises than in trials won by females ($U=84.0$, $p=0.02$; \Subfigrefb{risefactors}{A}). Consequently, the number of rises produced by losing fish correlated positively with the difference in EODfs, because of the sexually dimorphic EODf in \lepto{} ($r=0.32$, $p=0.05$; \Subfigrefb{risefactors}{B}).
+Interestingly, in trials won by males the sex of the losing fish did not have an effect ($U=37.0$, $p=0.36.0$), whereas in trials won by females losing males produced more rises than losing females ($U=10.0$, $p=0.036$).
+
+\subsection{Sex-specific dependence of rise emission on body-size}
+
+The dependence on sex of the winner was even stronger when considering the contestants' body-size. In pairings won by males, the number of rises emitted by losers tended to increase with loser size ($r=0.42$, $p=0.064$) and decrease with winner size ($r=-0.51$, $p=0.022$). When regarding the difference in body-size, the number of rises emitted by losers increased with its size approaching and exceeding the size of the winning male ($r=0.74$, $p<0.001$, \Subfigrefb{risefactors}{C}). Backward elimination in a multiple linear regression model of number of rises in dependence on absolute sizes of competitors and their difference resulted in size difference as the only parameter ($t=4.72$, $p<0.001$) remaining in the significant model ($F(1,18)=22.3$, $p<0.001$) with $R^2=0.55$.
+
+In pairings won by females, the number of rises emitted by losers decreased with loser size ($r=-0.55$, $p=0.023$) and was unaffected be winner size. When regarding the difference in body-size, the number of detected loser rises decreased the more similar the competitors were in size ($r=-0.75$, $p<0.001$, \Subfigrefb{risefactors}{C}), i.e. the effect was opposite to the one found for trails won by males. In a multiple linear regression model for trials won by females, size difference was the only parameter ($t=-4.36$, $p=0.001$) remaining in the significant model ($F(1,15)=18.98$, $p<0.001$) with $R^2 = 0.56$ after backward elimination.
+
+\subsection{Habituation of rise rates and loser effects}
+
+The number of rises produced by losers was independent from the outcome of preceding competitions, rejecting a loser effect on the communication behavior of \lepto{}. However, the fish's total experience in the experiment influenced the number of emitted rises. With increasing experience, i.e. the more trials a fish participated in, the quantity of detected loser rises decreased ($r=-0.39$, $p=0.02$) independent of the paired sexes (\Subfigrefb{risefactors}{B}). The time scale of this habituation matches the one reported for habituation of chirp emission in response to 60\,s long stimulations with an EOD mimic \citep{Harvey2010}.
+
+\subsection{Agonistic interactions}
+
+\begin{figure*}[!h]
+\centerline{\includegraphics[width=5.5in]{Fig5ChasingDependencies}}
+\caption{Agonistic interactions. While the number of agonistic interactions was independent of the physical characteristics of the opponents, the duration of chasing events showed similar dependencies as the number of rises. \figitem{A} The median chasing duration were the shortest in male-male interactions. In the annotations of the sex pairings the first symbol indicates the winner. \figitem{B} The median chasing duration increased with the number of rises emitted by losers. \figitem{C} In trials won by males the median chasing duration increased with losers approaching and exceeding the size of winners ($\Delta\text{size} = \text{size}_{\text{loser}} - \text{size}_{\text{winner}}$). In trials won by females the opposite effect was observed, however similar explanations as for the quantity of rises in the respective pairings apply (\Subfigrefb{risefactors}{B}). Correlation coefficients and their significance are shown in corresponding colors. \figitem{D} With increasing experience in the experiments the median chasing duration decreased.}
+\label{agonistics}
+\end{figure*}
+
+%\begin{figure}[tp]
+%  \includegraphics{Fig5ChasingDependencies}
+%  \caption{\label{agonistics} Agonistic interactions. While the number of agonistic interactions was independent of the physical characteristics of the opponents, the duration of chasing events showed similar dependencies as the number of rises. \figitem{A} The median chasing duration were the shortest in male-male interactions. In the annotations of the sex pairings the first symbol indicates the winner. \figitem{B} The median chasing duration increased with the number of rises emitted by losers. \figitem{C} In trials won by males the median chasing duration increased with losers approaching and exceeding the size of winners ($\Delta\text{size} = \text{size}_{\text{loser}} - \text{size}_{\text{winner}}$). In trials won by females the opposite effect was observed, however similar explanations as for the quantity of rises in the respective pairings apply (\Subfigrefb{risefactors}{B}). Correlation coefficients and their significance are shown in corresponding colors. \figitem{D} With increasing experience in the experiments the median chasing duration decreased. }
+%\end{figure}
+
+We detected in total 2\,480 chasing events and 804 agonistic interactions involving physical contact in the 19 trials were we recorded and evaluated these behaviors with infrared video. Agonistic interactions were exclusively detected during the dark-phase of each trial and stopped with or shortly after the onset of the light-phase (\Subfigrefb{trial}{E}). In random visual inspections of video recordings we found agonistic behaviors to always be initiated by those fish later identified as winners. Per trial we observed on average $128\pm 72$ chasing behaviors lasting $7.4\pm 6.5$ seconds and $36\pm 21$ physical contacts. The number of physical contacts tended to increase with the number of chasing events ($r=0.37$, $p=0.12$). Interestingly, none of the so far discussed factors had an impact on the number of both categories of agonistic interactions, including the competitor's sexes, their size and EODf differences, and their experience in the experiment. In particular and similar to the rises, the number of interactions per trial were highly variable (contacts: $CV=0.55$, chasing events: $CV=0.58$) and neither the number of contacts ($r=-0.27$, $p=0.24$) nor the number of chasing events ($r=0.30$, $p=0.20$) correlated with the number of rises.
+
+\subsection{Sex-specific dependence of the duration of chasing behaviors on body-size differences}
+
+However, the duration of the chasing behaviors were sensitive to these factors. The median duration of chasing event was shorter in male-male competitions compared to other pairings ($U=5$, $p=0.003$). For other pairings the median duration of chasing events were indistinguishable (\Subfigref{agonistics}{A}). 
+
+In trials won by males the median chasing duration tended to decrease with winner size ($r=-058$, $p=0.06$) and was unaffected by loser size. However, it increased with the size of the losing fish relative to the size of the winner ($r=0.73$, $p=0.006$, \Subfigrefb{agonistics}{C}). Size difference remained after backward elimination the only parameter ($t=3.54$, $p=0.006$) in a linear regression model predicting median chasing duration ($F(1,9)=12.5$, $p=0.006$) with $R^2 = 0.58$. In trials won by females median chasing duration was independent from absolute sizes but tended to decrease with decreasing size difference between competitors ($r=-0.65$, $p=0.08$, \Subfigrefb{agonistics}{D}). Size difference was the last size parameter excluded by backward elimination, but did was not significant ($t=-2.07$, $p=0.084$, $R^2=0.42$). Chasing durations were not correlated with differences in EODf between the competitors ($r=0.18$, $p=0.45$). 
+
+\subsection{Habituation of the duration of chasing behaviors}
+
+Beyond physical differences, the experience of the competitors in the experiment influenced the duration of chasing behaviors. The duration of chasing events decreased with the number of trials the losing fish participated in ($r=-0.50$, $p=0.03$, \Subfigrefb{agonistics}{E}). The number of chasing behaviors was unaffected by experience ($r=0.05$, $p=0.83$). Finally, the observed communication behavior had an impact on the chasing duration. In trials where losers emitted more rises, chasing events lasted longer ($r=0.64$, $p=0.003$, \Subfigrefb{agonistics}{F}).
+
+\subsection{Some rises triggered agonistic interactions}
+
+\begin{figure*}[!h]
+\centerline{\includegraphics[width=5.5in]{Fig6EventRises}}
+\caption{Rises trigger other fish to initiate agonistic attacks. \figitem{A} Rise times and rates relative to physical contacts (top) and the onset of chasing events (bottom). Each line of the rasters (black) shows rise times aligned to all agonistic events of a single competition trial. Corresponding rise rates (red/orange) were obtained by convolving rise times with Gaussian kernels with standard deviation of 1\,s and normalizing by the number of agonistic events and trials. 98\,\% confidence intervals (reddish/orangish areas) were estimated by jackknifing. The Null-hypothesis (mean in blue, 1st and 99th percentile in bluish) was obtained by randomly permuting rise intervals. \figitem{B} Fraction of all rises within the dark-phase of a trial that occurred within five seconds prior to agonistic contacts (top) or the onset of chasing behaviors (bottom) and the corresponding times these five-second windows make up relative to the total dark-phase lasting three hours. \figitem{C} Mean fractions of rises (outer circle) occurring within five seconds prior to physical contacts (red), prior to the onset of chasing behaviors (orange), and during chasing events (green) and the corresponding times (inner circle) over all trials.}
+\label{event_rises}
+\end{figure*}
+
+%\begin{figure}[tp]
+%  \includegraphics{Fig6EventRises}
+%  \caption{\label{event_rises} 
+%  Rises trigger other fish to initiate agonistic attacks. \figitem{A} Rise times and rates relative to physical contacts (top) and the onset of chasing events (bottom). Each line of the rasters (black) shows rise times aligned to all agonistic events of a single competition trial. Corresponding rise rates (red/orange) were obtained by convolving rise times with Gaussian kernels with standard deviation of 1\,s and normalizing by the number of agonistic events and trials. 98\,\% confidence intervals (reddish/orangish areas) were estimated by jackknifing. The Null-hypothesis (mean in blue, 1st and 99th percentile in bluish) was obtained by randomly permuting rise intervals. \figitem{B} Fraction of all rises within the dark-phase of a trial that occurred within five seconds prior to agonistic contacts (top) or the onset of chasing behaviors (bottom) and the corresponding times these five-second windows make up relative to the total dark-phase lasting three hours. \figitem{C} Mean fractions of rises (outer circle) occurring within five seconds prior to physical contacts (red), prior to the onset of chasing behaviors (orange), and during chasing events (green) and the corresponding times (inner circle) over all trials.}
+%\end{figure}
+
+Within about five seconds prior to agonistic interactions, rise rates accumulated over all agonistic interactions were increased (\Subfigref{event_rises}{A, B}). Because the baseline rate of rises was just one rise per minute, this does \emph{not} imply that a burst of rises triggered agonistic interactions. Rather, the probability of a single rise to evoke an agonistic interaction was increased. In particular, chances for agonistic contacts were higher 0.7\,s after a rise and chances for chasing behaviors were higher 1.6\,s after a rise. Consequently, the fraction of rises occurring within five seconds prior to agonistic onsets exceeded the fraction expected from the corresponding times, the number of agonistic interactions times five seconds (agonistic contacts: 3.6\,\% versus 1.7\,\%, $t=2.9$, $p=0.01$; chasing behaviors: 9.6\,\% versus 5.7\,\%, $t=-3.1$, $p=0.007$, \Subfigrefb{event_rises}{B}).
+
+\subsection{Reduced rise rates during chasing events}
+
+Rise rates were approximately halved during chasing events (\Subfigrefb{event_rises}{A, bottom}). After the onset of chasing rise rate was reduced for about ten seconds, clearly outlasting the average duration of chasing behaviors (7.4\,s). Again this just implies that the chances to observe a single rise during chasing is reduced. About 7.0\,\% of rises occurred during chasing events, less than expected from the corresponding time covered by the chasing events (8.4\,\%, $t=3.4$, $p=0.003$, \Subfigrefb{event_rises}{C}).
+
+\subsection{Most rises did not trigger agonistic interactions}
+
+All the rises emitted within five seconds prior to agonistic contacts and chasing events as well as during the chasing events make up 20\,\% of all rises (\Subfigrefb{event_rises}{C}). Although this is disproportional more than expected from the corresponding times, the majority of the rises (80\,\%) could not be linked to any obvious interaction. Also note that the fish engaged in actual agonistic interactions in form of chasing behaviors in just 8.4\,\% of the time. Vice versa, agonistic interactions were \emph{not} exclusively triggered by rises emitted by losers. Rises preceded 15.6\,\% of all chasing events and 19.4\,\% of physical contacts, respectively. 
+
+
+\section{Discussion} % 2350 words
+
+In staged competition experiments between pairs of the electric fish \lepto{} of either sex we recorded electrocommunication signals, so called rises, and agonistic behaviors. Losers were characterized by relatively smaller body-sizes and their continuously higher rise emission rates. Rises were costly for losers since they raised chances to be attacked and to be chased for a longer time by winners. Our results hint towards rises signaling an individual's motivation to continue opponent assessment by stimulating ritualized fighting behaviors.
+
+\subsection{Body-size as a proxy for RHP in \lepto{}}
+
+An animal's ability to win fights, its RHP, is often correlated to body-size or weight, because physical strength is usually directly related to size \citep{Parker1974, Archer1988}. Difference in body-size also was the best predictor for the outcome of competitions in our experiments (\Figsrefb{bodysize}, \fref{glm}). Thus, competitors seem to be capable to assess each other's body-size even in darkness. Electric field amplitudes have been shown to correlate with body-size across electric fish species (\eig{}: \citealp{Westby1981}; \sterno{}: \citealp{Hopkins1972}; \albi{}: \citealp{Knudsen1975}). 
+The lateral-line organ might provide further sensory cues to assess a contestant's body-size \citep{Butler2015}. 
+
+The outcome of competitions can also be influenced by sex-dependent differences in motivation \citep{EnquistLeimar1987, ArnottElwood2008, Dunham2008}. In males an increased motivation and likelihood to compete has often been observed \citep{Archer1988}. In our experiments, males won competitions slightly more often than females, but mainly because of a bias of males being larger than females in these trials (\Figrefb{bodysize}). Overall, average body-size was independent of sex (\Subfigrefb{fishsetup}{A}). However, when evaluated separately, the correlation between body-size and winning was more pronounced in trials won by males than trials won by females (\Subfigrefb{bodysize}{B -- E}). This could reflect a higher valuation of suitable shelters by males. 
+
+\subsection{Relevant signals and interactions of \lepto{} during competition}
+
+Competitors assess their own and/or their opponent's RHP based on cues, including actively emitted signals, and adapt their behavior accordingly \citep{Cluttonbrock1979, Enquist1990, Payne1998, ArnottElwood2009}. Properties of the continuously emitted electric field of \lepto{}, in particular EODf, could be utilized in opponent assessment. Males increase both EODf and the androgen 11-ketotestosterone at the transition to breeding season \citep{Cuddy2012} and males with higher EODf seem to fertilize more eggs \citep{Hagedorn1985, Henninger2018}. 
+
+Outside the breeding season males with higher EODf have been found to be more territorial during the day \citep{Raab2019} and to occupy their preferred shelter alone \citep{Dunlap2002}. Whereas in the latter study EODf was weakly but significantly correlated with body-size, we did not have such a correlation (\Subfigrefb{fishsetup}{A}). Consequently, in our experiments predictive power of EODf on competition outcome was insignificant (\Figrefb{eodf}), demonstrating only a minor role for EODf signaling RHP in addition to body-size.
+
+The RHP of contestants usually affects their fighting behavior, e.g. quantity, intensity, duration, or point of giving up \citep{ArnottElwood2009, Taylor2001, Briffa2004}.
+While in \lepto{} the number of agonistic interactions did not correlate with any of the measured parameters, the duration of chasing events was dependent on the contestant's difference in body-size, the main factor determining RHP, and the winner's sex (discussed below). Interestingly, the number of rises emitted by losers were correlated in similar ways to the contestant's RHP. This similarity together with the observation of rises frequently triggering agonistic attacks suggests rises to play a potential role in assessing opponents.
+
+\subsection{Electrocommunication with rises}
+
+\lepto{} has been shown to use a rich repertoire of electrocommunication signals in social interactions \citep{Smith2013,Benda2020}. Some of the various types of chirps, transient elevations of EODf within less than about 500\,ms, are used in agonistic, same sex encounters, to deter agonistic attacks \citep{Hupe2008,Henninger2018} and in courtship where synchronization of spawning is probably only one of their many functions \citep{Hagedorn1985, Triefenbach2003, Cuddy2012, Henninger2018}. In contrast, evidence for the function of rises is scarce and inconsistent. Rises are characterized by smaller but much longer increases in EODf in comparison to chirps \citep{Hopkins1974,Hagedorn1985}. They vary considerably in their size (a few up to several tens of Hertz) and over three orders of magnitude in their duration (less than a second to up to a few minutes, \citealp{Tallarovic2002}). The large number of rises we detected in our experiments clearly formed a continuous distribution of sizes and durations and we found no indication of distinct functional roles of rises of different sizes \citep{Triefenbach2008}, refuting earlier attempts to categorize rises \citep{Hagedorn1985, Tallarovic2002,Dye1987}.
+
+\subsection{Function of rises}
+
+Rises have been observed to be followed by attacks or bouts of aggression, both in \textit{Eigenmannia} \citep{Hopkins1974} and \lepto{} \citep{Triefenbach2008}, and to primarily be emitted by subordinates in \Albi{} \citep{Serrano2003}. We also found rises in \lepto{} to be primarily emitted by losing fish (\Subfigrefb{EODfriserates}{A, B}) and agonistic interactions to be more frequent after the emission of rises (\Subfigref{event_rises}{A}). These common findings further support the hypothesis of rises being conserved signals in gymnotiform electric fish \citep{Turner2007}. 
+
+Since only about $\sim$20\,\% of rises were followed by agonistic interactions one could argue rises to be submissive signals aiming to avert upcoming agonistic attacks. However, the emission of more rises did not decrease the number of agonistic interactions and even increased the duration of chasing events (\Subfigrefb{agonistics}{B}), suggesting rises to rather encourage agonistic interactions than to deter them. This contradicts the interpretation of rises as submissive signals \citep{Hopkins1974,Serrano2003} and as an general expression of stress \citep{Smith2013}. Chirps, on the other hand, have been shown to reduce attack probability in competition experiments \citep{Hupe2008b}. \lepto{} thus use a variety of electrocommunication signals of different meanings in social interactions.
+
+Communication signals in general aim to alter the behavior of a receiver in a net beneficial fashion for the sender and they are only produced when the potential benefits outweigh the costs \citep{Endler1993, Seyfarth2010}. In contests they can convey information about physical condition and RHP \citep{Davies1978, Cluttonbrock1979}, social status \citep{Huyghe2005, Fernald2014}, and motivation or behavioral intent (e.g. aggression: \citealp{Triefenbach2008, Kareklas2019}, or submission: \citealp{Hupe2008, Silva2012}) and often already convey sufficient information to settle competitions without the necessity of escalating costly fights \citep{ArnottElwood2009}. In our experiments winners could reliably be predicted within the initial 25\,min of each trial based on the numbers of rises emitted by either fish (\Subfigrefb{EODfriserates}{C}). Nevertheless, losers continued to emit more rises than the winner until the end of the dark-phase (\Subfigrefb{EODfriserates}{D}). Never did we observe a switch in communication behavior between contestants (\Subfigrefb{EODfriserates}{E}). Therefore, rises were apparently not used to ultimately win competitions. What then is the purpose of rises?
+
+\subsection{Sexual dimorphic behavioral traits}
+
+Male \lepto{} have been shown to be more territorial than females \citep{Dunlap2002} and show more intense dominance displays \citep{Raab2019}. Females, on the other hand, are more tolerant to the presence of con-specifics \citep{ZupancMaler1993,Cuddy2012}. All these observation could be explained by an increased resource valuation in males (territoriality at shelters) in comparison to females, and males being more motivated to win competitions. Our data further support this hypothesis, as discussed in the following.
+
+In trials won by males, both the number of rises and the duration of chasing events increased with decreasing size difference between contestants (\Subfigsrefb{risefactors}{C}, \subfref{agonistics}{C}). This is not unusual, because of increased chances of success when competing with opponents of similar size (e.g. \citealp{Cluttonbrock1979, Enquist1990}). A higher motivation of males could be inferred by losers by means of behavioral cues and interpreted as potentially higher costs when engaging in competition, which could reduce a loser's motivation to compete. This could explain the overall lower rise production of losers in trials won by males (\Subfigref{risefactors}{A}) and the resulting shorter chasing events (\Subfigref{agonistics}{A}). 
+
+In trials won by females, we found opposite relations. With decreasing size difference less rises were produced by the losing fish and chasing duration decreased (\Subfigsrefb{risefactors}{C}, \subfref{agonistics}{C}). These negative correlations, however, are mainly carried by the sex of the losing fish. Males losing against females tend to be much smaller (\Subfigref{bodysize}{E}) and at the same time emit more rises (\Subfigref{risefactors}{A}) and interact longer during chasing events (\Subfigref{agonistics}{A}) compared to all other pairings. Females competing against females were more similar in size (\Subfigsrefb{bodysize}{C}, \subfref{fishsetup}{A}), emitted less rises (\Subfigref{risefactors}{A}), and had shorter chasing events (\Subfigref{agonistics}{A}). The higher intrinsic motivation of males in addition to the lower potential costs in competing with less territorial females could explain the enhanced rise production in males regardless of RHP of female opponents.
+
+In other species, already the sole presence of a potential mating partner often affects communication (e.g. \citealp{Barske2015}) and other behaviors associated with reproductive success \citep{Taylor1975}. Accordingly, the specific sex pairing could evoke males to emit disproportional many rises when losing against females. Males could additionally be motivated to continue assessment in order to indicate increased fighting capabilities and appear more suitable as potential mating partner. However, winning males not emitting more rises towards females and females responding with equal levels of aggression to rises of both sexes (\Figref{agonistics}) rather argues against rises to signal a male's quality to females in our competition experiments.
+
+Nevertheless, competition between \lepto{} and associated behaviors presumably change with reproductive state. The motivation of males to compete could be enhanced, especially for same sex rivals. Females could use male rises to assess their capability and motivation to compete and thus their quality. Testing these speculations, however, requires extensive breeding experiments.
+
+In summary, the dependence of rise production on the fish's RHP and the link between agonistic interactions and rise emission support our hypothesis of rises signaling an individual's motivation to continue opponent assessment using ritualized fighting. Both behaviors also being dependent on the competitor's sex additionally suggests sexually dimorphic behavioral traits in \lepto{}, potentially arising from a higher motivation of males to win competitions despite substantial differences in RHP. 
+
+%In summary, the dependence of rise production by losing fish on sex suggests sexually dimorphic behavioral traits in \lepto{}, potentially arising from a higher motivation of males to win competitions despite substantial differences in RHP. 
+
+%\notetr{TO REBUTTAL: The additional evaluation of movement trajectories of competitors could help to validate our conclusions. An individual's motivation to compete could be reflected in its overall swimming activity and its proximity or relative movement towards the other fish \citep{XXX}. However, the experimental setup and quality of video recordings impeded the extraction of proper movement trajectories, wherefore the evaluation of movement trajectories was neglected in this experiment, but will be part of a follow up study.}
+
+\subsection{Mutual assessment in \lepto{}}
+
+Analysing the dependence of competition behaviors on the contestants' RHP allows to differentiate between assessment strategies, i.e. pure self, cumulative, or mutual assessment \citep{ArnottElwood2009}. In cumulative assessment costs arising from own actions during competitions and those being inflicted by opponents are accumulated until an endurance threshold is reached and the animal retreats \citep{Payne1998}. In our experiments, however, this threshold never seems to be reached, because rise emission and agonisitic interactions went on throughout the dark phase. For pure self assessment a positive correlation between both contestants' absolute RHP and the extent of behaviors associated with competition is expected \citep{Taylor2001}. This can be rejected, because absolute body-size of neither winner nor loser predicted competition outcome (\Subfigref{bodysize}{F}), and both the number of rises and duration of chasing events rather decreased with winner size.
+
+Both, communication and agonistic behaviors remained steady throughout single trials. Both are presumably low costs behaviors, because no injuries or other negative consequences resulted from them. This supports mutual assessment where low cost competition behaviors are repetitively performed in order to accurately assess an opponent's RHP relative to the own (e.g. \citealp{Cluttonbrock1979}). Furthermore, animals are expected to improve in accuracy of assessing the opponent with increasing experience \citep{Enquist1990, Grosenick2007}. This matches previous observations on decreasing competition intensity over trials in another gymnotiform electric fish \citep{Westby1970} as well as our own observations on \lepto{} where the number of emitted rises and the duration of chasing events decrease with the fish's experience in the competition experiment (\Subfigsrefb{risefactors}{D}, \subfref{agonistics}{D}).
+
+\subsection{Dominance in \lepto{}}
+
+Competitions are not exclusively used to directly secure access to resources, but also to establish dominance hierarchies, that indirectly regulate access to resources \citep{Wauters1992, Sapolsky2005, Taves2009}. After establishing dominance, knowledge about an individual's social status can prevent costly repetitive fighting and therefore be beneficial for all individuals involved \citep{Fernald2014, Huyghe2005}. Characteristics of social hierarchies and behavioral correlates of dominance vary widely across species \citep{Cluttonbrock1979, Cigliano1993, Sapolsky2005}. In group living species, beyond regulating access to resources, social hierarchies often come along with complex social dynamics, like, for example, leader-follower dynamics (e.g. \citealp{Strandburg2018, Jason1990}). In solitary species, on the other hand, dominance is primarily associated with resource-based benefits \citep{Cigliano1993}. 
+
+Dominance hierarchies have also been suggested for \lepto{} \citep{Hagedorn1985, Dunlap2002}. Since behavioral observations suggests \lepto{} to be a solitary living species \citep{Stamper2010, Raab2019, Henninger2020}, this dominance can be assumed to be mainly resource based.
+
+Previous studies suggest male but not female \lepto{} to form a dominance hierarchy \citep{Hagedorn1985, Dunlap2002}. Indeed, as discussed above, males seemed to be more motivated to win competitions. Nevertheless, competition outcome was independent from the contestants' sex and mainly determined by their relative body-size (\Figrefb{glm}). Dominance in \lepto{} thus appears to be sex-independent, in line with similar studies on other gymnotiform electric fish \citep{Silva2012, Zubizarreta2020}.
+
+\subsection{Rises in the social hierarchy of \lepto{}}
+
+In social hierarchies dominants often use agonistic attacks to keep subordinates under control \citep{Cluttonbrock1979, Creel1996, Janson1985}. In \lepto{} subordinates could emit rises to signal their motivation to continue assessment, with the aim to reduce relative dominance (e.g. \citealp{Kareklas2019}). Dominants, on the other hand, could counteract with agonistic attacks. The interplay and balance between rises and agonistic attacks could define the relative dominance between contestants and regulate skewness in access to resources. This would imply that motivation of the fish in the competition depends on the valuation of not only present but also regularly encountered resources, most likely food, that were absent during our experiments. 
+
+This hypothesis on a possible benefit of continuous loser rise emission is supported by a single exceptional trial, where the dominant fish shared the superior shelter with the subordinate at the end of a trial. In this mixed-sex trial, the smaller male (11.9\,cm) was continuously emitting 180~rises during the dark-phase and apparently succeeded in reducing relative dominance difference to the larger female (12.5\,cm, no rises during dark-phase) by gaining access to the shelter.
+
+\section{Conclusion}
+Male \lepto{} seem to be more motivated to win staged competitions for a superior shelter than females. Nevertheless, contest outcomes were mainly determined by relative body-size, reflecting the contestants' overall fighting ability, their RHP.  During competition, \lepto{} interact physically by means of ritualized fights and use rises as distinct electrocommunicaion signal. The way how the extent of both behaviors depends on the contestants' RHP suggests \lepto{} to assess their opponents during contests (mutual assessment). Here, rises are almost exclusively emitted by losers and seem to signal their motivation to continue physical assessment. Rises triggered agonistic attacks and enhanced the duration of chasing events. The motivation to continue assessment could reflect a loser's attempt to reduce relative dominance, which is counteracted by dominants with agonistic attacks.
+
+%\vfill\eject
+
+%%%%%%%%%%% Please use the respective coding for Back matter section %%%%%%%%
+
+%\ack{Supported by Deutsche Forschungsgemeinschaft via mini RTG ``Sensory
+%flow processing across modalities'' by the excellence cluster ``Center
+%of Integrative Neuroscience'' (CIN EXC 307).}
+
+%\competing{Insert the Competing interests text here.}
+
+\contribution{T.R. designed the experiment, measured and analyzed data, and wrote the manuscript. S.B. and S.E. measured the data. J.B. discussed the experiment, advised data analysis, and edited the manuscript.}
+
+\funding{Supported by Deutsche Forschungsgemeinschaft via mini RTG ``Sensory
+flow processing across modalities'' by the excellence cluster ``Center
+of Integrative Neuroscience'' (CIN EXC 307).}
+
+\data{The recorded data and custom analysis scripts are available on request.}
+
+%\supplementary{Insert the supplementary text text here.}
+
+%%%%%%%%% References %%%%%%%%%%%%%%%%%
+
+%\bibliography{journalsabbrv,references}
+
+\begin{thebibliography}{70}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Archer(1988)}]{Archer1988}
+\textbf{Archer J} (1988) The behavioural biology of aggression, volume~1.
+ CUP Archive.
+
+\bibitem[{Arnott and Elwood(2008)}]{ArnottElwood2008}
+\textbf{Arnott G, Elwood RW} (2008) Information gathering and decision making about
+  resource value in animal contests.
+ Animal Behaviour 76:529--542.
+
+\bibitem[{Arnott and Elwood(2009)}]{ArnottElwood2009}
+\textbf{Arnott G, Elwood RW} (2009) Assessment of fighting ability in animal contests.
+ Animal Behaviour 77:991--1004.
+
+\bibitem[{Barske et~al.(2015)Barske, Schlinger and Fusani}]{Barske2015}
+\textbf{Barske J, Schlinger BA, Fusani L} (2015) The presence of a female influences
+  courtship performance of male manakins.
+ The Auk: Ornithological Advances 132:594--603.
+
+\bibitem[{Batista et~al.(2012)Batista, Zubizarreta, Perrone and
+  Silva}]{Silva2012}
+\textbf{Batista G, Zubizarreta L, Perrone R, Silva A} (2012) Non-sex-biased Dominance in
+  a Sexually Monomorphic Electric Fish: Fight Structure and Submissive Electric
+  Signalling.
+ Ethology 118:398--410.
+
+\bibitem[{Benda(2020)}]{Benda2020}
+\textbf{Benda J} (2020) The physics of electrosensory worlds.
+ In: The Senses: A Comprehensive Reference (Fritzsch H Band~Bleckmann,
+  ed.), volume~7. Elsevier, Academic Press, pp. 228--254.
+
+\bibitem[{Briffa and Elwood(2004)}]{Briffa2004}
+\textbf{Briffa M, Elwood RW} (2004) Use of energy reserves in fighting hermit crabs.
+ Proceedings of the Royal Society of London Series B: Biological
+  Sciences 271:373--379.
+
+\bibitem[{Butler and Maruska(2015)}]{Butler2015}
+\textbf{Butler JM, Maruska KP} (2015) The mechanosensory lateral line is used to assess
+  opponents and mediate aggressive behaviors during territorial interactions in
+  an African cichlid fish.
+ Journal of Experimental Biology 218:3284--3294.
+
+\bibitem[{Chapman et~al.(1995)Chapman, Chapman and Wrangham}]{Chapman1995}
+\textbf{Chapman C, Chapman L, Wrangham R} (1995) Ecological constraints on group size:
+  an analysis of spider monkey and chimpanzee subgroups.
+ Behav Ecol Sociobiol 36.
+
+\bibitem[{Cigliano(1993)}]{Cigliano1993}
+\textbf{Cigliano JA} (1993) Dominance and den use in Octopus bimaculoides.
+ Animal behaviour 46:677--684.
+
+\bibitem[{Clutton-Brock et~al.(1979)Clutton-Brock, Albon, Gibson and
+  Guinness}]{Cluttonbrock1979}
+\textbf{Clutton-Brock T, Albon S, Gibson R, Guinness F} (1979) The logical stag:
+  Adaptive aspects of fighting in red deer (Cervus elaphus L.).
+ Animal Behaviour 27:211 -- 225.
+
+\bibitem[{Creel et~al.(1996)Creel, Creel and Monfort}]{Creel1996}
+\textbf{Creel S, Creel NM, Monfort S} (1996) Social stress and dominance.
+ Nature 379:212.
+
+\bibitem[{Cuddy et~al.(2012)Cuddy, Aubin-Horth and Krahe}]{Cuddy2012}
+\textbf{Cuddy M, Aubin-Horth N, Krahe R} (2012) Electrocommunication behaviour and non
+  invasively-measured androgen changes following induced seasonal breeding in
+  the weakly electric fish, \textit{Apteronotus leptorhynchus}.
+ Hormones and behavior 61:4--11.
+
+\bibitem[{Davies and Halliday(1978)}]{Davies1978}
+\textbf{Davies NB, Halliday TR} (1978) Deep croaks and fighting assessment in toads Bufo
+  bufo.
+ Nature 274:683--685.
+
+\bibitem[{Dunham(2008)}]{Dunham2008}
+\textbf{Dunham AE} (2008) Battle of the sexes: cost asymmetry explains female dominance
+  in lemurs.
+ Anim Behav 76:1435--1439.
+
+\bibitem[{Dunlap and Oliveri(2002)}]{Dunlap2002}
+\textbf{Dunlap K, Oliveri L} (2002) Retreat site selection and social organization in
+  captive electric fish, \textit{Apteronotus leptorhynchus}.
+ J Comp Physiol A 188:469--477.
+
+\bibitem[{Dye(1987)}]{Dye1987}
+\textbf{Dye J} (1987) Dynamics and stimulus-dependence of pacemaker control during
+  behavioral modulations in the weakly electric fish, \textit{Apteronotus}.
+ Journal of Comparative Physiology A 161:175--185.
+
+\bibitem[{Endler(1993)}]{Endler1993}
+\textbf{Endler JA} (1993) Some general comments on the evolution and design of animal
+  communication systems.
+ Philosophical Transactions of the Royal Society of London Series B:
+  Biological Sciences 340:215--225.
+
+\bibitem[{Engler et~al.(2000)Engler, Fogarty, Banks and Zupanc}]{Engler2000}
+\textbf{Engler G, Fogarty C, Banks J, Zupanc G} (2000) Spontaneous modulations of the
+  electric organ discharge in the weakly electric fish, \textit{Apteronotus
+  leptorhynchus}: a biophysical and behavioral analysis.
+ J Comp Physiol A 186:645--660.
+
+\bibitem[{Enquist and Leimar(1987)}]{EnquistLeimar1987}
+\textbf{Enquist M, Leimar O} (1987) Evolution of fighting behaviour: the effect of
+  variation in resource value.
+ Journal of theoretical Biology 127:187--205.
+
+\bibitem[{Enquist et~al.(1990)Enquist, Leimar, Ljungberg, Mallner and
+  Segerdahl}]{Enquist1990}
+\textbf{Enquist M, Leimar O, Ljungberg T, Mallner Y, Segerdahl N} (1990) A test of the
+  sequential assessment game: fighting in the cichlid fish Nannacara anomala.
+ Animal Behaviour 40:1--14.
+
+\bibitem[{Fernald(2014)}]{Fernald2014}
+\textbf{Fernald RD} (2014) Communication about social status.
+ Curr Opin Neurobiol 28:1 -- 4.
+ SI: Communication and language.
+
+\bibitem[{Friard and Gamba(2016)}]{Friard2016}
+\textbf{Friard O, Gamba M} (2016) BORIS: a free, versatile open-source event-logging
+  software for video/audio coding and live observations.
+ Methods in Ecology and Evolution 7:1325--1330.
+
+\bibitem[{Grosenick et~al.(2007)Grosenick, Clement and Fernald}]{Grosenick2007}
+\textbf{Grosenick L, Clement TS, Fernald RD} (2007) Fish can infer social rank by
+  observation alone.
+ Nature 445:429--432.
+
+\bibitem[{Hagedorn and Heiligenberg(1985)}]{Hagedorn1985}
+\textbf{Hagedorn M, Heiligenberg W} (1985) Court and spark: electric signals in the
+  courtship and mating of gymnotoid fish.
+ Anim Behav 33:254 -- 265.
+
+\bibitem[{Harvey-Girard et~al.(2010)Harvey-Girard, Tweedle, Ironstone, Cuddy,
+  Ellis and Maler}]{Harvey2010}
+\textbf{Harvey-Girard E, Tweedle J, Ironstone J, Cuddy M, Ellis W, Maler L} (2010)
+  Long-term recognition memory of individual conspecifics is associated with
+  telencephalic expression of {Egr-1} in the electric fish \textit{Apteronotus
+  leptorhynchus}.
+ J Comp Neurol 518:2666--2692.
+
+\bibitem[{Henninger et~al.(2018)Henninger, Krahe, Kirschbaum, Grewe and
+  Benda}]{Henninger2018}
+\textbf{Henninger J, Krahe R, Kirschbaum F, Grewe J, Benda J} (2018) Statistics of
+  natural communication signals observed in the wild identify important yet
+  neglected stimulus regimes in weakly electric fish.
+ J Neurosci 38:5456--5465.
+
+\bibitem[{Henninger et~al.(2020)Henninger, Krahe, Sinz and
+  Benda}]{Henninger2020}
+\textbf{Henninger J, Krahe R, Sinz F, Benda J} (2020) Tracking activity patterns of a
+  multispecies community of gymnotiform weakly electric fish in their
+  neotropical habitat without tagging.
+ J Exp Biol 223:jeb206342.
+
+\bibitem[{Hopkins(1972)}]{Hopkins1972}
+\textbf{Hopkins CD} (1972) Sex differences in electric signaling in an electric fish.
+ Science 176:1035--1037.
+
+\bibitem[{Hopkins(1974)}]{Hopkins1974}
+\textbf{Hopkins CD} (1974) Electric communication: functions in the social behavior of
+  \textit{Eigenmannia virescens}.
+ Behaviour 50:270--305.
+
+\bibitem[{Hunter(2007)}]{Hunter2007}
+\textbf{Hunter JD} (2007) Matplotlib: A 2D graphics environment.
+ Computing in science \& engineering 9:90--95.
+
+\bibitem[{Hup\'e and Lewis(2008)}]{Hupe2008}
+\textbf{Hup\'e G, Lewis J} (2008) Electrocommunication signals in free swimming brown
+  ghost knifefish, \textit{Apteronotus leptorhynchus}.
+ J Exp Biol 211:1657--67.
+
+\bibitem[{Hup\'e et~al.(2008)Hup\'e, Lewis and Benda}]{Hupe2008b}
+\textbf{Hup\'e GJ, Lewis JE, Benda J} (2008) The effect of difference frequency on
+  electrocommunication: chirp production and encoding in a species of weakly
+  electric fish, \textit{Apteronotus leptorhynchus}.
+ J Physiol Paris 102:164--172.
+
+\bibitem[{Huyghe et~al.(2005)Huyghe, Vanhooydonck, Scheers, Molina-Borja and
+  Van~Damme}]{Huyghe2005}
+\textbf{Huyghe K, Vanhooydonck B, Scheers H, Molina-Borja M, Van~Damme R} (2005)
+  Morphology, performance and fighting capacity in male lizards, Gallotia
+  galloti.
+ Functional Ecology 19:800--807.
+
+\bibitem[{Janson(1985)}]{Janson1985}
+\textbf{Janson C} (1985) Aggresive competition and individual food consumption in wild
+  brown capuchin monkeys (Cebus apella).
+ Behav Ecol Sociobiol 18:125--138.
+
+\bibitem[{Janson(1990)}]{Jason1990}
+\textbf{Janson CH} (1990) Ecological consequences of individual spatial choice in
+  foraging groups of brown capuchin monkeys, Cebus apella.
+ Anim Behav 40:922 -- 934.
+
+\bibitem[{Kappeler and Sch{\"a}ffler(2008)}]{Kappeler2008}
+\textbf{Kappeler PM, Sch{\"a}ffler L} (2008) The lemur syndrome unresolved: extreme male
+  reproductive skew in sifakas (Propithecus verreauxi), a sexually monomorphic
+  primate with female dominance.
+ Behav Ecol Sociobiol 62:1007--1015.
+
+\bibitem[{Kareklas et~al.(2019)Kareklas, Wilson, Kunc and
+  Arnott}]{Kareklas2019}
+\textbf{Kareklas K, Wilson J, Kunc HP, Arnott G} (2019) Signal complexity communicates
+  aggressive intent during contests, but the process is disrupted by noise.
+ Biology letters 15:20180841.
+
+\bibitem[{Knudsen(1975)}]{Knudsen1975}
+\textbf{Knudsen E} (1975) Spatial aspects of the electric fields generated by weakly
+  electric fish.
+ J Comp Physiol A 99:103--118.
+
+\bibitem[{Madhav et~al.(2018)Madhav, Jayakumar, Demir, Stamper, Fortune and
+  Cowan}]{Madhav2018}
+\textbf{Madhav MS, Jayakumar RP, Demir A, Stamper SA, Fortune ES, Cowan NJ} (2018)
+  High-resolution behavioral mapping of electric fishes in Amazonian habitats.
+ Scientific Reports 8.
+
+\bibitem[{Markham et~al.(2015)Markham, Gesquiere, Alberts and
+  Altmann}]{Markham2015}
+\textbf{Markham AC, Gesquiere LR, Alberts SC, Altmann J} (2015) Optimal group size in a
+  highly social mammal.
+ PNAS 112:14882--14887.
+
+\bibitem[{Meyer et~al.(1987)Meyer, Leong and Keller}]{Meyer1987}
+\textbf{Meyer JH, Leong M, Keller CH} (1987) Hormone-induced and maturational changes in
+  electric organ discharges and electroreceptor tuning in the weakly electric
+  fish \textit{Apteronotus}.
+ J Comp Physiol A 160:385--394.
+
+\bibitem[{Oliphant(2007)}]{Oliphant2007}
+\textbf{Oliphant TE} (2007) SciPy: Open source scientific tools for Python.
+ Computing in Science and Engineering 9:10--20.
+
+\bibitem[{Parker(1974)}]{Parker1974}
+\textbf{Parker G} (1974) Assessment strategy and the evolution of fighting behaviour.
+ Journal of Theoretical Biology 47:223 -- 243.
+
+\bibitem[{Payne(1998)}]{Payne1998}
+\textbf{Payne RJ} (1998) Gradually escalating fights and displays: the cumulative
+  assessment model.
+ Animal Behaviour 56:651--662.
+
+\bibitem[{Raab et~al.(2019)Raab, Linhart, Wurm and Benda}]{Raab2019}
+\textbf{Raab T, Linhart L, Wurm A, Benda J} (2019) Dominance in Habitat Preference and
+  Diurnal Explorative Behavior of the Weakly Electric Fish \textit{Apteronotus
+  leptorhynchus}.
+ Frontiers in Integrative Neuroscience 13:21.
+
+\bibitem[{Sapolsky(2005)}]{Sapolsky2005}
+\textbf{Sapolsky RM} (2005) The Influence of Social Hierarchy on Primate Health.
+ Science 308:648--652.
+
+\bibitem[{Serrano-Fern{\'a}ndez(2003)}]{Serrano2003}
+\textbf{Serrano-Fern{\'a}ndez P} (2003) Gradual frequency rises in interacting black
+  ghost knifefish, \textit{Apteronotus albifrons}.
+ J Comp Physiol A 189:685--692.
+
+\bibitem[{Seyfarth et~al.(2010)Seyfarth, Cheney, Bergman, Fischer,
+  Zuberb{\"u}hler and Hammerschmidt}]{Seyfarth2010}
+\textbf{Seyfarth RM, Cheney DL, Bergman T, Fischer J, Zuberb{\"u}hler K, Hammerschmidt
+  K} (2010) The central importance of information in studies of animal
+  communication.
+ Animal Behaviour 80:3--8.
+
+\bibitem[{Smith(2013)}]{Smith2013}
+\textbf{Smith GT} (2013) Evolution and hormonal regulation of sex differences in the
+  electrocommunication behavior of ghost knifefishes (Apteronotidae).
+ J Exp Biol 216:2421--2433.
+
+\bibitem[{Stamper et~al.(2010)Stamper, Carrera-G, Tan, Fug\`ere, Krahe and
+  Fortune}]{Stamper2010}
+\textbf{Stamper SA, Carrera-G E, Tan EW, Fug\`ere V, Krahe R, Fortune ES} (2010) Species
+  differences in group size and electrosensory interference in weakly electric
+  fishes: Implications for electrosensory processing.
+ Behav Brain Res 207:368 -- 376.
+
+\bibitem[{Strandburg-Peshkin et~al.(2018)Strandburg-Peshkin, Papageorgiou,
+  Crofoot and Farine}]{Strandburg2018}
+\textbf{Strandburg-Peshkin A, Papageorgiou D, Crofoot MC, Farine DR} (2018) Inferring
+  influence and leadership in moving animal groups.
+ Philosophical Transactions of the Royal Society B: Biological
+  Sciences 373:20170006.
+
+\bibitem[{Tallarovic and Zakon(2002)}]{Tallarovic2002}
+\textbf{Tallarovic SK, Zakon HH} (2002) Electrocommunication signals in female brown
+  ghost electric knifefish, \textit{Apteronotus leptorhynchus}.
+ J Comp Physiol A 659--657.
+
+\bibitem[{Tallarovic and Zakon(2005)}]{Tallarovic2005}
+\textbf{Tallarovic SK, Zakon HH} (2005) Electric organ discharge frequency jamming
+  during social interactions in brown ghost knifefish, \textit{Apteronotus
+  leptorhynchus}.
+ Anim Behav 70:1355 -- 1365.
+
+\bibitem[{Taves et~al.(2009)Taves, Desjardins, Mishra and Balshine}]{Taves2009}
+\textbf{Taves MD, Desjardins JK, Mishra S, Balshine S} (2009) Androgens and dominance:
+  sex-specific patterns in a highly social fish (Neolamprologus pulcher).
+ General and Comparative Endocrinology 161:202--207.
+
+\bibitem[{Taylor(1975)}]{Taylor1975}
+\textbf{Taylor GT} (1975) Male aggression in the presence of an estrous female.
+ Journal of comparative and physiological psychology 89:246.
+
+\bibitem[{Taylor and Elwood(2003)}]{Taylor2003}
+\textbf{Taylor P, Elwood RW} (2003) The mismeasure of animal contests.
+ Animal Behaviour 65:1195--1202.
+
+\bibitem[{Taylor et~al.(2001)Taylor, Hasson and Clark}]{Taylor2001}
+\textbf{Taylor PW, Hasson O, Clark DL} (2001) Initiation and resolution of jumping
+  spider contests: roles for size, proximity, and early detection of rivals.
+ Behavioral Ecology and Sociobiology 50:403--413.
+
+\bibitem[{Todd and Andrews(1999)}]{Todd1999}
+\textbf{Todd BS, Andrews DC} (1999) The Identification of Peaks in Physiological
+  Signals.
+ Computers and Biomedical Research 32:322 -- 335.
+
+\bibitem[{Triefenbach and Zakon(2003)}]{Triefenbach2003}
+\textbf{Triefenbach F, Zakon H} (2003) Effects of sex, sensitivity and status on cue
+  recognition in the weakly electric fish \textit{Apteronotus leptorhynchus}.
+ Anim Behav 65:19 -- 28.
+
+\bibitem[{Triefenbach and Zakon(2008)}]{Triefenbach2008}
+\textbf{Triefenbach F, Zakon H} (2008) Changes in signalling during agonistic
+  interactions between male weakly electric knifefish, \textit{Apteronotus
+  leptorhynchus}.
+ Anim Behav 75:1263--1272.
+
+\bibitem[{Turner et~al.(2007)Turner, Derylo, de~Santana, Alves-Gomes and
+  Smith}]{Turner2007}
+\textbf{Turner CR, Derylo M, de~Santana CD, Alves-Gomes JA, Smith GT} (2007)
+  Phylogenetic comparative analysis of electric communication signals in ghost
+  knifefishes (Gymnotiformes: Apteronotidae).
+ J Exp Biol 210:4104--4122.
+
+\bibitem[{van~der Walt(2011)}]{vanderWalt2011}
+\textbf{van~der Walt SC} (2011) Colbert, and G. Varoquaux,“The NumPy array: A
+  structure for efficient numerical computation,”.
+ Comput Sci Eng 13.
+
+\bibitem[{Walz et~al.(2014)Walz, Grewe and Benda}]{Walz2014}
+\textbf{Walz H, Grewe J, Benda J} (2014) Static frequency tuning accounts for changes in
+  neural synchrony evoked by transient communication signals.
+ J Neurophysiol 112:752--765.
+
+\bibitem[{Wauters and Dhondt(1992)}]{Wauters1992}
+\textbf{Wauters L, Dhondt AA} (1992) Spacing behaviour of red squirrels, Sciurus
+  vulgaris: variation between habitats and the sexes.
+ Animal Behaviour 43:297 -- 311.
+
+\bibitem[{Westby and Box(1970)}]{Westby1970}
+\textbf{Westby GM, Box HO} (1970) Prediction of dominance in social groups of the
+  electric fish, \textit{Gymnotus carapo}.
+ Psychonomic Science 21:181--183.
+
+\bibitem[{Westby and Kirschbaum(1981)}]{Westby1981}
+\textbf{Westby GM, Kirschbaum F} (1981) Sex differences in the electric organ discharge
+  of Eigenmannia virescens and the effect of gonadal maturation.
+ In: Sensory physiology of aquatic lower vertebrates. Elsevier, pp.
+  179--194.
+
+\bibitem[{Zakon et~al.(2002)Zakon, Oestreich, Tallarovic and
+  Triefenbach}]{Zakon2002}
+\textbf{Zakon HH, Oestreich J, Tallarovic S, Triefenbach F} (2002) EOD modulations of
+  brown ghost electric fish: JARs, chirps, rises, and dips.
+ J Physiol Paris 96:451--458.
+
+\bibitem[{Zubizarreta et~al.(2020)Zubizarreta, Quintana, Hernández,
+  Teixeira~de Mello, Meerhoff, Massaaki~Honji, Guimarães~Moreira and
+  Silva}]{Zubizarreta2020}
+\textbf{Zubizarreta L, Quintana L, Hernández D, Teixeira~de Mello F, Meerhoff M,
+  Massaaki~Honji R, Guimarães~Moreira R, Silva A} (2020) Seasonal and social
+  factors associated with spacing in a wild territorial electric fish.
+ PLOS ONE 15:1--19.
+
+\bibitem[{Zupanc and Maler(1993)}]{ZupancMaler1993}
+\textbf{Zupanc GKH, Maler L} (1993) Evoked chirping in the weakly electric fish
+  \textit{Apteronotus leptorhynchus}: a quantitative biophysical analysis.
+ Canadian Journal of Zoology 71:2301--2310.
+\end{thebibliography}
+
+% labels of our supplementary figures
+
+\clearpage
+
+\renewcommand\thefigure{\thesection S\arabic{figure}}
+\setcounter{figure}{0}   
+
+\pagestyle{empty}
+
+\begin{figure}[!ht]
+  \caption{\label{fishsetup}}
+\end{figure}
+
+\begin{figure}[!ht]
+  \caption{\label{eodf}}
+\end{figure}
+
+\begin{figure}[!htp]
+  \caption{\label{glm}}
+\end{figure}
+
+\end{document}
