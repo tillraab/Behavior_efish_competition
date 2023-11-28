@@ -420,12 +420,34 @@ def event_category_signal(all_event_t, all_contact_t, all_ag_on_t, all_ag_off_t,
     time_context_values.append(len(all_pre_chase_time) * 3 * 60 * 60 - np.sum(time_context_values))
     time_context_values /= np.sum(time_context_values)
 
-    # fig, ax = plt.subplots(figsize=(12/2.54,12/2.54))
+    event_context_values2 = []
+    time_context_values2 = []
+    for event_value, time_value in zip(event_context_values[:-1], time_context_values[:-1]):
+        event_context_values2.append(event_value)
+        time_context_values2.append(time_value)
+        if event_value >= time_value:
+            time_context_values2.append(event_value - time_value)
+            event_context_values2.append(0)
+        else:
+            event_context_values2.append(time_value - event_value)
+            time_context_values2.append(0)
+
+    event_context_values2.append(1-np.sum(event_context_values2))
+    time_context_values2.append(1-np.sum(time_context_values2))
+    # fig, ax_pie = plt.subplots(figsize=(12/2.54,12/2.54))
     size = 0.3
-    outer_colors = ['tab:red', 'tab:orange', 'yellow', 'tab:green', 'k', 'tab:brown', 'tab:grey']
-    ax_pie.pie(event_context_values, radius=1, colors=outer_colors,
+    # embed()
+    # quit()
+
+    outer_colors = ['tab:red', 'tab:grey',
+                    'tab:orange', 'tab:grey',
+                    'yellow', 'tab:grey',
+                    'tab:green', 'tab:grey',
+                    'k', 'tab:grey', 'tab:brown',
+                    'tab:grey', 'tab:grey']
+    ax_pie.pie(event_context_values2, radius=1, colors=outer_colors,
                wedgeprops=dict(width=size, edgecolor='w'), startangle=90, center=(0, 1))
-    ax_pie.pie(time_context_values, radius=1 - size, colors=outer_colors,
+    ax_pie.pie(time_context_values2, radius=1 - size, colors=outer_colors,
                wedgeprops=dict(width=size, edgecolor='w', alpha=.6), startangle=90, center=(0, 1))
 
     ax_pie.set_title(r'event context')
@@ -451,7 +473,7 @@ def event_category_signal(all_event_t, all_contact_t, all_ag_on_t, all_ag_off_t,
                        Patch(facecolor='tab:brown', alpha=0.6, edgecolor='w',
                              label='%.1f' % (time_context_values[5] * 100) + '%')]
 
-    ax_pie.legend(handles=legend_elements, loc='lower right', ncol=2, bbox_to_anchor=(1.15, -0.25), frameon=False,
+    ax_pie.legend(handles=legend_elements, loc='lower right', ncol=2, bbox_to_anchor=(1.15, -0.3), frameon=False,
                   fontsize=9)
 
     plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr', f'{event_name}_categories.png'),

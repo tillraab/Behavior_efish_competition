@@ -15,6 +15,9 @@ def main(folder, dt):
     create_video_path = os.path.join(folder, 'rise_video')
     if not os.path.exists(create_video_path):
         os.mkdir(create_video_path)
+
+    # embed()
+    # quit()
     video = cv2.VideoCapture(video_path) #  was 'cap'
 
     # fish_freqs = np.load(os.path.join(folder, 'analysis', 'fish_freq_interp.npy'))
@@ -29,6 +32,8 @@ def main(folder, dt):
     fill_spec = np.memmap(os.path.join(folder, 'fill_spec.npy'), dtype='float', mode='r',
                                shape=(fill_spec_shape[0], fill_spec_shape[1]), order='F')
     #######################################
+    # embed()
+    # quit()
     for fish_nr in np.arange(2)[::-1]:
 
         for idx_oi in tqdm(np.array(rise_idx[fish_nr][~np.isnan(rise_idx[fish_nr])], dtype=int)):
@@ -98,7 +103,7 @@ def main(folder, dt):
 
             # plt.ion()
             for i in tqdm(np.arange(len(frames_oi))):
-                break
+                # break
                 video.set(cv2.CAP_PROP_POS_FRAMES, int(frames_oi[i]))
                 ret, frame = video.read()
 

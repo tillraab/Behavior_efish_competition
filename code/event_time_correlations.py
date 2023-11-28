@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import pathlib
 import time
 import itertools
 
@@ -91,7 +92,7 @@ def kde(event_dt, conv_t, kernal_w = 1, kernal_h = 0.2):
     return conv_array
 
 
-def permutation_kde(event_dt, conv_t, repetitions = 2000, max_mem_use_GB = 4, kernal_w = 1, kernal_h = 0.2):
+def permutation_kde(event_dt, conv_t, repetitions = 2000, max_mem_use_GB = 2, kernal_w = 1, kernal_h = 0.2):
     def chunk_permutation(select_event_dt, conv_tt, n_chuck, max_jitter, kernal_w, kernal_h):
         # array.shape = (120, 100, 15486) = (len(conv_t), repetitions, len(event_dt))
         # event_dt_perm = cp.tile(event_dt, (len(conv_t), repetitions, 1))
@@ -385,37 +386,7 @@ def main(base_path):
     conv_t = cp.arange(-max_dt, max_dt+conv_t_dt, conv_t_dt)
     conv_t_numpy = cp.asnumpy(conv_t)
 
-    # embed()
-    # quit()
-
-    # for centered_times, event_counts, title in \
-    #         [[lose_chrips_centered_on_ag_off_t, lose_chirp_count, r'chirp$_{lose}$ on chase$_{off}$'],
-    #          [lose_chrips_centered_on_ag_on_t, lose_chirp_count, r'chirp$_{lose}$ on chase$_{on}$'],
-    #          [lose_chrips_centered_on_contact_t, lose_chirp_count, r'chirp$_{lose}$ on contact'],
-    #          [lose_chrips_centered_on_win_rises, lose_chirp_count, r'chirp$_{lose}$ on rise$_{win}$'],
-    #          [lose_chrips_centered_on_win_chirp, lose_chirp_count, r'chirp$_{lose}$ on chirp$_{win}$'],
-    #          [lose_chirps_centered_on_lose_rises, lose_chirp_count, r'chirp$_{lose}$ on rises$_{lose}$'],
-    #
-    #          [win_chrips_centered_on_ag_off_t, win_chirp_count, r'chirp$_{win}$ on chase$_{off}$'],
-    #          [win_chrips_centered_on_ag_on_t, win_chirp_count, r'chirp$_{win}$ on chase$_{on}$'],
-    #          [win_chrips_centered_on_contact_t, win_chirp_count, r'chirp$_{win}$ on contact'],
-    #          [win_chrips_centered_on_lose_rises, win_chirp_count, r'chirp$_{win}$ on rise$_{lose}$'],
-    #          [win_chrips_centered_on_lose_chirp, win_chirp_count, r'chirp$_{win}$ on chirp$_{lose}$'],
-    #          [win_chirps_centered_on_win_rises, win_chirp_count, r'chirp$_{win}$ on rises$_{win}$'],
-    #
-    #          [lose_rises_centered_on_ag_off_t, lose_rises_count, r'rise$_{lose}$ on chase$_{off}$'],
-    #          [lose_rises_centered_on_ag_on_t, lose_rises_count, r'rise$_{lose}$ on chase$_{on}$'],
-    #          [lose_rises_centered_on_contact_t, lose_rises_count, r'rise$_{lose}$ on contact'],
-    #          [lose_rises_centered_on_win_chirps, lose_rises_count, r'rise$_{lose}$ on chirp$_{win}$'],
-    #
-    #          [win_rises_centered_on_ag_off_t, win_rises_count, r'rise$_{win}$ on chase$_{off}$'],
-    #          [win_rises_centered_on_ag_on_t, win_rises_count, r'rise$_{win}$ on chase$_{on}$'],
-    #          [win_rises_centered_on_contact_t, win_rises_count, r'rise$_{win}$ on contact'],
-    #          [win_rises_centered_on_lose_chirps, win_rises_count, r'rise$_{win}$ on chirp$_{lose}$'],
-    #
-    #          [ag_off_centered_on_ag_on, chase_count,  r'chase$_{off}$ on chase$_{on}$']]:
-
-    for centered_times, event_counts, title in \
+    for category_enu, (centered_times, event_counts, title) in enumerate(
             [[lose_chrips_centered_on_ag_off_t, chase_count, r'chirp$_{lose}$ on chase$_{off}$'],
              [lose_chrips_centered_on_ag_on_t, chase_count, r'chirp$_{lose}$ on chase$_{on}$'],
              [lose_chrips_centered_on_contact_t, contact_count, r'chirp$_{lose}$ on contact'],
@@ -440,77 +411,79 @@ def main(base_path):
              [win_rises_centered_on_contact_t, contact_count, r'rise$_{win}$ on contact'],
              [win_rises_centered_on_lose_chirps, lose_chirp_count, r'rise$_{win}$ on chirp$_{lose}$'],
 
-             [ag_off_centered_on_ag_on, chase_count, r'chase$_{off}$ on chase$_{on}$']]:
+             [ag_off_centered_on_ag_on, chase_count, r'chase$_{off}$ on chase$_{on}$']]):
+
         save_str = title.replace('$', '').replace('{', '').replace('}', '').replace(' ', '_')
 
         ###########################################################################################################
         ### by pairing ###
-        centered_times_pairing = []
-        for sex_w, sex_l in itertools.product(['m', 'f'], repeat=2):
-            centered_times_pairing.append([])
-            for i in range(len(centered_times)):
-                if sex_w == sex_win[i] and sex_l == sex_lose[i]:
-                    centered_times_pairing[-1].append(centered_times[i])
+        if True:
+            centered_times_pairing = []
+            for sex_w, sex_l in itertools.product(['m', 'f'], repeat=2):
+                centered_times_pairing.append([])
+                for i in range(len(centered_times)):
+                    if sex_w == sex_win[i] and sex_l == sex_lose[i]:
+                        centered_times_pairing[-1].append(centered_times[i])
 
-        event_counts_pairings = [np.nansum(np.array(event_counts)[(sex_win == 'm') & (sex_lose == 'm')]),
-                                 np.nansum(np.array(event_counts)[(sex_win == 'm') & (sex_lose == 'f')]),
-                                 np.nansum(np.array(event_counts)[(sex_win == 'f') & (sex_lose == 'm')]),
-                                 np.nansum(np.array(event_counts)[(sex_win == 'f') & (sex_lose == 'f')])]
-        color = [male_color, female_color, male_color, female_color]
-        linestyle = ['-', '--', '--', '-']
+            event_counts_pairings = [np.nansum(np.array(event_counts)[(sex_win == 'm') & (sex_lose == 'm')]),
+                                     np.nansum(np.array(event_counts)[(sex_win == 'm') & (sex_lose == 'f')]),
+                                     np.nansum(np.array(event_counts)[(sex_win == 'f') & (sex_lose == 'm')]),
+                                     np.nansum(np.array(event_counts)[(sex_win == 'f') & (sex_lose == 'f')])]
+            color = [male_color, female_color, male_color, female_color]
+            linestyle = ['-', '--', '--', '-']
 
-        perm_p_pairings = []
-        jk_p_pairings = []
-        fig = plt.figure(figsize=(20/2.54, 12/2.54))
-        gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.9)
-        ax = []
-        ax.append(fig.add_subplot(gs[0, 0]))
-        ax.append(fig.add_subplot(gs[0, 1], sharey=ax[0]))
-        ax.append(fig.add_subplot(gs[1, 0], sharex=ax[0]))
-        ax.append(fig.add_subplot(gs[1, 1], sharey=ax[2], sharex=ax[1]))
+            perm_p_pairings = []
+            jk_p_pairings = []
+            fig = plt.figure(figsize=(20/2.54, 12/2.54))
+            gs = gridspec.GridSpec(2, 2, left=0.1, bottom=0.1, right=0.95, top=0.9)
+            ax = []
+            ax.append(fig.add_subplot(gs[0, 0]))
+            ax.append(fig.add_subplot(gs[0, 1], sharey=ax[0]))
+            ax.append(fig.add_subplot(gs[1, 0], sharex=ax[0]))
+            ax.append(fig.add_subplot(gs[1, 1], sharey=ax[2], sharex=ax[1]))
 
-        for enu, (centered_times_p, event_count_p) in enumerate(zip(centered_times_pairing, event_counts_pairings)):
-            boot_kde = permutation_kde(np.hstack(centered_times_p), conv_t, kernal_w=1, kernal_h=1)
-            jk_kde = jackknife_kde(np.hstack(centered_times_p), conv_t, jack_pct=jack_pct, kernal_w=1, kernal_h=1)
+            for enu, (centered_times_p, event_count_p) in enumerate(zip(centered_times_pairing, event_counts_pairings)):
+                boot_kde = permutation_kde(np.hstack(centered_times_p), conv_t, kernal_w=1, kernal_h=1)
+                jk_kde = jackknife_kde(np.hstack(centered_times_p), conv_t, jack_pct=jack_pct, kernal_w=1, kernal_h=1)
 
-            perm_p1, perm_p50, perm_p99 = np.percentile(boot_kde, (1, 50, 99), axis=0)
-            perm_p_pairings.append([perm_p1, perm_p50, perm_p99])
+                perm_p1, perm_p50, perm_p99 = np.percentile(boot_kde, (1, 50, 99), axis=0)
+                perm_p_pairings.append([perm_p1, perm_p50, perm_p99])
 
-            jk_p1, jk_p50, jk_p99 = np.percentile(jk_kde, (1, 50, 99), axis=0)
-            jk_p_pairings.append([jk_p1, jk_p50, jk_p99])
+                jk_p1, jk_p50, jk_p99 = np.percentile(jk_kde, (1, 50, 99), axis=0)
+                jk_p_pairings.append([jk_p1, jk_p50, jk_p99])
 
-            ax[enu].fill_between(conv_t_numpy, perm_p1 / event_count_p, perm_p99 / event_count_p, color='cornflowerblue', alpha=.8)
-            ax[enu].plot(conv_t_numpy, perm_p50 / event_count_p, color='dodgerblue', alpha=1, lw=3)
+                ax[enu].fill_between(conv_t_numpy, perm_p1 / event_count_p, perm_p99 / event_count_p, color='cornflowerblue', alpha=.8)
+                ax[enu].plot(conv_t_numpy, perm_p50 / event_count_p, color='dodgerblue', alpha=1, lw=3)
 
-            ax[enu].fill_between(conv_t_numpy, jk_p1 / event_count_p / jack_pct, jk_p99 / event_count_p / jack_pct, color=color[enu], alpha=.8)
-            ax[enu].plot(conv_t_numpy, jk_p50 / event_count_p / jack_pct, color=color[enu], alpha=1, lw=3, linestyle=linestyle[enu])
+                ax[enu].fill_between(conv_t_numpy, jk_p1 / event_count_p / jack_pct, jk_p99 / event_count_p / jack_pct, color=color[enu], alpha=.8)
+                ax[enu].plot(conv_t_numpy, jk_p50 / event_count_p / jack_pct, color=color[enu], alpha=1, lw=3, linestyle=linestyle[enu])
 
-            ax_m = ax[enu].twinx()
-            counter = 0
-            for enu2, centered_events in enumerate(centered_times_p):
-                Cevents = centered_events[np.abs(centered_events) <= max_dt]
-                if len(Cevents) != 0:
-                    ax_m.plot(Cevents, np.ones(len(Cevents)) * counter, '|', markersize=8, color='k', alpha=.1)
-                    counter += 1
+                ax_m = ax[enu].twinx()
+                counter = 0
+                for enu2, centered_events in enumerate(centered_times_p):
+                    Cevents = centered_events[np.abs(centered_events) <= max_dt]
+                    if len(Cevents) != 0:
+                        ax_m.plot(Cevents, np.ones(len(Cevents)) * counter, '|', markersize=8, color='k', alpha=.1)
+                        counter += 1
 
-            ax_m.set_yticks([])
-            ax[enu].set_xlim(-max_dt, max_dt)
-            ax[enu].tick_params(labelsize=10)
+                ax_m.set_yticks([])
+                ax[enu].set_xlim(-max_dt, max_dt)
+                ax[enu].tick_params(labelsize=10)
 
-        plt.setp(ax[1].get_yticklabels(), visible=False)
-        plt.setp(ax[3].get_yticklabels(), visible=False)
+            plt.setp(ax[1].get_yticklabels(), visible=False)
+            plt.setp(ax[3].get_yticklabels(), visible=False)
 
-        plt.setp(ax[0].get_xticklabels(), visible=False)
-        plt.setp(ax[1].get_xticklabels(), visible=False)
+            plt.setp(ax[0].get_xticklabels(), visible=False)
+            plt.setp(ax[1].get_xticklabels(), visible=False)
 
-        ax[2].set_xlabel('time [s]', fontsize=12)
-        ax[3].set_xlabel('time [s]', fontsize=12)
-        ax[0].set_ylabel('event rate [Hz]', fontsize=12)
-        ax[2].set_ylabel('event rate [Hz]', fontsize=12)
-        fig.suptitle(title)
+            ax[2].set_xlabel('time [s]', fontsize=12)
+            ax[3].set_xlabel('time [s]', fontsize=12)
+            ax[0].set_ylabel('event rate [Hz]', fontsize=12)
+            ax[2].set_ylabel('event rate [Hz]', fontsize=12)
+            fig.suptitle(title)
 
-        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr', f'{save_str}_by_sexes.png'), dpi=300)
-        plt.close()
+            plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr', f'{save_str}_by_sexes.png'), dpi=300)
+            plt.close()
 
         ###########################################################################################################
         ### all pairings ###
@@ -520,15 +493,29 @@ def main(base_path):
         perm_p1, perm_p50, perm_p99 = np.percentile(boot_kde, (1, 50, 99), axis=0)
         jk_p1, jk_p50, jk_p99 = np.percentile(jk_kde, (1, 50, 99), axis=0)
 
+        if category_enu == 0:
+            # chirp on chase off
+            chirp_on_chase_off = [perm_p1, perm_p50, perm_p99, jk_p1, jk_p50, jk_p99, event_counts]
+        elif category_enu == 1:
+            # chirp on chase on
+            chirp_on_chase_on = [perm_p1, perm_p50, perm_p99, jk_p1, jk_p50, jk_p99, event_counts]
+        elif category_enu == 20:
+            # chase off on chase on
+            chase_off_on_chase_on = [perm_p1, perm_p50, perm_p99, jk_p1, jk_p50, jk_p99, event_counts]
+
+        elif category_enu == 12:
+            rise_on_chase_off = [perm_p1, perm_p50, perm_p99, jk_p1, jk_p50, jk_p99, event_counts]
+        elif category_enu == 13:
+            rise_on_chase_on = [perm_p1, perm_p50, perm_p99, jk_p1, jk_p50, jk_p99, event_counts]
+
+        elif category_enu == 2:
+            chirp_on_contact = [perm_p1, perm_p50, perm_p99, jk_p1, jk_p50, jk_p99, event_counts]
+        elif category_enu == 14:
+            rise_on_contact = [perm_p1, perm_p50, perm_p99, jk_p1, jk_p50, jk_p99, event_counts]
+
         fig = plt.figure(figsize=(20/2.54, 12/2.54))
         gs = gridspec.GridSpec(1, 1, left=0.1, bottom=0.1, right=0.95, top=0.95)
         ax = fig.add_subplot(gs[0, 0])
-
-        # ax.fill_between(conv_t_numpy, perm_p1/len(np.hstack(centered_times)), perm_p99/len(np.hstack(centered_times)), color='cornflowerblue', alpha=.8)
-        # ax.plot(conv_t_numpy, perm_p50/len(np.hstack(centered_times)), color='dodgerblue', alpha=1, lw=3)
-        #
-        # ax.fill_between(conv_t_numpy, jk_p1/len(np.hstack(centered_times))/jack_pct, jk_p99/len(np.hstack(centered_times))/jack_pct, color='tab:red', alpha=.8)
-        # ax.plot(conv_t_numpy, jk_p50/len(np.hstack(centered_times))/jack_pct, color='firebrick', alpha=1, lw=3)
 
         ax.fill_between(conv_t_numpy, perm_p1/np.nansum(event_counts), perm_p99/np.nansum(event_counts), color='cornflowerblue', alpha=.8)
         ax.plot(conv_t_numpy, perm_p50/np.nansum(event_counts), color='dodgerblue', alpha=1, lw=3)
@@ -536,8 +523,8 @@ def main(base_path):
         ax.fill_between(conv_t_numpy, jk_p1/np.nansum(event_counts)/jack_pct, jk_p99/np.nansum(event_counts)/jack_pct, color='tab:red', alpha=.8)
         ax.plot(conv_t_numpy, jk_p50/np.nansum(event_counts)/jack_pct, color='firebrick', alpha=1, lw=3)
 
-
         ax_m = ax.twinx()
+        counter = 0
         for enu, centered_events in enumerate(centered_times):
             Cevents = centered_events[np.abs(centered_events) <= max_dt]
             if len(Cevents) != 0:
@@ -554,6 +541,104 @@ def main(base_path):
 
         plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'event_time_corr', f'{save_str}.png'), dpi=300)
         plt.close()
+
+    embed()
+    quit()
+    event_time_plot_with_agonistic_dur(conv_t_numpy, chirp_on_chase_off, chase_off_on_chase_on,
+                                       lose_chrips_centered_on_ag_off_t, jack_pct, max_dt,
+                                       title=r'chirp$_{lose}$ on chase$_{off}$', chase_on_centered=False)
+
+    event_time_plot_with_agonistic_dur(conv_t_numpy, chirp_on_chase_on, chase_off_on_chase_on,
+                                       lose_chrips_centered_on_ag_on_t, jack_pct, max_dt,
+                                       title=r'chirp$_{lose}$ on chase$_{on}$', chase_on_centered=True)
+
+
+    event_time_plot_with_agonistic_dur(conv_t_numpy, rise_on_chase_off, chase_off_on_chase_on,
+                                       lose_rises_centered_on_ag_off_t, jack_pct, max_dt,
+                                       title=r'rise$_{lose}$ on chase$_{off}$', chase_on_centered=False)
+
+    event_time_plot_with_agonistic_dur(conv_t_numpy, rise_on_chase_on, chase_off_on_chase_on,
+                                       lose_rises_centered_on_ag_on_t, jack_pct, max_dt,
+                                       title=r'rise$_{lose}$ on chase$_{on}$', chase_on_centered=True)
+
+
+    event_time_plot_with_agonistic_dur(conv_t_numpy, rise_on_contact, None,
+                                       lose_rises_centered_on_contact_t, jack_pct, max_dt,
+                                       title=r'rise$_{lose}$ on contact')
+
+    event_time_plot_with_agonistic_dur(conv_t_numpy, chirp_on_contact, None,
+                                       lose_chrips_centered_on_contact_t, jack_pct, max_dt,
+                                       title=r'chirp$_{lose}$ on contact')
+
+
+
+
+
+def event_time_plot_with_agonistic_dur(conv_t_numpy, centered_communication, chase_dur_dist,
+                                       centered_raster_times, jack_pct, max_dt, title='', chase_on_centered=True):
+    fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
+    gs = gridspec.GridSpec(1, 1, left=0.1, bottom=0.125 , right=0.9, top=0.95)
+    ax = fig.add_subplot(gs[0, 0])
+    perm_p1, perm_p50, perm_p99, jk_p1, jk_p50, jk_p99, event_counts = centered_communication
+
+    ax.fill_between(conv_t_numpy, perm_p1 / np.nansum(event_counts), perm_p99 / np.nansum(event_counts),
+                    color='tab:gray', alpha=.8)
+    ax.plot(conv_t_numpy, perm_p50 / np.nansum(event_counts), color='tab:gray', alpha=1, lw=3)
+
+    ax.fill_between(conv_t_numpy, jk_p1 / np.nansum(event_counts) / jack_pct,
+                    jk_p99 / np.nansum(event_counts) / jack_pct, color='tab:red', alpha=.8)
+    ax.plot(conv_t_numpy, jk_p50 / np.nansum(event_counts) / jack_pct, color='firebrick', alpha=1, lw=3)
+
+    ax.set_xlabel('time [s]', fontsize=14)
+    ax.set_ylabel('event rate [Hz]', fontsize=14)
+    ax.set_title(title, fontsize=14)
+    ax.set_xlim(-max_dt, max_dt)
+    ax.tick_params(labelsize=12)
+
+    ### chasing dist
+    if hasattr(chase_dur_dist, '__len__'):
+        ax_m = ax.twinx()
+        perm_p1, perm_p50, perm_p99, jk_p1, jk_p50, jk_p99, event_counts = chase_dur_dist
+        if chase_on_centered == False:
+            y1label = r'p(chase$_{start}$)'
+            jk_p1 = jk_p1[::-1]
+            jk_p50 = jk_p50[::-1]
+            jk_p99 = jk_p99[::-1]
+            mask = conv_t_numpy <= 0
+        else:
+            y1label = r'p(chase$_{end}$)'
+            mask = conv_t_numpy >= 0
+
+        ax_m.fill_between(conv_t_numpy[mask], jk_p1[mask] / np.nansum(event_counts) / jack_pct,
+                        jk_p99[mask] / np.nansum(event_counts) / jack_pct, color='tab:blue', alpha=.6)
+        ax_m.plot(conv_t_numpy[mask], jk_p50[mask] / np.nansum(event_counts) / jack_pct, color='tab:blue', alpha=.75, lw=3)
+
+
+        ax_m.set_ylabel(y1label, fontsize=14)
+        ax_m.yaxis.label.set_color('tab:blue')
+        ax_m.spines["right"].set_edgecolor('tab:blue')
+        ax_m.tick_params(axis='y', colors='tab:blue', labelsize=12)
+
+    counter = 0
+    ax_m2 = ax.twinx()
+    for enu, centered_events in enumerate(centered_raster_times):
+        Cevents = centered_events[np.abs(centered_events) <= max_dt]
+        if len(Cevents) != 0:
+            ax_m2.plot(Cevents, np.ones(len(Cevents)) * counter, '|', markersize=8, color='k', alpha=.1)
+            counter += 1
+
+    ax_m2.plot([0, 0], [-1, counter], '--', color='k', lw=2)
+    ax_m2.set_ylim(-1, counter)
+
+    ax_m2.yaxis.set_visible(False)
+    # embed()
+    # quit()
+    save_path = pathlib.Path(__file__).parent / 'figures' / 'event_time_corr_new'
+    save_str = title.replace(' ', '_').replace('{', '').replace('}', '').replace('$', '')
+    if not save_path.exists():
+        save_path.mkdir(parents=True, exist_ok=True)
+    plt.savefig(save_path / f'{save_str}.png', dpi=300)
+    plt.close()
 
 
 if __name__ == '__main__':
