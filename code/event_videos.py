@@ -48,7 +48,7 @@ def main(folder, dt):
     fill_spec = np.memmap(os.path.join(folder, 'fill_spec.npy'), dtype='float', mode='r',
                                shape=(fill_spec_shape[0], fill_spec_shape[1]), order='F')
 
-    for rise_time in rise_bboxes['t0'][rise_bboxes['id'] == lose_id].to_numpy():
+    for rise_time in rise_times:
         relevant_chirps = chirp_times[((chirp_times - rise_time) > 0 ) &
                                       ((chirp_times - rise_time) < dt * 3)]
         if len(relevant_chirps) == 0:
