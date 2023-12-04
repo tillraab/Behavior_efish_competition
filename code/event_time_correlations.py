@@ -577,6 +577,7 @@ def main(base_path):
 def event_time_plot_with_agonistic_dur(conv_t_numpy, centered_communication, chase_dur_dist,
                                        centered_raster_times, jack_pct, max_dt, title='', chase_on_centered=True):
     fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
+    # fig = plt.figure(figsize=(14 / 2.54, 8 / 2.54))
     gs = gridspec.GridSpec(1, 1, left=0.1, bottom=0.125 , right=0.9, top=0.95)
     ax = fig.add_subplot(gs[0, 0])
     perm_p1, perm_p50, perm_p99, jk_p1, jk_p50, jk_p99, event_counts = centered_communication
@@ -637,7 +638,7 @@ def event_time_plot_with_agonistic_dur(conv_t_numpy, centered_communication, cha
     save_str = title.replace(' ', '_').replace('{', '').replace('}', '').replace('$', '')
     if not save_path.exists():
         save_path.mkdir(parents=True, exist_ok=True)
-    plt.savefig(save_path / f'{save_str}.png', dpi=300)
+    plt.savefig(save_path / f'xx_{save_str}.png', dpi=300)
     plt.close()
 
 

@@ -32,7 +32,7 @@ def main(folder, dt):
     lose_id = meta.loc[filename, 'Lose_ID']
     rise_bboxes = pd.read_csv(pathlib.Path(folder) / "risedetector_bboxes.csv", sep=',')
     chirp_bboxes = pd.read_csv(pathlib.Path(folder) / "chirpdetector_bboxes.csv", sep=',')
-    rise_times = rise_bboxes['t0'][rise_bboxes['id'] == lose_id].to_numpy()
+    rise_times = rise_bboxes['event_time'][rise_bboxes['id'] == lose_id].to_numpy()
     chirp_times = chirp_bboxes['chirp_times'][(chirp_bboxes['assigned_track'] == lose_id)].to_numpy()
 
     # ToDo: rise and chipt times to times idxs!!!
