@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from thunderfish.powerspectrum import decibel
 import itertools
 from event_time_correlations import load_and_converete_boris_events
 from tqdm import tqdm
@@ -160,6 +161,63 @@ def get_temperature(folder_path):
 
     return np.array(temp_t), np.array(temp)
 
+def make_nice_example_plot(fund_v, ident_v, idx_v, times, spec, win_id, lose_id, contact_t_GRID,
+                           ag_on_off_t_GRID, rise_idx_int, chirp_times, recording):
+    # embed()
+    # quit()
+    Wc, Lc = 'darkgreen', '#3673A4'
+
+    fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
+    gs = gridspec.GridSpec(2, 1, left=0.1, bottom=0.1, right=1, top=1, height_ratios=[2, 5], hspace=0)
+    ax = []
+    ax.append(fig.add_subplot(gs[0, 0]))
+    ax.append(fig.add_subplot(gs[1, 0], sharex=ax[0]))
+
+    ####################################################
+    ### traces
+
+    ax[1].imshow(decibel(spec)[::-1], aspect='auto', extent=[times[0]/ 3600, times[-1]/ 3600, 0, 2000], cmap='afmhot', vmin=-100, vmax=-50)
+    # ax[1].plot(times[idx_v[ident_v == win_id]] / 3600, fund_v[ident_v == win_id], color=Wc)
+    # ax[1].plot(times[idx_v[ident_v == lose_id]] / 3600, fund_v[ident_v == lose_id], color=Lc)
+
+    min_f, max_f = np.min(fund_v[~np.isnan(ident_v)]), np.nanmax(fund_v[~np.isnan(ident_v)])
+    ax[1].set_ylim(min_f - 50, max_f + 50)
+
+    ax[1].set_xlim(times[0] / 3600, times[-1] / 3600)
+    plt.setp(ax[0].get_xticklabels(), visible=False)
+
+    # ax[1].legend(loc='upper right', bbox_to_anchor=(1, 1), title=r'EODf$_{25}$')
+    ####################################################
+    ### behavior
+
+    ax[0].plot(contact_t_GRID / 3600, np.ones_like(contact_t_GRID), '|', markersize=8, color='k')
+    ax[0].plot(ag_on_off_t_GRID[:, 0] / 3600, np.ones_like(ag_on_off_t_GRID[:, 0]) * 2, '|', markersize=8,
+               color='firebrick')
+
+    ax[0].plot(times[rise_idx_int[0]] / 3600, np.ones_like(rise_idx_int[0]) * 4, '|', markersize=8, color=Wc)
+    ax[0].plot(times[rise_idx_int[1]] / 3600, np.ones_like(rise_idx_int[1]) * 5, '|', markersize=8, color=Lc)
+
+
+    ax[0].plot(chirp_times[0] / 3600, np.ones_like(chirp_times[0]) * 7, '|', markersize=8, color=Wc)
+    ax[0].plot(chirp_times[1] / 3600, np.ones_like(chirp_times[1]) * 8, '|', markersize=8, color=Lc)
+
+    ax[0].set_ylim(0, 9)
+    ax[0].set_yticks([1, 2, 4, 5, 7, 8])
+    ax[0].set_yticklabels(['contact', 'chase', r'rise$_{win}$', r'rise$_{lose}$', r'chirp$_{win}$', r'chirp$_{lose}$'])
+
+    for a in ax:
+        a.tick_params(labelsize=10)
+    ax[1].set_xlabel('time [h]', fontsize=12)
+    ax[1].set_ylabel('frequency [Hz]', fontsize=12)
+
+    # fig.suptitle(f'{recording}')
+
+    # plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'example_trials', f'{recording}.png'), dpi=300)
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'example_trials', f'{recording}_new.png'), dpi=300)
+    # plt.savefig(os.path.join(os.path.join(os.path.split(__file__)[0], 'figures', f'{recording}.png')), dpi=300)
+    plt.close()
+    pass
+
 def main(base_path=None):
     colors = ['#BA2D22', '#53379B', '#F47F17', '#3673A4', '#AAB71B', '#DC143C', '#1E90FF']
     female_color, male_color = '#e74c3c', '#3498db'
@@ -244,6 +302,8 @@ def main(base_path=None):
         ident_v = np.load(os.path.join(trial_path, 'ident_v.npy'))
         idx_v = np.load(os.path.join(trial_path, 'idx_v.npy'))
         times = np.load(os.path.join(trial_path, 'times.npy'))
+
+        spec = np.load(os.path.join(trial_path, 'spec.npy'))
 
         if len(uid:=np.unique(ident_v[~np.isnan(ident_v)])) >2:
             print(f'to many ids: {len(uid)}')
@@ -336,6 +396,13 @@ def main(base_path=None):
         # embed()
 
         ###############################################################################
+        # embed()
+        # quit()
+
+        if video_eval and got_chirps:
+            make_nice_example_plot(fund_v, ident_v, idx_v, times, spec, win_id, lose_id, contact_t_GRID,
+                               ag_on_off_t_GRID, rise_idx_int, chirp_times, recording)
+
         fig = plt.figure(figsize=(30/2.54, 18/2.54))
         gs = gridspec.GridSpec(2, 1, left = 0.1, bottom = 0.1, right=0.95, top=0.95, height_ratios=[1, 3], hspace=0)
         ax = []
@@ -347,10 +414,6 @@ def main(base_path=None):
 
         ax[1].plot(times[idx_v[ident_v == win_id]] / 3600, fund_v[ident_v == win_id], color=Wc, label=f'ID {win_id} {np.nanmedian(q10_comp_freq[0]):.2f}Hz')
         ax[1].plot(times[idx_v[ident_v == lose_id]] / 3600, fund_v[ident_v == lose_id], color=Lc, label=f'ID {lose_id} {np.nanmedian(q10_comp_freq[1]):.2f}Hz')
-
-        # ax[1].plot(baseline_freq_times / 3600, q10_comp_freq[0], '--', color=Wc, lw=1)
-        # ax[1].plot(baseline_freq_times / 3600, q10_comp_freq[1], '--', color=Lc, lw=1)
-        # ax[1].plot(times[idx_v[ident_v == lose_id]] / 3600, fund_v[ident_v == lose_id], color=Lc)
 
         min_f, max_f = np.min(fund_v[~np.isnan(ident_v)]), np.nanmax(fund_v[~np.isnan(ident_v)])
         ax[1].set_ylim(min_f-50, max_f+50)
@@ -402,7 +465,7 @@ def main(base_path=None):
                 sex = 'm'
             trial_summary['sex_win'][(trial_summary['group'] == g) & (trial_summary['win_fish'] == f)] = sex
             trial_summary['sex_lose'][(trial_summary['group'] == g) & (trial_summary['lose_fish'] == f)] = sex
-    trial_summary.to_csv(os.path.join(base_path, 'trial_summary.csv'))
+    # trial_summary.to_csv(os.path.join(base_path, 'trial_summary.csv'))
     pass
 
 if __name__ == '__main__':
