@@ -111,8 +111,14 @@ def plot_mixed_transition_diagram(og_matrix_origin, og_matrix_target, labels, no
         matrix_origin[matrix_origin <= threshold] = 0
         matrix_target[matrix_target <= threshold] = 0
         helper_maks = matrix_origin >= matrix_target
-        matrix_origin[~helper_maks] = 0
+
+        # matrix_origin[~helper_maks] = 0
         matrix_target[helper_maks] = 0
+
+        # embed()
+        # quit()
+        matrix_origin[(matrix_origin == 0) & (matrix_target >= 5)] = 5
+
         matrix_origin_prev = np.copy(matrix_origin)
         matrix_target_prev = np.copy(matrix_target)
 
@@ -157,22 +163,23 @@ def plot_mixed_transition_diagram(og_matrix_origin, og_matrix_target, labels, no
         matrix_target_prev[~old_mask] = 0
 
         matrix_origin = np.around(matrix_origin, decimals=1)
-        matrix_target = np.around(matrix_target, decimals=1)
+        # matrix_target = np.around(matrix_target, decimals=1)
         matrix_origin_prev = np.around(matrix_origin_prev, decimals=1)
-        matrix_target_prev = np.around(matrix_target_prev, decimals=1)
+        # matrix_target_prev = np.around(matrix_target_prev, decimals=1)
 
         Graph = nx.from_numpy_array(matrix_origin, create_using=nx.DiGraph)
-        Graph2 = nx.from_numpy_array(matrix_target, create_using=nx.DiGraph)
+        # Graph2 = nx.from_numpy_array(matrix_target, create_using=nx.DiGraph)
         Graph_prev = nx.from_numpy_array(matrix_origin_prev, create_using=nx.DiGraph)
-        Graph2_prev = nx.from_numpy_array(matrix_target_prev, create_using=nx.DiGraph)
+        # Graph2_prev = nx.from_numpy_array(matrix_target_prev, create_using=nx.DiGraph)
 
         node_labels = dict(zip(Graph, labels))
 
-
+        # embed()
+        # quit()
         edge_labels = nx.get_edge_attributes(Graph, 'weight')
-        edge_labels2 = nx.get_edge_attributes(Graph2, 'weight')
+        # edge_labels2 = nx.get_edge_attributes(Graph2, 'weight')
         edge_labels_prev = nx.get_edge_attributes(Graph_prev, 'weight')
-        edge_labels2_prev = nx.get_edge_attributes(Graph2_prev, 'weight')
+        # edge_labels2_prev = nx.get_edge_attributes(Graph2_prev, 'weight')
 
         positions = nx.circular_layout(Graph)
         positions2 = nx.circular_layout(Graph)
@@ -183,53 +190,55 @@ def plot_mixed_transition_diagram(og_matrix_origin, og_matrix_target, labels, no
         nx.draw_networkx_nodes(Graph, pos=positions, node_size=node_size, ax=ax, alpha=0.5, node_color=np.array(color_palet)[:len(node_size)])
         nx.draw_networkx_labels(Graph, pos=positions2, labels=node_labels, ax=ax)
 
-        edge_width = np.array([x / 5 for x in [*edge_labels.values()]])
-        edge_width2 = np.array([x / 5 for x in [*edge_labels2.values()]])
-        edge_width_prev = np.array([x / 5 for x in [*edge_labels_prev.values()]])
-        edge_width2_prev = np.array([x / 5 for x in [*edge_labels2_prev.values()]])
+        # edge_width = np.array([(x / 5) for x in [*edge_labels.values()]])
+        edge_width = np.array([np.log(x) for x in [*edge_labels.values()]])
+        # edge_width2 = np.array([x / 5 for x in [*edge_labels2.values()]])
+        # edge_width_prev = np.array([(x / 5) for x in [*edge_labels_prev.values()]])
+        edge_width_prev = np.array([np.log(x) for x in [*edge_labels_prev.values()]])
+        # edge_width2_prev = np.array([x / 5 for x in [*edge_labels2_prev.values()]])
 
         edge_width[edge_width >= 6] = 6
-        edge_width2[edge_width2 >= 6] = 6
+        # edge_width2[edge_width2 >= 6] = 6
         edge_width_prev[edge_width_prev >= 6] = 6
-        edge_width2_prev[edge_width2_prev >= 6] = 6
+        # edge_width2_prev[edge_width2_prev >= 6] = 6
 
-        if len(edge_labels2) >= 1:
+        if len(edge_labels) >= 1:
             if color_by_origin:
-                edge_colors = np.array(color_palet)[np.array([*edge_labels2.keys()], dtype=int)[:, 0]]
+                edge_colors = np.array(color_palet)[np.array([*edge_labels.keys()], dtype=int)[:, 0]]
             elif color_by_target:
-                edge_colors = np.array(color_palet)[np.array([*edge_labels2.keys()], dtype=int)[:, 1]]
+                edge_colors = np.array(color_palet)[np.array([*edge_labels.keys()], dtype=int)[:, 1]]
             else:
                 edge_colors = 'k'
 
-            nx.draw_networkx_edges(Graph2, pos=positions, node_size=node_size, width=edge_width2,
-                                   arrows=True, arrowsize=20, arrowstyle='->',
-                                   min_target_margin=25, min_source_margin=25, connectionstyle="arc3, rad=0.05",
-                                   # rad=0.025"
-                                   ax=ax, edge_color=edge_colors)
+            # nx.draw_networkx_edges(Graph2, pos=positions, node_size=node_size, width=edge_width2,
+            #                        arrows=True, arrowsize=20, arrowstyle='->',
+            #                        min_target_margin=25, min_source_margin=25, connectionstyle="arc3, rad=0.05",
+            #                        # rad=0.025"
+            #                        ax=ax, edge_color=edge_colors)
 
-        if len(edge_labels2_prev) >= 1:
+        if len(edge_labels_prev) >= 1:
             if color_by_origin:
-                edge_colors_prev = np.array(color_palet)[np.array([*edge_labels2_prev.keys()], dtype=int)[:, 0]]
+                edge_colors_prev = np.array(color_palet)[np.array([*edge_labels_prev.keys()], dtype=int)[:, 0]]
             elif color_by_target:
-                edge_colors_prev = np.array(color_palet)[np.array([*edge_labels2_prev.keys()], dtype=int)[:, 1]]
+                edge_colors_prev = np.array(color_palet)[np.array([*edge_labels_prev.keys()], dtype=int)[:, 1]]
             else:
                 edge_colors_prev = 'k'
 
 
-            nx.draw_networkx_edges(Graph2_prev, pos=positions, node_size=node_size, width=edge_width2_prev,
-                                   arrows=True, arrowsize=20, arrowstyle='->',
-                                   min_target_margin=25, min_source_margin=25, connectionstyle="arc3, rad=0.05", # rad=0.025"
-                                   ax=ax, edge_color=edge_colors_prev, alpha=.25)
+            # nx.draw_networkx_edges(Graph2_prev, pos=positions, node_size=node_size, width=edge_width2_prev,
+            #                        arrows=True, arrowsize=20, arrowstyle='->',
+            #                        min_target_margin=25, min_source_margin=25, connectionstyle="arc3, rad=0.05", # rad=0.025"
+            #                        ax=ax, edge_color=edge_colors_prev, alpha=.25)
 
         nx.draw_networkx_edges(Graph, pos=positions, node_size=node_size, width=edge_width,
                                arrows=True, arrowsize=20, arrowstyle='->',
                                min_target_margin=25, min_source_margin=25, connectionstyle="arc3, rad=0.05",
-                               ax=ax, edge_color='k')
-
-        nx.draw_networkx_edges(Graph_prev, pos=positions, node_size=node_size, width=edge_width_prev,
-                               arrows=True, arrowsize=20, arrowstyle='->',
-                               min_target_margin=25, min_source_margin=25, connectionstyle="arc3, rad=0.05",
-                               ax=ax, edge_color='k', alpha=.25)
+                               ax=ax, edge_color=edge_colors)
+        if len(edge_labels_prev) > 0:
+            nx.draw_networkx_edges(Graph_prev, pos=positions, node_size=node_size, width=edge_width_prev,
+                                   arrows=True, arrowsize=20, arrowstyle='->',
+                                   min_target_margin=25, min_source_margin=25, connectionstyle="arc3, rad=0.05",
+                                   ax=ax, edge_color=edge_colors_prev, alpha=.25)
 
         ax.spines["top"].set_visible(False)
         ax.spines["bottom"].set_visible(False)
@@ -242,7 +251,7 @@ def plot_mixed_transition_diagram(og_matrix_origin, og_matrix_target, labels, no
 
         old_mask += mask
 
-        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'markov', f'marcov_buildup_{scenario}' + '.png'), dpi=300)
+        plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'markov', f'marcov_buildup_1_{scenario}' + '.png'), dpi=300)
         plt.close()
     # plt.show()
 
@@ -302,19 +311,23 @@ def fine_spec_plot(ax, example_1_path, trial_summary, example_ag_on_off):
     # plt.pcolormesh(artificial_t_axis, artificial_f_axis, decibel(spec), vmin=-100, vmax=-50)
     lose_freq_in_snippet = fund_v[(ident_v == lose_id) & (times[idx_v] > example_ag_on_off[0][0]-5) & (times[idx_v] < example_ag_on_off[0][1]+5)]
     max_f, min_f = np.max(lose_freq_in_snippet) + 25, np.min(lose_freq_in_snippet) - 25
+    min_f = 750
 
+    # print(example_1_path, example_ag_on_off[0][0])
     f_idx0 = np.where(spec_freqs <= min_f)[0][-1]
     f_idx1 = np.where(spec_freqs >= max_f)[0][0]
 
     t_idx0 = np.where(fine_times <= example_ag_on_off[0][0] - 5)[0][-1]
     t_idx1 = np.where(fine_times >= example_ag_on_off[0][0] + 4)[0][0]
     ax.pcolormesh(fine_times[t_idx0:t_idx1+1] - example_ag_on_off[0][0], spec_freqs[f_idx0:f_idx1+1],
-                  decibel(fine_spec[f_idx0:f_idx1+1, t_idx0:t_idx1+1]))
+                  decibel(fine_spec[f_idx0:f_idx1+1, t_idx0:t_idx1+1]), cmap='afmhot')
 
     t_idx0 = np.where(fine_times <= example_ag_on_off[0][1] - 5)[0][-1]
     t_idx1 = np.where(fine_times >= example_ag_on_off[0][1] + 5)[0][0]
     ax.pcolormesh(fine_times[t_idx0:t_idx1+1] - example_ag_on_off[0][1] + 10, spec_freqs[f_idx0:f_idx1+1],
-                  decibel(fine_spec[f_idx0:f_idx1+1, t_idx0:t_idx1+1]))
+                  decibel(fine_spec[f_idx0:f_idx1+1, t_idx0:t_idx1+1]), cmap='afmhot')
+
+    ax.set_yticks([750, 775, 800])
 
     ax.fill_between([4, 5], [spec_freqs[f_idx0], spec_freqs[f_idx0]], [spec_freqs[f_idx1], spec_freqs[f_idx1]], color='white')
 
@@ -466,7 +479,7 @@ def main(base_path):
 
     ###  agonistic categorie example figure
     fig = plt.figure(figsize=(20 / 2.54, 12 / 2.54))
-    gs = gridspec.GridSpec(2, 1, left=0.1, bottom=0.1, right=0.9, top=0.9, height_ratios=[1, 4], hspace=0)
+    gs = gridspec.GridSpec(2, 1, left=0.1, bottom=0.1, right=0.9, top=0.9, height_ratios=[1, 3], hspace=0)
     ax = fig.add_subplot(gs[1, 0])
     ax_spec = fig.add_subplot(gs[0, 0], sharex=ax)
     plt.setp(ax_spec.get_xticklabels(), visible=False)
@@ -495,6 +508,8 @@ def main(base_path):
     # plot correct spectrogram
     fine_spec_plot(ax_spec, example_1_path, trial_summary, example_ag_on_off)
 
+    # for a in [ax, ax_spec]:
+    #     a.tick_params(labelsize=10)
     ##########################################
 
     ax.plot([0, 0], [0.5, 5], '--', color='k', lw=1)
@@ -508,6 +523,7 @@ def main(base_path):
     ax.set_xlabel('time [s]', fontsize=12)
     ax.tick_params(axis='y', labelsize=20)
     ax.tick_params(axis = 'x', labelsize=10)
+    ax_spec.tick_params(labelsize=10)
 
 
     legend_elements = [Line2D([0], [0], color='firebrick', lw=2, label=r'rise$_{lose}$'),
@@ -518,7 +534,7 @@ def main(base_path):
     ax_spec.set_ylabel('EODf [Hz]', fontsize=12)
     ax.spines[['right', 'top']].set_visible(False)
 
-    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'markov', 'agonistic_categories' + '.png'), dpi=300)
+    plt.savefig(os.path.join(os.path.split(__file__)[0], 'figures', 'markov', 'agonistic_catego ries' + '.png'), dpi=300)
     plt.show()
 
 
@@ -598,7 +614,7 @@ def main(base_path):
     plt.show()
 
     plot_mixed_transition_diagram(mm_origin, mm_target, individual_event_labels, ball_size,
-                                  color_by_target=True, color_palet=glob_colors_new)
+                                  color_by_origin=True, color_palet=glob_colors_new)
 
     for i, (marcov_matrix, event_counts) in enumerate(zip(all_marcov_matrix, all_event_counts)):
         fig, ax = plt.subplots(figsize=(21 / 2.54, 19 / 2.54))

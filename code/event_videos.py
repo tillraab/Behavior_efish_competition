@@ -51,8 +51,14 @@ def main(folder, dt):
     for rise_time in rise_times:
         relevant_chirps = chirp_times[((chirp_times - rise_time) > 0 ) &
                                       ((chirp_times - rise_time) < dt * 3)]
+
         if len(relevant_chirps) == 0:
+            name_appendix = '_rise_only'
+            pass
+        else:
+            name_appendix = ''
             continue
+            # continue
 
         rel_chirp_time = relevant_chirps - rise_time
 
@@ -320,7 +326,7 @@ def main(folder, dt):
         # video_name = ("./rise_video/%s_%2.f:%2.f:%2.f.mp4" % (win_lose_str, HH, MM, SS)).replace(' ', '0')
         # command = "ffmpeg -r 25 -i './rise_video/frame%4d.jpg' -vf 'pad=ceil(iw/2)*2:ceil(ih/2)*2' -vcodec libx264 -y -an"
 
-        video_name = os.path.join(create_video_path, ("%s_%2.f:%2.f:%2.f.mp4" % (win_lose_str, HH, MM, SS)).replace(' ', '0'))
+        video_name = os.path.join(create_video_path, ("%s%s_%2.f:%2.f:%2.f.mp4" % (win_lose_str, name_appendix, HH, MM, SS)).replace(' ', '0'))
         command1 = "ffmpeg -r 25 -i"
         frames_path = '"%s"' % os.path.join(create_video_path, "frame%4d.jpg")
         command2 = "-vf 'pad=ceil(iw/2)*2:ceil(ih/2)*2' -vcodec libx264 -y -an"
